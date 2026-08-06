@@ -6,38 +6,294 @@
 <title>Recipes — Petrus Sommeliers</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --cream:#faf7f1; --sans:'Inter',sans-serif; --serif:'Cormorant Garamond',serif; }
-body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-height:100vh; }
-.top-bar { background:var(--green-dark); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
-.top-bar a { color:var(--gold); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
-.top-bar a:hover { color:#fff; }
-.top-bar h2 { font-family:var(--serif); color:#fff; font-size:18px; margin:0; }
-.content { max-width:600px; margin:80px auto; padding:0 20px; text-align:center; }
-.content h1 { font-family:var(--serif); font-size:32px; color:var(--green); margin-bottom:12px; }
-.content p { font-size:14px; color:#888; }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:800px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:14px}
+.box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
+.box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
+.fields{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.fields input,.fields select{padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none;flex:1;min-width:0}
+.fields input[type="number"]{flex:0 0 55px}
+.fields select{flex:0 0 auto}
+.fields input:focus{border-color:var(--gld)}
+.btn-plus{padding:4px 12px;background:var(--gld);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer}
+.btn-plus:hover{background:#a07e3a}
+.btn-save{padding:7px 20px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.btn-save:hover{background:var(--grn2)}
+.ing-list{margin-bottom:10px}
+.ing-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f5f0ea;font-size:11px}
+.ing-item:last-child{border-bottom:none}
+.ing-item .qty{min-width:40px;color:#888}
+.ing-item .unit{min-width:24px;color:#888;font-size:10px}
+.ing-item .product{flex:1}
+.s-remove{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer}
+.s-remove:hover{color:#c0392b}
+/* Saved recipes */
+.recipe-card{border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:12px;background:#fdf9f2}
+.recipe-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.recipe-head .recipe-name{font-family:var(--f);font-size:18px;color:var(--grn);flex:1}
+.recipe-head .recipe-date{font-size:9px;color:#888}
+.recipe-total{font-size:10px;color:var(--gld);margin-bottom:8px;font-weight:600}
+.recipe-ing{font-size:11px;padding:3px 0;border-bottom:1px solid #f5f0ea;display:flex;gap:8px}
+.recipe-ing:last-child{border-bottom:none}
+.recipe-ing .r-qty{min-width:40px;color:var(--grn);font-weight:500}
+.recipe-ing .r-unit{min-width:24px;color:#888;font-size:10px}
+.recipe-ing .r-product{flex:1}
+.recipe-ing .r-scaled{min-width:50px;text-align:right;color:var(--gld);font-weight:500}
+.yield-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid #f0ebe5}
+.yield-row label{font-size:9px;color:#888}
+.yield-row input{width:70px;padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);text-align:center}
+.yield-row .yield-total{font-size:10px;color:var(--grn);font-weight:600}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <a href="sommeliers.html">&larr; Back</a>
-  <h2>Petrus</h2>
-  <span></span>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Recipes</h1>
+<div id="recipesList"></div>
+<div id="addArea"></div>
 </div>
-<div class="content">
-  <h1>Recipes</h1>
-  <p>Coming soon.</p>
-</div>
-
-<!-- Firebase + Auth -->
+<div class="sm" id="sm"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
 <script>
-auth.onAuthStateChanged((user) => {
-  if (!user) { window.location.href = 'index.html'; }
+var U=null;
+var recipes=[];
+var staged=[];
+var _recipeName='',_recipeDate=new Date().toISOString().slice(0,10);
+var _editingId=null; // null = new recipe, string = editing existing
+var _recipeIndex=0;
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  U=u;logAccess(u,'page_view','somm-recipes.html');
+  loadRecipes();
 });
+
+function loadRecipes(){
+  db.collection('somm_recipes').get().then(function(snap){
+    recipes=[];
+    snap.forEach(function(doc){recipes.push({id:doc.id,data:doc.data()});});
+    recipes.sort(function(a,b){return a.data.name>b.data.name?1:-1;});
+    render();
+  });
+}
+
+function render(){
+  renderRecipes();
+  renderAdd();
+}
+
+function renderRecipes(){
+  var h='';
+  if(recipes.length===0){h='<div class="box"><div class="em">No recipes yet</div></div>';}
+  else{
+    var r=_recipeIndex;
+    if(r>=recipes.length)r=0;
+    if(r<0)r=recipes.length-1;
+    _recipeIndex=r;
+    var rec=recipes[r].data;
+    var id=recipes[r].id;
+    var totalMl=0;
+    for(var i=0;i<rec.ingredients.length;i++){
+      var ing=rec.ingredients[i];
+      var mlVal=parseFloat(ing.qty)||0;
+      if(ing.unit==='cl')mlVal=mlVal*10;
+      if(ing.unit==='oz')mlVal=mlVal*30;
+      totalMl+=mlVal;
+    }
+    h+='<div class="recipe-card">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
+    h+='<span style="font-family:var(--f);font-size:20px;color:var(--grn);flex:1">'+rec.name+'</span>';
+    h+='<span style="font-size:9px;color:#888">'+(r+1)+'/'+recipes.length+'</span>';
+    h+='<span style="cursor:pointer;font-size:14px;color:var(--gld);user-select:none" onclick="prevRecipe()">&larr;</span>';
+    h+='<span style="cursor:pointer;font-size:14px;color:var(--gld);user-select:none" onclick="nextRecipe()">&rarr;</span>';
+    h+='</div>';
+    h+='<div class="recipe-total">Total: '+totalMl+' ml</div>';
+
+    for(var i=0;i<rec.ingredients.length;i++){
+      var ing=rec.ingredients[i];
+      h+='<div class="recipe-ing"><span class="r-qty">'+ing.qty+'</span><span class="r-unit">'+ing.unit+'</span><span class="r-product">'+ing.product+'</span><span class="r-scaled" id="scaled_'+id+'_'+i+'"></span></div>';
+    }
+
+    h+='<div class="yield-row"><label>Yield (ml):</label><input type="number" id="yield_'+id+'" placeholder="" oninput="calcYield(\''+id+'\','+totalMl+')"><label style="margin-left:12px">Portions:</label><input type="number" id="portions_'+id+'" placeholder="" min="1" oninput="calcPortions(\''+id+'\')"><span class="yield-total" id="yieldTotal_'+id+'"></span></div>';
+    // Notes
+    h+='<div style="margin-top:8px"><textarea id="notes_'+id+'" placeholder="Notes..." style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--s);resize:vertical;min-height:30px;outline:none" onblur="saveNotes(\''+id+'\')">'+(rec.notes||'')+'</textarea></div>';
+    // Footer: last edit + edit button + delete
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid #f0ebe5">';
+    h+='<span style="font-size:8px;color:#bbb;font-style:italic;flex:1">'+(rec.lastEditBy?'Last edit: <strong style="color:#999">'+rec.lastEditBy+'</strong> · '+rec.date:'')+'</span>';
+    h+='<button onclick="editRecipe(\''+id+'\')" style="padding:4px 12px;background:var(--pink);color:var(--grn);border:1px solid rgba(92,26,26,0.15);border-radius:4px;font-size:8px;cursor:pointer;font-family:var(--s)">Edit</button>';
+    h+='<button class="s-remove" onclick="deleteRecipe(\''+id+'\')">&times;</button>';
+    h+='</div>';
+    h+='</div>';
+  }
+  document.getElementById('recipesList').innerHTML=h;
+}
+
+function prevRecipe(){_recipeIndex--;renderRecipes();}
+function nextRecipe(){_recipeIndex++;renderRecipes();}
+
+function calcYield(recId,totalMl){
+  var yieldVal=parseFloat(document.getElementById('yield_'+recId).value)||0;
+  var portEl=document.getElementById('portions_'+recId);
+  if(yieldVal){portEl.disabled=true;portEl.value='';}else{portEl.disabled=false;}
+  if(!yieldVal||!totalMl)return;
+  var multiplier=yieldVal/totalMl;
+  var rec=recipes.find(function(r){return r.id===recId;});
+  if(!rec)return;
+  var total=0;
+  for(var i=0;i<rec.data.ingredients.length;i++){
+    var ing=rec.data.ingredients[i];
+    var mlVal=parseFloat(ing.qty)||0;
+    if(ing.unit==='cl')mlVal=mlVal*10;
+    if(ing.unit==='oz')mlVal=mlVal*30;
+    var scaled=(mlVal*multiplier).toFixed(1);
+    total+=parseFloat(scaled);
+    var el=document.getElementById('scaled_'+recId+'_'+i);
+    if(el)el.textContent=scaled+' ml';
+  }
+  var totalEl=document.getElementById('yieldTotal_'+recId);
+  if(totalEl)totalEl.textContent='= '+total.toFixed(0)+' ml';
+}
+
+function calcPortions(recId){
+  var portions=parseFloat(document.getElementById('portions_'+recId).value)||0;
+  var yieldEl=document.getElementById('yield_'+recId);
+  if(portions){yieldEl.disabled=true;yieldEl.value='';}else{yieldEl.disabled=false;}
+  if(!portions)return;
+  var rec=recipes.find(function(r){return r.id===recId;});
+  if(!rec)return;
+  var total=0;
+  for(var i=0;i<rec.data.ingredients.length;i++){
+    var ing=rec.data.ingredients[i];
+    var qty=parseFloat(ing.qty)||0;
+    var scaled=(qty*portions).toFixed(1);
+    var mlVal=parseFloat(scaled);
+    if(ing.unit==='cl')mlVal=mlVal*10;
+    if(ing.unit==='oz')mlVal=mlVal*30;
+    else mlVal=parseFloat(scaled);
+    total+=mlVal;
+    var el=document.getElementById('scaled_'+recId+'_'+i);
+    if(el)el.textContent=scaled+' '+ing.unit;
+  }
+  var totalEl=document.getElementById('yieldTotal_'+recId);
+  if(totalEl)totalEl.textContent='= '+total.toFixed(0)+' ml (x'+portions+')';
+}
+
+function renderAdd(){
+  var a='<div class="box"><h3>Add new recipe</h3>';
+  a+='<div class="fields" style="margin-bottom:12px">';
+  a+='<input type="text" id="r_name" placeholder="Name of the recipe" value="'+_recipeName+'" onchange="_recipeName=this.value" oninput="_recipeName=this.value">';
+  a+='</div>';
+
+  // Staged ingredients
+  if(staged.length>0){
+    a+='<div class="ing-list">';
+    for(var i=0;i<staged.length;i++){
+      var s=staged[i];
+      a+='<div class="ing-item"><span class="qty">'+s.qty+'</span><span class="unit">'+s.unit+'</span><span class="product">'+s.product+'</span><button class="s-remove" onclick="removeStaged('+i+')">&times;</button></div>';
+    }
+    a+='</div>';
+  }
+
+  // Add ingredient row
+  a+='<div class="fields">';
+  a+='<input type="number" id="r_qty" placeholder="Qty" min="0" step="0.1">';
+  a+='<select id="r_unit"><option value="ml">ml</option><option value="cl">cl</option><option value="oz">oz</option><option value="dash">dash</option><option value="drop">drop</option><option value="uni">uni</option></select>';
+  a+='<input type="text" id="r_product" placeholder="Product" onkeydown="if(event.key===\'Enter\')stageIng()">';
+  a+='<button class="btn-plus" onclick="stageIng()">+</button>';
+  a+='</div>';
+
+  a+='<div style="margin-top:10px"><button class="btn-save" onclick="saveRecipe()">'+(_editingId?'Update recipe':'Save recipe')+'</button>';
+  if(_editingId)a+=' <button class="btn-plus" onclick="cancelEdit()" style="background:#999">Cancel</button>';
+  a+='</div>';
+  a+='</div>';
+  document.getElementById('addArea').innerHTML=a;
+}
+
+function stageIng(){
+  var qty=(document.getElementById('r_qty')||{}).value||'';
+  var unit=(document.getElementById('r_unit')||{}).value||'ml';
+  var product=(document.getElementById('r_product')||{}).value.trim()||'';
+  if(!qty||!product){msg('Qty and product required');return;}
+  staged.push({qty:qty,unit:unit,product:product});
+  document.getElementById('r_qty').value='';
+  document.getElementById('r_product').value='';
+  renderAdd();
+}
+
+function removeStaged(i){staged.splice(i,1);renderAdd();}
+
+function cancelEdit(){
+  _editingId=null;_recipeName='';_recipeDate=new Date().toISOString().slice(0,10);staged=[];
+  renderAdd();
+}
+
+function editRecipe(id){
+  var rec=recipes.find(function(r){return r.id===id;});
+  if(!rec)return;
+  _editingId=id;
+  _recipeName=rec.data.name;
+  _recipeDate=rec.data.date;
+  staged=rec.data.ingredients.slice();
+  renderAdd();
+  window.scrollTo(0,document.getElementById('addArea').offsetTop-20);
+}
+
+function saveRecipe(){
+  var name=(document.getElementById('r_name')||{}).value.trim()||_recipeName;
+  if(!name){msg('Recipe name required');return;}
+  if(staged.length===0){msg('Add at least one ingredient');return;}
+  var date=new Date().toISOString().slice(0,10);
+  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+
+  var data={
+    name:name,
+    date:date,
+    author:author,
+    lastEditBy:author,
+    ingredients:staged,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if(_editingId){
+    // Update existing
+    db.collection('somm_recipes').doc(_editingId).update(data).then(function(){
+      staged=[];_recipeName='';_recipeDate=new Date().toISOString().slice(0,10);_editingId=null;
+      loadRecipes();msg('Recipe updated');
+    }).catch(function(e){console.error(e);msg('Error');});
+  } else {
+    // Create new
+    data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+    db.collection('somm_recipes').add(data).then(function(){
+      staged=[];_recipeName='';_recipeDate=new Date().toISOString().slice(0,10);_editingId=null;
+      loadRecipes();msg('Recipe saved');
+    }).catch(function(e){console.error(e);msg('Error');});
+  }
+}
+
+function deleteRecipe(id){
+  if(!confirm('Delete this recipe?'))return;
+  db.collection('somm_recipes').doc(id).delete().then(function(){loadRecipes();msg('Deleted');});
+}
+
+function saveNotes(id){
+  var text=(document.getElementById('notes_'+id)||{}).value||'';
+  db.collection('somm_recipes').doc(id).update({notes:text});
+}
+
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
 </script>
 </body>
 </html>

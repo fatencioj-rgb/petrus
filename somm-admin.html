@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Somm Admin — Petrus</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:900px;margin:0 auto;padding:24px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:4px}
+.pg>.sub{font-size:11px;color:#888;margin-bottom:20px}
+/* Stats */
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.stat{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px 18px;min-width:120px;text-align:center}
+.stat .num{font-family:var(--f);font-size:26px;color:var(--grn)}
+.stat .lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-top:2px}
+/* Actions */
+.actions{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:18px;margin-bottom:16px}
+.actions h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:12px}
+.action-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f0ea;flex-wrap:wrap}
+.action-row:last-child{border-bottom:none}
+.action-row label{font-size:11px;min-width:120px;color:var(--grn);font-weight:500}
+.action-row select,.action-row input{padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s)}
+.action-row input:focus,.action-row select:focus{border-color:var(--gld);outline:none}
+.btn{padding:6px 14px;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--s);text-transform:uppercase;letter-spacing:.5px}
+.btn-danger{background:#dc3545;color:#fff}
+.btn-danger:hover{background:#c82333}
+.btn-export{background:var(--grn);color:#fff}
+.btn-export:hover{background:var(--grn2)}
+.btn-warn{background:#e67e22;color:#fff}
+.btn-warn:hover{background:#d35400}
+/* Preview table */
+.preview{margin-top:12px;max-height:300px;overflow-y:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:10px}
+.tbl th{background:var(--grn2);color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;position:sticky;top:0}
+.tbl td{padding:5px 8px;border-bottom:1px solid #f5f0ea}
+.tbl tr:hover td{background:#fdf9f2}
+/* Activity log */
+.activity{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:18px;margin-bottom:16px}
+.activity h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:12px}
+.log-item{font-size:11px;padding:4px 0;border-bottom:1px solid #f9f5ef;display:flex;gap:8px}
+.log-item:last-child{border-bottom:none}
+.log-item .l-time{font-size:9px;color:#999;min-width:70px}
+.log-item .l-user{font-weight:500;color:var(--grn);min-width:60px}
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999}
+.confirm-overlay.show{display:flex}
+.confirm-box{background:#fff;border-radius:10px;padding:24px;max-width:400px;text-align:center}
+.confirm-box h4{font-family:var(--f);font-size:18px;color:var(--grn);margin-bottom:10px}
+.confirm-box p{font-size:12px;color:#666;margin-bottom:16px}
+.confirm-box .btns{display:flex;gap:10px;justify-content:center}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Somm Admin</h1>
+<p class="sub">Data management — only visible to Fiorella</p>
+<div class="stats" id="stats"></div>
+<div class="actions">
+  <h3>Clean up old data</h3>
+  <div class="action-row">
+    <label>Collection</label>
+    <select id="cleanCol">
+      <option value="somm_stock">Stock</option>
+      <option value="somm_deliveries">Deliveries</option>
+      <option value="somm_wastages">Wastages</option>
+      <option value="somm_transfers">Transfers</option>
+      <option value="somm_duties">Duties</option>
+      <option value="somm_daily_notes">Daily Notes</option>
+    </select>
+    <label>Before</label>
+    <input type="date" id="cleanBefore">
+    <button class="btn btn-warn" onclick="previewClean()">Preview</button>
+    <button class="btn btn-danger" onclick="confirmClean()">Delete</button>
+  </div>
+  <div class="preview" id="preview"></div>
+</div>
+<div class="actions">
+  <h3>Quick cleanup</h3>
+  <div class="action-row">
+    <label>Delete all pending duties</label>
+    <button class="btn btn-danger" onclick="clearPendingDuties()">Clear pending</button>
+  </div>
+  <div class="action-row">
+    <label>Delete all completed duties</label>
+    <button class="btn btn-danger" onclick="clearCompletedDuties()">Clear completed</button>
+  </div>
+  <div class="action-row">
+    <label>Delete ALL duties (pending + done)</label>
+    <button class="btn btn-danger" onclick="clearCollection('somm_duties')">Clear all duties</button>
+  </div>
+  <div class="action-row">
+    <label>Delete all deliveries</label>
+    <button class="btn btn-danger" onclick="clearCollection('somm_deliveries')">Clear all deliveries</button>
+  </div>
+  <div class="action-row">
+    <label>Delete all stock alerts</label>
+    <button class="btn btn-danger" onclick="clearCollection('somm_stock')">Clear all stock</button>
+  </div>
+</div>
+<div class="actions">
+  <h3>Team Messages (carousel)</h3>
+  <div id="msgList"></div>
+  <div class="action-row">
+    <input type="text" id="newMsg" placeholder="Write a message for the team..." style="flex:1">
+    <button class="btn btn-export" onclick="addMessage()">Add</button>
+  </div>
+</div>
+<div class="actions">
+  <h3>Export data (CSV)</h3>
+  <div class="action-row">
+    <label>Collection</label>
+    <select id="exportCol">
+      <option value="somm_stock">Stock</option>
+      <option value="somm_deliveries">Deliveries</option>
+      <option value="somm_wastages">Wastages</option>
+      <option value="somm_transfers">Transfers</option>
+      <option value="somm_duties">Duties</option>
+    </select>
+    <label>From</label><input type="date" id="exportFrom">
+    <label>To</label><input type="date" id="exportTo">
+    <button class="btn btn-export" onclick="exportCSV()">Export CSV</button>
+  </div>
+</div>
+<div class="actions">
+  <h3>Reset collection (danger)</h3>
+  <div class="action-row">
+    <label>Collection</label>
+    <select id="resetCol">
+      <option value="somm_stock">Stock</option>
+      <option value="somm_deliveries">Deliveries</option>
+      <option value="somm_wastages">Wastages</option>
+      <option value="somm_transfers">Transfers</option>
+      <option value="somm_duties">Duties</option>
+      <option value="somm_daily_notes">Daily Notes</option>
+    </select>
+    <button class="btn btn-danger" onclick="confirmReset()">Reset All</button>
+  </div>
+</div>
+<div class="activity">
+  <h3>Recent team activity</h3>
+  <div id="activityLog"></div>
+</div>
+</div>
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h4 id="confirmTitle">Are you sure?</h4>
+    <p id="confirmMsg"></p>
+    <div class="btns">
+      <button class="btn btn-danger" id="confirmYes">Yes, delete</button>
+      <button class="btn btn-export" onclick="hideConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="sm" id="sm"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null;
+var COLLECTIONS=['somm_stock','somm_deliveries','somm_wastages','somm_duties','somm_transfers','somm_daily_notes'];
+var previewDocs=[];
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  // Only Fiorella can access
+  var email=u.email||'';
+  if(!email.startsWith('fiorella')){window.location.href='sommeliers.html';return;}
+  U=u;logAccess(u,'page_view','somm-admin.html');
+  loadStats();
+  loadActivity();
+  loadMessages();
+  // Set default dates
+  var today=new Date().toISOString().slice(0,10);
+  var twoMonths=new Date();twoMonths.setMonth(twoMonths.getMonth()-2);
+  document.getElementById('cleanBefore').value=twoMonths.toISOString().slice(0,10);
+  document.getElementById('exportFrom').value=twoMonths.toISOString().slice(0,10);
+  document.getElementById('exportTo').value=today;
+});
+
+function loadStats(){
+  var h='';
+  var promises=COLLECTIONS.map(function(col){return db.collection(col).get();});
+  Promise.all(promises).then(function(results){
+    var labels=['Stock','Deliveries','Wastages','Duties','Notes'];
+    for(var i=0;i<results.length;i++){
+      h+='<div class="stat"><div class="num">'+results[i].size+'</div><div class="lbl">'+labels[i]+'</div></div>';
+    }
+    document.getElementById('stats').innerHTML=h;
+  });
+}
+
+function loadActivity(){
+  db.collection('access_logs').orderBy('timestamp','desc').limit(20).get().then(function(snap){
+    var h='';
+    snap.forEach(function(doc){
+      var d=doc.data();
+      var time=d.timestamp?new Date(d.timestamp.seconds*1000).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+      h+='<div class="log-item"><span class="l-time">'+time+'</span><span class="l-user">'+(d.userName||d.userEmail||'')+'</span><span>'+d.action+' — '+d.page+'</span></div>';
+    });
+    if(!h)h='<div style="color:#ccc;font-size:11px;text-align:center">No activity</div>';
+    document.getElementById('activityLog').innerHTML=h;
+  });
+}
+
+// === PREVIEW & CLEAN ===
+function previewClean(){
+  var col=document.getElementById('cleanCol').value;
+  var before=document.getElementById('cleanBefore').value;
+  if(!before){msg('Select a date');return;}
+  var dateField=col==='somm_duties'?'date':col==='somm_daily_notes'?'date':'date';
+  db.collection(col).where(dateField,'<',before).get().then(function(snap){
+    previewDocs=[];
+    snap.forEach(function(doc){previewDocs.push({id:doc.id,data:doc.data()});});
+    var h='';
+    if(previewDocs.length===0){h='<div style="color:#999;font-size:11px;padding:10px">No documents found before '+before+'</div>';}
+    else{
+      h='<p style="font-size:11px;color:#e67e22;margin-bottom:8px"><strong>'+previewDocs.length+'</strong> documents will be deleted</p>';
+      h+='<table class="tbl"><thead><tr><th>Date</th><th>Name/Text</th><th>Author</th></tr></thead><tbody>';
+      for(var i=0;i<Math.min(previewDocs.length,20);i++){var d=previewDocs[i].data;
+        h+='<tr><td>'+(d.date||'—')+'</td><td>'+(d.name||d.text||'—')+'</td><td>'+(d.author||'—')+'</td></tr>';
+      }
+      if(previewDocs.length>20)h+='<tr><td colspan="3" style="color:#999">...and '+(previewDocs.length-20)+' more</td></tr>';
+      h+='</tbody></table>';
+    }
+    document.getElementById('preview').innerHTML=h;
+  });
+}
+
+function confirmClean(){
+  if(previewDocs.length===0){msg('Preview first');return;}
+  showConfirm('Delete '+previewDocs.length+' documents?','This cannot be undone. Data before '+document.getElementById('cleanBefore').value+' will be permanently removed.',function(){
+    var batch=db.batch();
+    var col=document.getElementById('cleanCol').value;
+    previewDocs.forEach(function(d){batch.delete(db.collection(col).doc(d.id));});
+    batch.commit().then(function(){
+      msg('Deleted '+previewDocs.length+' docs');
+      previewDocs=[];
+      document.getElementById('preview').innerHTML='';
+      loadStats();
+    }).catch(function(e){msg('Error: '+e.message);});
+  });
+}
+
+// === EXPORT CSV ===
+function exportCSV(){
+  var col=document.getElementById('exportCol').value;
+  var from=document.getElementById('exportFrom').value;
+  var to=document.getElementById('exportTo').value;
+  if(!from||!to){msg('Select date range');return;}
+  db.collection(col).where('date','>=',from).where('date','<=',to).get().then(function(snap){
+    if(snap.empty){msg('No data');return;}
+    var rows=[];var headers=null;
+    snap.forEach(function(doc){
+      var d=doc.data();
+      if(!headers)headers=Object.keys(d).filter(function(k){return k!=='createdAt'&&k!=='updatedAt';});
+      var row=headers.map(function(h){var v=d[h];return typeof v==='object'?JSON.stringify(v):'"'+(v||'')+'"';});
+      rows.push(row.join(','));
+    });
+    var csv=headers.join(',')+'\n'+rows.join('\n');
+    var blob=new Blob([csv],{type:'text/csv'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=col+'_'+from+'_'+to+'.csv';a.click();
+    msg('Exported '+rows.length+' rows');
+  });
+}
+
+// === RESET ===
+function confirmReset(){
+  var col=document.getElementById('resetCol').value;
+  showConfirm('RESET entire '+col+'?','This will delete ALL documents in this collection. This cannot be undone.',function(){
+    db.collection(col).get().then(function(snap){
+      var batch=db.batch();
+      snap.forEach(function(doc){batch.delete(doc.ref);});
+      return batch.commit();
+    }).then(function(){msg('Collection reset');loadStats();}).catch(function(e){msg('Error');});
+  });
+}
+
+// === CONFIRM DIALOG ===
+var confirmCallback=null;
+function showConfirm(title,message,cb){
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=message;
+  document.getElementById('confirmOverlay').classList.add('show');
+  confirmCallback=cb;
+  document.getElementById('confirmYes').onclick=function(){hideConfirm();if(confirmCallback)confirmCallback();};
+}
+function hideConfirm(){document.getElementById('confirmOverlay').classList.remove('show');confirmCallback=null;}
+
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},2000);}
+
+// === MESSAGES ===
+function clearPendingDuties(){
+  if(!confirm('Delete ALL pending duties?'))return;
+  db.collection('somm_duties').get().then(function(snap){
+    var batch=db.batch();
+    snap.forEach(function(doc){var d=doc.data();if(!d.done)batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){msg('Pending duties cleared');loadStats();});
+}
+
+function clearCompletedDuties(){
+  if(!confirm('Delete ALL completed duties?'))return;
+  db.collection('somm_duties').get().then(function(snap){
+    var batch=db.batch();
+    snap.forEach(function(doc){var d=doc.data();if(d.done)batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){msg('Completed duties cleared');loadStats();});
+}
+
+function clearCollection(col){
+  if(!confirm('Delete ALL documents in '+col+'?'))return;
+  db.collection(col).get().then(function(snap){
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){msg(col+' cleared');loadStats();});
+}
+
+function loadMessages(){
+  db.collection('somm_messages').orderBy('createdAt','desc').get().then(function(snap){
+    var h='';
+    snap.forEach(function(doc){
+      var d=doc.data();
+      h+='<div class="action-row"><span style="flex:1;font-size:12px">'+d.text+'</span><button class="btn btn-danger" onclick="deleteMessage(\''+doc.id+'\')" style="padding:3px 8px;font-size:8px">&times;</button></div>';
+    });
+    if(!h)h='<div style="color:#ccc;font-size:11px;padding:8px">No messages</div>';
+    document.getElementById('msgList').innerHTML=h;
+  });
+}
+
+function addMessage(){
+  var text=(document.getElementById('newMsg')||{}).value.trim();
+  if(!text){msg('Write something');return;}
+  db.collection('somm_messages').add({text:text,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){
+    document.getElementById('newMsg').value='';
+    loadMessages();msg('Message added');
+  });
+}
+
+function deleteMessage(id){
+  db.collection('somm_messages').doc(id).delete().then(function(){loadMessages();msg('Removed');});
+}
+</script>
+</body>
+</html>

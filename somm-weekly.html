@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Log — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:800px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:4px}
+.week-nav{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.week-nav button{padding:5px 12px;border:1px solid var(--gld);border-radius:4px;background:transparent;color:var(--grn);font-size:9px;cursor:pointer;text-transform:uppercase}
+.week-nav button:hover{background:var(--gld);color:#fff}
+.week-nav .week-label{font-family:var(--f);font-size:16px;color:var(--grn);flex:1;text-align:center}
+.wa-btn{width:28px;height:28px;border-radius:50%;background:#25D366;border:none;cursor:pointer;font-size:11px;color:#fff}
+.wa-btn:hover{background:#1da851}
+.section{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:12px}
+.section h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:8px}
+.section h3 .badge{font-size:9px;background:var(--grn);color:#fff;padding:2px 7px;border-radius:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--grn2);color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:5px 8px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
+.tbl tr:hover td{background:#fdf9f2}
+.s-tag{font-size:8px;padding:2px 6px;border-radius:8px;text-transform:uppercase;font-weight:600}
+.tag-low{background:#fff3cd;color:#856404}
+.tag-86{background:#f8d7da;color:#721c24}
+.tag-ok{background:#d4edda;color:#155724}
+.tag-chg{background:#f8d7da;color:#721c24}
+.tag-back{background:#d4edda;color:#155724}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Weekly Log</h1>
+<div class="week-nav">
+  <button onclick="prevWeek()">&larr; Prev</button>
+  <span class="week-label" id="weekLabel"></span>
+  <button onclick="nextWeek()">Next &rarr;</button>
+  <button class="wa-btn" onclick="shareWeek()" title="WhatsApp">📤</button>
+</div>
+<div id="content"></div>
+</div>
+<div class="sm" id="sm"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null;
+var weekOffset=0; // 0 = current week
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  U=u;logAccess(u,'page_view','somm-weekly.html');
+  loadWeek();
+});
+
+function getWeekRange(offset){
+  // Work week: Tuesday to Saturday
+  var now=new Date();
+  var day=now.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+  // Distance back to Tuesday
+  var diffToTue;
+  if(day>=2){diffToTue=day-2;} // Tue=0, Wed=1, Thu=2, Fri=3, Sat=4
+  else{diffToTue=day+5;} // Sun=5, Mon=6
+  var tue=new Date(now);
+  tue.setDate(now.getDate()-diffToTue+(offset*7));
+  var sat=new Date(tue);
+  sat.setDate(tue.getDate()+4); // Tue+4 = Saturday
+  return {
+    start:tue.toISOString().slice(0,10),
+    end:sat.toISOString().slice(0,10),
+    label:tue.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' — '+sat.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+  };
+}
+
+function prevWeek(){weekOffset--;loadWeek();}
+function nextWeek(){if(weekOffset<0){weekOffset++;loadWeek();}}
+
+function loadWeek(){
+  var range=getWeekRange(weekOffset);
+  document.getElementById('weekLabel').textContent=range.label;
+
+  Promise.all([
+    db.collection('somm_stock').where('date','>=',range.start).where('date','<=',range.end).get(),
+    db.collection('somm_deliveries').where('date','>=',range.start).where('date','<=',range.end).get(),
+    db.collection('somm_wastages').where('date','>=',range.start).where('date','<=',range.end).get(),
+    db.collection('somm_duties').where('date','>=',range.start).where('date','<=',range.end).get(),
+    db.collection('somm_transfers').where('date','>=',range.start).where('date','<=',range.end).get()
+  ]).then(function(results){
+    var stock=[],deliv=[],wast=[],duties=[],transfers=[];
+    results[0].forEach(function(doc){stock.push(doc.data());});
+    results[1].forEach(function(doc){deliv.push(doc.data());});
+    results[2].forEach(function(doc){wast.push(doc.data());});
+    results[3].forEach(function(doc){var d=doc.data();duties.push(d);});
+    results[4].forEach(function(doc){transfers.push(doc.data());});
+    render(stock,deliv,wast,duties,transfers,range);
+  }).catch(function(e){console.error('Weekly load error:',e);document.getElementById('content').innerHTML='<div class="em">Error loading: '+e.message+'</div>';});
+}
+
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
+
+function render(stock,deliv,wast,duties,transfers,range){
+  var h='';
+
+  // Stock alerts created this week
+  h+='<div class="section"><h3>Stock Alerts <span class="badge">'+stock.length+'</span></h3>';
+  if(stock.length===0){h+='<div class="em">No stock alerts this week</div>';}
+  else{
+    h+='<table class="tbl"><thead><tr><th>Day</th><th>Section</th><th>Name</th><th>Tag</th><th>Status</th><th>By</th></tr></thead><tbody>';
+    stock.sort(function(a,b){return a.date>b.date?1:-1;});
+    for(var i=0;i<stock.length;i++){var s=stock[i];
+      var tcls=s.tag==='86'?'tag-86':'tag-low';
+      var status=s.restocked?'<span class="s-tag tag-back">Restocked '+s.restockedDate+'</span>':'<span class="s-tag '+tcls+'">'+(s.tag==='86'?'86':'Low')+'</span>';
+      h+='<tr><td>'+fmtDate(s.date)+'</td><td>'+s.section+'</td><td>'+s.name+'</td><td><span class="s-tag '+tcls+'">'+(s.tag==='86'?'86':'Low')+'</span></td><td>'+status+'</td><td>'+s.author+'</td></tr>';
+    }
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+
+  // Deliveries
+  h+='<div class="section"><h3>Deliveries <span class="badge">'+deliv.length+'</span></h3>';
+  if(deliv.length===0){h+='<div class="em">No deliveries this week</div>';}
+  else{
+    h+='<table class="tbl"><thead><tr><th>Day</th><th>Section</th><th>Supplier</th><th>Name</th><th>Qty</th><th>Status</th><th>By</th></tr></thead><tbody>';
+    deliv.sort(function(a,b){return a.date>b.date?1:-1;});
+    for(var d=0;d<deliv.length;d++){var di=deliv[d];
+      var st=di.asInvoice?'<span class="s-tag tag-ok">✓ OK</span>':di.changed?'<span class="s-tag tag-chg">⚠ '+di.changeType+'</span>':'—';
+      h+='<tr><td>'+fmtDate(di.date)+'</td><td>'+di.section+'</td><td>'+di.supplier+'</td><td>'+di.name+'</td><td>'+di.qty+'</td><td>'+st+'</td><td>'+di.author+'</td></tr>';
+    }
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+
+  // Wastages
+  h+='<div class="section"><h3>Wastages <span class="badge">'+wast.length+'</span></h3>';
+  if(wast.length===0){h+='<div class="em">No wastages this week</div>';}
+  else{
+    h+='<table class="tbl"><thead><tr><th>Day</th><th>Type</th><th>Name</th><th>Qty</th><th>By</th></tr></thead><tbody>';
+    wast.sort(function(a,b){return a.date>b.date?1:-1;});
+    for(var w=0;w<wast.length;w++){var wi=wast[w];
+      h+='<tr><td>'+fmtDate(wi.date)+'</td><td>'+wi.type+'</td><td>'+wi.name+(wi.producer?' · '+wi.producer:'')+(wi.vintage?' '+wi.vintage:'')+'</td><td>'+wi.qty+' '+wi.unit+'</td><td>'+wi.author+'</td></tr>';
+    }
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+
+  // Duties this week
+  h+='<div class="section"><h3>Duties <span class="badge">'+duties.length+'</span></h3>';
+  if(duties.length===0){h+='<div class="em">No duties this week</div>';}
+  else{
+    h+='<table class="tbl"><thead><tr><th>Date</th><th>Duty</th><th>Assigned</th><th>Status</th><th>By</th></tr></thead><tbody>';
+    duties.sort(function(a,b){return a.date>b.date?1:-1;});
+    for(var dt=0;dt<duties.length;dt++){var du=duties[dt];
+      var status=du.done?'<span class="s-tag tag-back">✓ Done'+(du.doneBy?' — '+du.doneBy:'')+'</span>':'<span class="s-tag" style="background:#fff3cd;color:#856404">Pending</span>';
+      h+='<tr><td>'+fmtDate(du.date)+'</td><td>'+du.text+'</td><td>'+(du.assignee||'—')+'</td><td>'+status+'</td><td>'+du.author+'</td></tr>';
+    }
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+
+  // Transfers
+  h+='<div class="section"><h3>Transfers <span class="badge">'+transfers.length+'</span></h3>';
+  if(transfers.length===0){h+='<div class="em">No transfers this week</div>';}
+  else{
+    h+='<table class="tbl"><thead><tr><th>Date</th><th>To</th><th>Name</th><th>Qty</th><th>Unit</th><th>Received by</th><th>By</th></tr></thead><tbody>';
+    transfers.sort(function(a,b){return a.date>b.date?1:-1;});
+    for(var tr=0;tr<transfers.length;tr++){var ti=transfers[tr];
+      h+='<tr><td>'+fmtDate(ti.date)+'</td><td>'+ti.destination+'</td><td>'+ti.name+'</td><td>'+ti.qty+'</td><td>'+ti.unit+'</td><td>'+(ti.receivedBy||'—')+'</td><td>'+ti.author+'</td></tr>';
+    }
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+
+  document.getElementById('content').innerHTML=h;
+  // Store for share
+  window._weekData={stock:stock,deliv:deliv,wast:wast,duties:duties,transfers:transfers,range:range};
+}
+
+function shareWeek(){
+  var d=window._weekData;if(!d)return;
+  var txt='*Petrus — Weekly Log*\n'+d.range.label+'\n';
+  if(d.stock.length){txt+='\n_Stock Alerts ('+d.stock.length+')_\n';d.stock.forEach(function(s){txt+='• '+fmtDate(s.date)+' '+s.section+': '+s.name+' ['+s.tag+']'+(s.restocked?' ✓ Restocked':'')+'\n';});}
+  if(d.deliv.length){txt+='\n_Deliveries ('+d.deliv.length+')_\n';d.deliv.forEach(function(i){txt+='• '+fmtDate(i.date)+' '+i.name+' x'+i.qty+' ['+i.supplier+']'+(i.changed?' ⚠'+i.changeType:'')+'\n';});}
+  if(d.wast.length){txt+='\n_Wastages ('+d.wast.length+')_\n';d.wast.forEach(function(i){txt+='• '+fmtDate(i.date)+' '+i.name+' '+i.qty+' '+i.unit+'\n';});}
+  if(d.duties.length){txt+='\n_Duties Done ('+d.duties.length+')_\n';d.duties.forEach(function(i){txt+='• '+i.text+(i.doneBy?' — '+i.doneBy:'')+'\n';});}
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+</script>
+</body>
+</html>

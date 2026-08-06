@@ -21,7 +21,6 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .tab-btn{padding:10px 24px;border:2px solid var(--green);border-radius:6px;background:transparent;color:var(--green);font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
 .tab-btn:hover{background:var(--green);color:#fff}
 .tab-btn.active{background:var(--green);color:#fff}
-.tab-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:#ccc;color:#999}
 
 /* Controls */
 .controls{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:20px;padding:16px;background:#fff;border:1px solid #e8e0d4;border-radius:8px}
@@ -30,19 +29,18 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .ctrl-group select,.ctrl-group input[type="date"]{padding:8px 12px;border:1px solid #ddd;border-radius:5px;font-family:var(--sans);font-size:13px;outline:none}
 .ctrl-group select:focus,.ctrl-group input[type="date"]:focus{border-color:var(--gold)}
 .upload-area{margin-left:auto;display:flex;align-items:center;gap:8px}
-.upload-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--gold);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
-.upload-btn:hover{background:#a07d3a}
+.upload-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#f5e8e8;color:var(--green);border:none;border-radius:5px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
+.upload-btn:hover{background:#e8d4d4}
 #csvFile{display:none}
 
 /* Table */
-.stock-table-wrap{background:#fff;border:1px solid #e8e0d4;border-radius:8px;overflow-x:auto;margin-bottom:20px}
-.stock-table{width:100%;border-collapse:collapse;min-width:900px}
-.stock-table thead{background:var(--green-dark);position:sticky;top:0;z-index:2}
-.stock-table th{padding:10px 10px;color:var(--gold);font-size:9px;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;text-align:left;white-space:nowrap}
+.stock-table-wrap{background:#fff;border:1px solid #e8e0d4;border-radius:8px;overflow-x:auto;margin-bottom:20px;max-height:70vh;overflow-y:auto}
+.stock-table{width:100%;border-collapse:collapse;min-width:800px}
+.stock-table thead{background:#f5e8e8;position:sticky;top:0;z-index:2}
+.stock-table th{padding:10px 10px;color:var(--green);font-size:9px;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;text-align:left;white-space:nowrap}
 .stock-table tbody tr{border-bottom:1px solid #f0ebe3;transition:background 0.1s}
 .stock-table tbody tr:hover{background:#fdf9f3}
 .stock-table td{padding:7px 10px;font-size:11px;vertical-align:middle}
-.stock-table td.cat-cell{color:var(--gold);font-weight:600;font-size:10px}
 .stock-table td.name-cell{font-weight:500;max-width:260px}
 .stock-table td.num-cell{text-align:center;color:#666}
 .stock-table .qty-input{width:58px;padding:6px 6px;border:1px solid #ddd;border-radius:4px;font-size:12px;font-family:var(--sans);text-align:center;outline:none;background:#fffef8}
@@ -52,14 +50,48 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .cat-row td{background:#f9f5ef;font-size:12px;font-weight:600;color:var(--green);padding:10px 12px}
 
 /* Total column */
-.total-header{background:var(--gold) !important;color:#fff !important}
+.total-header{background:var(--green) !important;color:#fff !important}
 .total-cell{text-align:center;font-weight:700;color:var(--green);font-size:12px;background:#f9f5ef}
 
+/* Lock button */
+.loc-header-name{margin-bottom:6px}
+.loc-header-lock{margin-bottom:4px}
+.lock-btn{display:inline-block;cursor:pointer;font-size:8px;padding:3px 7px;border-radius:4px;border:1px solid var(--green);color:var(--green);background:transparent;font-family:var(--sans);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;transition:all 0.2s;white-space:nowrap}
+.lock-btn:hover{background:var(--green);color:#fff}
+.lock-btn.is-locked{background:var(--green-dark);color:#fff;border-color:var(--green-dark)}
+.lock-info{font-size:8px;font-weight:400;letter-spacing:0;text-transform:none;color:#999;margin-top:4px}
+.qty-input.locked{background:#f0f0f0;color:#aaa;border-color:#e0e0e0;cursor:not-allowed}
+
 /* Actions */
-.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
 .action-btn{padding:12px 28px;border:none;border-radius:6px;font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
-.btn-export{background:#2c6e49;color:#fff}
-.btn-export:hover{background:#1b4d34}
+.btn-save{background:var(--green);color:#fff}
+.btn-save:hover{background:var(--green-dark)}
+.btn-update{background:var(--green);color:#fff}
+.btn-update:hover{background:var(--green-dark)}
+.btn-export{background:var(--green);color:#fff}
+.btn-export:hover{background:var(--green-dark)}
+.btn-print{background:var(--green);color:#fff}
+.btn-print:hover{background:var(--green-dark)}
+.btn-delete{background:#fff;color:#c0392b;border:1px solid #c0392b}
+.btn-delete:hover{background:#c0392b;color:#fff}
+
+/* Print styles */
+@media print{
+  body{background:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top-bar,.tabs,.controls,.upload-area,.actions,.status-msg,.info-bar,.search-bar,.saved-doc{display:none !important}
+  .page{max-width:100%;padding:0;margin:0}
+  .page-title{font-size:20px;margin-bottom:10px}
+  .stock-table-wrap{border:none;overflow:visible;max-height:none}
+  .stock-table{min-width:auto}
+  .stock-table thead{background:#f5e8e8 !important}
+  .stock-table th{font-size:8px;padding:6px 5px}
+  .stock-table td{font-size:10px;padding:5px 5px}
+  .stock-table tbody tr{border-bottom:1px solid #ccc}
+  .stock-table .qty-input{border:1px solid #ccc;width:45px;padding:3px;font-size:10px}
+  .cat-row td{font-size:10px;padding:6px 8px}
+  .total-cell{font-size:10px}
+}
 
 /* Empty */
 .empty-state{text-align:center;padding:60px 20px;color:#aaa}
@@ -73,6 +105,15 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 /* Info bar */
 .info-bar{font-size:11px;color:#888;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap}
 .info-bar span{background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e8e0d4}
+
+/* Search */
+.search-bar{margin-bottom:16px}
+.search-bar input{width:100%;padding:10px 14px;border:1px solid #e8e0d4;border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;background:#fff}
+.search-bar input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,150,80,0.12)}
+
+/* Saved document indicator */
+.saved-doc{background:#fff;border:1px solid #e8e0d4;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#555;display:flex;align-items:center;gap:8px}
+.saved-doc-icon{color:#27ae60;font-size:10px}
 
 @media(max-width:700px){
   .controls{flex-direction:column;align-items:stretch}
@@ -93,9 +134,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('bar')">Bar</button>
-    <button class="tab-btn disabled" onclick="return false">Wine</button>
-    <button class="tab-btn disabled" onclick="return false">Glassware</button>
+    <button class="tab-btn active" id="tabWine" onclick="switchTab('wine')">Wine</button>
+    <button class="tab-btn" id="tabBar" onclick="switchTab('bar')">Bar</button>
   </div>
 
   <!-- Controls -->
@@ -123,6 +163,17 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
     <span id="infoMeta"></span>
   </div>
 
+  <!-- Saved document indicator -->
+  <div class="saved-doc" id="savedDoc" style="display:none">
+    <span class="saved-doc-icon">●</span>
+    <span id="savedDocInfo"></span>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar" id="searchBar" style="display:none">
+    <input type="text" id="searchInput" placeholder="Search by name, category..." oninput="filterTable()">
+  </div>
+
   <!-- Table -->
   <div id="tableArea">
     <div class="empty-state">
@@ -133,7 +184,11 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 
   <!-- Actions -->
   <div class="actions" id="actionsArea" style="display:none">
-    <button class="action-btn btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="action-btn btn-save" onclick="saveStocktake()">Save</button>
+    <button class="action-btn btn-update" onclick="updateStocktake()">Update</button>
+    <button class="action-btn btn-export" onclick="exportCSV()">Export CSV</button>
+    <button class="action-btn btn-print" onclick="window.print()">Print / PDF</button>
+    <button class="action-btn btn-delete" onclick="deleteStocktake()">Delete</button>
   </div>
 </div>
 
@@ -144,25 +199,35 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
 <script>
+// ── Configuration per section ──
+var SECTION_LOCATIONS = {
+  wine: ['Cellar','Downstairs','Premium Fridge','Bar Fridge','Wine Fridge'],
+  bar: ['Shelf under till','Shelfs Bar','Softs Fridge','Wine Fridge','Cellar']
+};
+
 // ── State ──
 var currentUser = null;
-var currentTab = 'bar';
-var metaLine = '';      // First line of CSV (do not delete or edit)
-var headerLine = '';    // Second line (column headers)
-var headers = [];       // Parsed header names
-var rows = [];          // Array of arrays (each row = array of cell values)
-var closeFC_idx = -1;   // Index of [E]Close FC column
-var closeSC_idx = -1;   // Index of [E]Close SC column
-var cat_idx = -1;       // Index of Tertiary Category
-var name_idx = -1;      // Index of Brand & Description
-var hiddenCols = [];    // Columns hidden from view but kept in data
-
-// Location columns for counting
-var LOCATIONS = ['Cellar','Downstairs','Premium Fridge','Bar Fridge','Wine Fridge'];
-var locationData = [];  // Array of objects: [{cellar:0, downstairs:0, ...}, ...]
+var currentTab = new URLSearchParams(window.location.search).get('tab') || 'wine';
+var metaLine = '';
+var headerLine = '';
+var headers = [];
+var rows = [];
+var closeFC_idx = -1;
+var closeSC_idx = -1;
+var cat_idx = -1;
+var name_idx = -1;
+var hiddenCols = [];
+var locationData = [];
+var lockedCols = {};  // {locationName: {locked: true, by: 'Fiorella'} }
+var docExists = false; // Whether a saved document exists in Firestore
+var docInfo = {};      // {createdBy, date, updatedBy}
 
 // Columns to hide visually (still exported in CSV)
 var HIDDEN_HEADERS = ['pid','[e]stock type','[e]bin number','[e]pos','tertiary category','[e]close fc','[e]close sc'];
+
+function getLocations(){
+  return SECTION_LOCATIONS[currentTab] || [];
+}
 
 function buildHiddenCols(){
   hiddenCols = [];
@@ -183,6 +248,9 @@ auth.onAuthStateChanged(function(user){
   if(!user){window.location.href='index.html';return;}
   currentUser = user;
   logAccess(user,'page_view','somm-stocktake.html');
+  // Set active tab UI on load
+  document.getElementById('tabWine').classList.toggle('active', currentTab === 'wine');
+  document.getElementById('tabBar').classList.toggle('active', currentTab === 'bar');
   initControls();
   loadStocktake();
 });
@@ -208,6 +276,23 @@ function getSelectedMonth(){
 }
 function getSelectedDate(){
   return document.getElementById('dateInput').value;
+}
+
+// ── Tab Switching ──
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tabWine').classList.toggle('active', tab === 'wine');
+  document.getElementById('tabBar').classList.toggle('active', tab === 'bar');
+  // Update URL so refresh remembers the tab
+  var url = new URL(window.location);
+  url.searchParams.set('tab', tab);
+  window.history.replaceState({}, '', url);
+  // Reset and load data for this tab
+  rows = []; headers = []; metaLine = ''; headerLine = ''; locationData = []; lockedCols = {};
+  docExists = false; docInfo = {};
+  updateDocIndicator();
+  renderTable();
+  loadStocktake();
 }
 
 // ── CSV Parsing ──
@@ -244,10 +329,7 @@ function parseCSVLine(line){
 function parseFullCSV(text){
   var lines = text.split(/\r?\n/);
 
-  // Line 1: metadata
   metaLine = lines[0] || '';
-
-  // Line 2: headers
   headerLine = lines[1] || '';
   headers = parseCSVLine(headerLine);
 
@@ -262,12 +344,10 @@ function parseFullCSV(text){
   }
   buildHiddenCols();
 
-  // Parse data rows (line 3 onwards)
   rows = [];
   for(var i=2; i<lines.length; i++){
     var line = lines[i].trim();
     if(!line) continue;
-    // Remove trailing comma if present
     if(line.endsWith(',')) line = line.slice(0,-1);
     var cells = parseCSVLine(line);
     rows.push(cells);
@@ -284,71 +364,92 @@ function parseFullCSV(text){
     });
   }
 
-  // Initialize location data for each row
   initLocationData();
-
   renderTable();
   showStatus(rows.length + ' items loaded from CSV');
-  // Auto-save the uploaded CSV so others can access it
-  autoSave();
 }
 
 function initLocationData(){
+  var locs = getLocations();
   locationData = [];
   for(var i=0; i<rows.length; i++){
     var loc = {};
-    for(var l=0; l<LOCATIONS.length; l++){
-      loc[LOCATIONS[l]] = '';
+    for(var l=0; l<locs.length; l++){
+      loc[locs[l]] = '';
     }
     locationData.push(loc);
   }
 }
 
 function calcTotal(rowIdx){
+  var locs = getLocations();
   var total = 0;
-  for(var l=0; l<LOCATIONS.length; l++){
-    var v = parseFloat(locationData[rowIdx][LOCATIONS[l]]);
+  for(var l=0; l<locs.length; l++){
+    var v = parseFloat(locationData[rowIdx][locs[l]]);
     if(!isNaN(v)) total += v;
   }
   return total;
 }
 
 // ── Render ──
+var searchTerm = '';
+
+function filterTable(){
+  searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+  renderTable();
+}
+
 function renderTable(){
   var area = document.getElementById('tableArea');
   if(rows.length === 0){
     area.innerHTML = '<div class="empty-state"><h3>No items yet</h3><p>Upload your Procure Wizard CSV to get started.</p></div>';
     document.getElementById('actionsArea').style.display = 'none';
     document.getElementById('infoBar').style.display = 'none';
+    document.getElementById('searchBar').style.display = 'none';
     return;
   }
+
+  var locs = getLocations();
+
+  // Show search bar
+  document.getElementById('searchBar').style.display = 'block';
 
   // Info bar
   document.getElementById('infoBar').style.display = 'flex';
   document.getElementById('infoCount').textContent = rows.length + ' products';
-  document.getElementById('infoMeta').textContent = metaLine.replace('<-- Do not delete or edit','').replace(/,/g,' ').trim();
+  document.getElementById('infoMeta').textContent = currentTab.toUpperCase() + ' — ' + (metaLine.replace('<-- Do not delete or edit','').replace(/,/g,' ').trim());
 
   var html = '<div class="stock-table-wrap"><table class="stock-table"><thead><tr>';
-  // Render CSV headers (skip hidden)
+  // CSV visible headers
   var visibleCount = 0;
   for(var h=0; h<headers.length; h++){
     if(isHidden(h)) continue;
     html += '<th>' + escHtml(headers[h].trim()) + '</th>';
     visibleCount++;
   }
-  // Add location columns + total
-  for(var l=0; l<LOCATIONS.length; l++){
-    html += '<th>' + escHtml(LOCATIONS[l]) + '</th>';
+  // Location headers with lock buttons
+  for(var l=0; l<locs.length; l++){
+    var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
+    var lockClass = isLocked ? ' is-locked' : '';
+    var lockLabel = isLocked ? 'Locked' : 'Lock';
+    var lockInfo = isLocked ? '<div class="lock-info"><em>by</em> ' + escHtml(lockedCols[locs[l]].by || '') + '</div>' : '';
+    html += '<th><div class="loc-header-name">' + escHtml(locs[l]) + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
   }
   html += '<th class="total-header">Total</th>';
-  var totalCols = visibleCount + LOCATIONS.length + 1;
+  var totalCols = visibleCount + locs.length + 1;
   html += '</tr></thead><tbody>';
 
   var lastCat = '';
   for(var i=0; i<rows.length; i++){
     var row = rows[i];
 
-    // Category separator — shown exactly as written in CSV
+    // Filter by search term
+    if(searchTerm){
+      var matchText = (row[name_idx]||'') + ' ' + (row[cat_idx]||'');
+      if(matchText.toLowerCase().indexOf(searchTerm) === -1) continue;
+    }
+
+    // Category separator
     if(cat_idx > -1){
       var thisCat = (row[cat_idx]||'').trim();
       if(thisCat && thisCat !== lastCat){
@@ -358,7 +459,6 @@ function renderTable(){
     }
 
     html += '<tr>';
-    // CSV visible columns
     for(var c=0; c<headers.length; c++){
       if(isHidden(c)) continue;
       var val = (row[c]||'').trim();
@@ -369,11 +469,14 @@ function renderTable(){
       }
     }
     // Location inputs
-    for(var l=0; l<LOCATIONS.length; l++){
-      var locVal = locationData[i] ? (locationData[i][LOCATIONS[l]] || '') : '';
-      html += '<td><input class="qty-input" type="number" min="0" step="0.5" value="' + escHtml(String(locVal)) + '" data-row="' + i + '" data-loc="' + LOCATIONS[l] + '" onchange="setLocValue(this)"></td>';
+    for(var l=0; l<locs.length; l++){
+      var locVal = locationData[i] ? (locationData[i][locs[l]] || '') : '';
+      var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
+      var disabledAttr = isLocked ? ' disabled' : '';
+      var lockedClass = isLocked ? ' locked' : '';
+      html += '<td><input class="qty-input' + lockedClass + '" type="number" min="0" step="0.5" value="' + escHtml(String(locVal)) + '" data-row="' + i + '" data-loc="' + locs[l] + '" onchange="setLocValue(this)"' + disabledAttr + '></td>';
     }
-    // Total (auto-sum → writes to [E]Close SC)
+    // Total
     var total = calcTotal(i);
     var totalDisplay = total > 0 ? total : '';
     html += '<td class="total-cell">' + totalDisplay + '</td>';
@@ -389,44 +492,31 @@ function setLocValue(el){
   var r = parseInt(el.getAttribute('data-row'));
   var loc = el.getAttribute('data-loc');
   locationData[r][loc] = el.value;
-  // Update [E]Close SC with the total
+  // Update [E]Close SC with total
   var total = calcTotal(r);
   if(closeSC_idx > -1){
     rows[r][closeSC_idx] = total > 0 ? String(total) : '';
   }
-  // Update total cell without full re-render (keep focus)
+  // Update total cell without full re-render
   var tr = el.closest('tr');
   var totalCell = tr.querySelector('.total-cell');
   if(totalCell) totalCell.textContent = total > 0 ? total : '';
-  // Auto-save after short delay
-  autoSave();
 }
 
-var saveTimer = null;
-function autoSave(){
-  if(saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(function(){
-    if(rows.length === 0) return;
-    var author = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
-    var payload = {
-      section: 'bar',
-      month: getSelectedMonth(),
-      date: getSelectedDate(),
-      metaLine: metaLine,
-      headerLine: headerLine,
-      headers: headers,
-      rows: rows,
-      locationData: locationData,
-      updatedBy: author,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    db.collection('somm_stocktake').doc(getDocId()).set(payload, {merge:true}).then(function(){
-      showStatus('Auto-saved ✓');
-    }).catch(function(e){
-      console.error(e);
-      showStatus('Error saving');
-    });
-  }, 1200);
+function toggleLock(locName){
+  var author = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
+  if(lockedCols[locName] && lockedCols[locName].locked){
+    lockedCols[locName] = {locked: false, by: ''};
+  } else {
+    lockedCols[locName] = {locked: true, by: author};
+  }
+  // Save lock state to Firestore (only if doc exists)
+  if(docExists){
+    db.collection('somm_stocktake').doc(getDocId()).set({lockedCols: lockedCols, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}).then(function(){
+      showStatus(locName + (lockedCols[locName].locked ? ' locked' : ' unlocked'));
+    }).catch(function(e){ console.error(e); });
+  }
+  renderTable();
 }
 
 function escHtml(str){
@@ -434,7 +524,7 @@ function escHtml(str){
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Export CSV (same format as Procure Wizard) ──
+// ── Export CSV (same format as Procure Wizard — only total in [E]Close SC) ──
 function exportCSV(){
   if(rows.length === 0){ showStatus('Nothing to export'); return; }
 
@@ -444,7 +534,6 @@ function exportCSV(){
     var line = '';
     for(var c=0; c<rows[i].length; c++){
       var val = rows[i][c] || '';
-      // Wrap in quotes if it contains comma or quotes
       if(val.indexOf(',') > -1 || val.indexOf('"') > -1){
         val = '"' + val.replace(/"/g,'""') + '"';
       } else {
@@ -453,7 +542,7 @@ function exportCSV(){
       line += val;
       if(c < rows[i].length - 1) line += ',';
     }
-    line += ','; // trailing comma as in original
+    line += ',';
     csvContent += line + '\r\n';
   }
 
@@ -461,7 +550,7 @@ function exportCSV(){
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'Petrus-Stocktake-' + getSelectedMonth() + '.csv';
+  a.download = 'Petrus-Stocktake-' + currentTab + '-' + getSelectedMonth() + '.csv';
   a.click();
   URL.revokeObjectURL(url);
   showStatus('CSV exported ✓');
@@ -469,7 +558,63 @@ function exportCSV(){
 
 // ── Firestore Save / Load ──
 function getDocId(){
-  return 'stocktake_bar_' + getSelectedMonth();
+  return 'stocktake_' + currentTab + '_' + getSelectedMonth();
+}
+
+function saveStocktake(){
+  if(rows.length === 0){ showStatus('Nothing to save'); return; }
+  var author = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
+  var id = getDocId();
+  // Convert rows (array of arrays) to array of strings for Firestore
+  var rowStrings = rows.map(function(r){ return r.join('|||'); });
+  var payload = {
+    section: currentTab,
+    month: getSelectedMonth(),
+    date: getSelectedDate(),
+    metaLine: metaLine,
+    headerLine: headerLine,
+    headers: headers,
+    rowStrings: rowStrings,
+    locationData: locationData,
+    lockedCols: lockedCols,
+    createdBy: author,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection('somm_stocktake').doc(id).set(payload).then(function(){
+    docExists = true;
+    docInfo = {createdBy: author, date: getSelectedDate(), updatedBy: ''};
+    updateDocIndicator();
+    showStatus('Stocktake saved ✓');
+  }).catch(function(e){
+    console.error('Save error:', e);
+    showStatus('Error: ' + e.message);
+  });
+}
+
+function updateStocktake(){
+  if(rows.length === 0){ showStatus('Nothing to update'); return; }
+  var author = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
+  var rowStrings = rows.map(function(r){ return r.join('|||'); });
+  var payload = {
+    rowStrings: rowStrings,
+    locationData: locationData,
+    lockedCols: lockedCols,
+    date: getSelectedDate(),
+    updatedBy: author,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection('somm_stocktake').doc(getDocId()).set(payload, {merge:true}).then(function(){
+    docInfo.updatedBy = author;
+    docInfo.date = getSelectedDate();
+    updateDocIndicator();
+    showStatus('Stocktake updated ✓');
+  }).catch(function(e){
+    console.error(e);
+    showStatus('Error updating: ' + e.message);
+  });
 }
 
 function loadStocktake(){
@@ -480,7 +625,16 @@ function loadStocktake(){
       metaLine = data.metaLine || '';
       headerLine = data.headerLine || '';
       headers = data.headers || [];
-      rows = data.rows || [];
+      // If headers is empty but headerLine exists, re-parse it
+      if(headers.length === 0 && headerLine){
+        headers = parseCSVLine(headerLine);
+      }
+      // Convert rowStrings back to arrays
+      if(data.rowStrings && data.rowStrings.length > 0){
+        rows = data.rowStrings.map(function(s){ return s.split('|||'); });
+      } else {
+        rows = [];
+      }
       // Re-detect column indices
       closeFC_idx = -1; closeSC_idx = -1; cat_idx = -1; name_idx = -1;
       for(var h=0; h<headers.length; h++){
@@ -498,19 +652,69 @@ function loadStocktake(){
       } else {
         initLocationData();
       }
+      // Load lock states
+      lockedCols = data.lockedCols || {};
+      // Mark document as existing
+      docExists = true;
+      docInfo = {createdBy: data.createdBy || '', date: data.date || '', updatedBy: data.updatedBy || ''};
+      updateDocIndicator();
       renderTable();
-      showStatus('Loaded ' + rows.length + ' items');
+      if(rows.length > 0) showStatus('Loaded ' + rows.length + ' items');
     } else {
       rows = []; headers = []; metaLine = ''; headerLine = '';
+      locationData = [];
+      lockedCols = {};
+      docExists = false;
+      docInfo = {};
+      updateDocIndicator();
       renderTable();
     }
   }).catch(function(e){ console.error(e); });
 }
 
-// ── Tab ──
-function switchTab(tab){
-  if(tab !== 'bar') return;
-  currentTab = tab;
+function updateDocIndicator(){
+  var el = document.getElementById('savedDoc');
+  var infoEl = document.getElementById('savedDocInfo');
+  if(docExists && rows.length > 0){
+    el.style.display = 'flex';
+    var text = currentTab.toUpperCase() + ' — ' + getSelectedMonth();
+    if(docInfo.date) text += ' — saved ' + docInfo.date;
+    if(docInfo.updatedBy) text += ' — last update by ' + docInfo.updatedBy;
+    else if(docInfo.createdBy) text += ' — created by ' + docInfo.createdBy;
+    infoEl.textContent = text;
+  } else {
+    el.style.display = 'none';
+  }
+  updateActionButtons();
+}
+
+function updateActionButtons(){
+  var saveBtn = document.querySelector('.btn-save');
+  var updateBtn = document.querySelector('.btn-update');
+  if(saveBtn && updateBtn){
+    if(docExists){
+      saveBtn.style.display = 'none';
+      updateBtn.style.display = 'inline-block';
+    } else {
+      saveBtn.style.display = 'inline-block';
+      updateBtn.style.display = 'none';
+    }
+  }
+}
+
+function deleteStocktake(){
+  if(!confirm('Delete this stocktake? This cannot be undone.')) return;
+  db.collection('somm_stocktake').doc(getDocId()).delete().then(function(){
+    rows = []; headers = []; metaLine = ''; headerLine = '';
+    locationData = []; lockedCols = {};
+    docExists = false; docInfo = {};
+    updateDocIndicator();
+    renderTable();
+    showStatus('Stocktake deleted');
+  }).catch(function(e){
+    console.error(e);
+    showStatus('Error deleting');
+  });
 }
 
 // ── Status ──

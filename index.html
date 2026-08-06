@@ -280,6 +280,20 @@ body {
   <div id="loginPrompt" style="display:none;">
     <p style="color:var(--gold-light);font-size:13px;margin-bottom:24px;opacity:0.8;">Sign in to access the site</p>
     <button class="nav-btn" onclick="openModal()">Team Login</button>
+    <div style="display:flex;gap:14px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+      <div onclick="quickLogin('fiorella')" style="cursor:pointer;padding:20px 24px;background:#f8e8e8;border:1px solid rgba(92,26,26,0.15);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">F</div>
+        <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Fiorella</div>
+      </div>
+      <div onclick="quickLogin('christian')" style="cursor:pointer;padding:20px 24px;background:#f8e8e8;border:1px solid rgba(92,26,26,0.15);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">C</div>
+        <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Christian</div>
+      </div>
+      <div onclick="quickLogin('milena')" style="cursor:pointer;padding:20px 24px;background:#f8e8e8;border:1px solid rgba(92,26,26,0.15);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">M</div>
+        <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Milena</div>
+      </div>
+    </div>
   </div>
 
   <div class="footer">
@@ -332,16 +346,27 @@ auth.onAuthStateChanged((user) => {
 });
 
 // ── Modal Functions ───────────────────────────────────────────────
+function quickLogin(name){
+  document.getElementById('loginModal').classList.add('active');
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('loginName').value = name;
+  document.getElementById('loginName').style.display = 'none';
+  document.getElementById('loginCode').value = '';
+  setTimeout(() => document.getElementById('loginCode').focus(), 100);
+}
+
 function openModal() {
   document.getElementById('loginModal').classList.add('active');
   document.getElementById('loginError').textContent = '';
   document.getElementById('loginName').value = '';
+  document.getElementById('loginName').style.display = 'block';
   document.getElementById('loginCode').value = '';
   setTimeout(() => document.getElementById('loginName').focus(), 100);
 }
 
 function closeModal() {
   document.getElementById('loginModal').classList.remove('active');
+  document.getElementById('loginName').style.display = 'block';
 }
 
 async function handleLogin() {

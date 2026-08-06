@@ -14,18 +14,43 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .top-bar a:hover{color:#fff}
 .top-bar h2{font-family:var(--serif);color:#fff;font-size:18px;margin:0}
 .page{max-width:1200px;margin:0 auto;padding:24px 12px 60px}
-.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.header-row h1{font-family:var(--serif);font-size:24px;color:var(--green)}
+.header-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.header-row h1{font-family:var(--serif);font-size:22px;color:var(--green);margin-right:auto}
 .header-row .meta{font-size:12px;color:#888}
-.btn-circle{width:34px;height:34px;border-radius:50%;background:#25D366;border:none;cursor:pointer}
+.shift-toggle{display:flex;gap:0;border:1px solid var(--gold);border-radius:5px;overflow:hidden}
+.shift-btn{padding:5px 14px;font-size:10px;font-family:var(--sans);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border:none;cursor:pointer;background:#fff;color:var(--gold);transition:all 0.15s}
+.shift-btn.active{background:var(--gold);color:#fff}
+.shift-btn:hover:not(.active){background:#fdf5e6}
+.btn-circle{width:30px;height:30px;border-radius:50%;background:#25D366;border:none;cursor:pointer;font-size:12px}
 .btn-circle:hover{background:#1da851}
+</style>
+<style>
+.pending-section{margin-bottom:20px}
+.pending-header{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--green);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.pending-badge{background:var(--green);color:#fff;font-size:9px;padding:2px 7px;border-radius:10px}
+.pending-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.pending-item{background:#fff;border:1px solid #f0e8dc;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:11px}
+.pending-item .p-col{font-size:8px;text-transform:uppercase;color:var(--gold);letter-spacing:0.5px;min-width:50px}
+.pending-item .p-name{flex:1;font-size:12px}
+.pending-item .p-tag{font-size:8px;padding:2px 6px;border-radius:8px;text-transform:uppercase;font-weight:600}
+.pending-item .p-author{font-size:8px;color:#999}
+.pending-item .p-date{font-size:8px;color:#ccc}
+.pending-done-btn{font-size:9px;cursor:pointer;padding:3px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#999;white-space:nowrap}
+.pending-done-btn:hover{border-color:var(--gold);color:var(--gold)}
 </style>
 <style>
 .columns{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
 @media(max-width:900px){.columns{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:550px){.columns{grid-template-columns:1fr 1fr}}
-.col{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:12px;min-height:150px}
-.col-title{font-family:var(--sans);font-size:10px;color:var(--gold);margin-bottom:8px;text-align:center;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.col{background:#fff;border:1px solid #e8e0d4;border-radius:8px;overflow:hidden}
+.col-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none;border-bottom:1px solid #f5f0ea}
+.col-header:hover{background:#fdf9f2}
+.col-title{font-family:var(--sans);font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.col-count{font-size:9px;color:#ccc;background:#f5f0ea;padding:1px 6px;border-radius:8px}
+.col-arrow{font-size:10px;color:#ccc;transition:transform 0.2s}
+.col-arrow.open{transform:rotate(180deg)}
+.col-body{padding:0 12px 12px;display:none}
+.col-body.open{display:block}
 .item{display:flex;align-items:center;gap:5px;padding:5px 0;border-bottom:1px solid #f5f0ea;font-size:11px;flex-wrap:wrap}
 .item:last-child{border-bottom:none}
 .item-name{flex:1;font-size:12px}
@@ -42,6 +67,9 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .item-check{font-size:9px;cursor:pointer;padding:2px 5px;border-radius:3px;border:1px solid #ddd;background:#fff;color:#aaa;transition:all 0.15s}
 .item-check.done{background:var(--green);color:#fff;border-color:var(--green)}
 .item-author{font-size:8px;color:var(--gold)}
+.item-done-btn{font-size:9px;cursor:pointer;padding:2px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#999;transition:all 0.15s;white-space:nowrap}
+.item-done-btn:hover{border-color:var(--gold);color:var(--gold)}
+.item-done-btn.completed{background:#d4edda;color:#155724;border-color:#c3e6cb}
 .item-remove{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;padding:0 3px}
 .item-remove:hover{color:#c0392b}
 .ho-check{width:14px;height:14px;accent-color:var(--green);cursor:pointer}
@@ -74,10 +102,15 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 </div>
 <div class="page">
   <div class="header-row">
-    <h1 id="shiftTitle">Lunch</h1>
+    <h1 id="shiftTitle">Daily Log</h1>
     <span class="meta" id="dateMeta"></span>
-    <div class="btn-circle" onclick="shareWhatsApp()" title="Share on WhatsApp"></div>
+    <div class="shift-toggle">
+      <button class="shift-btn" id="btnAM" onclick="switchShift('lunch')">AM</button>
+      <button class="shift-btn" id="btnPM" onclick="switchShift('dinner')">PM</button>
+    </div>
+    <div class="btn-circle" onclick="shareWhatsApp()" title="Share on WhatsApp">📤</div>
   </div>
+  <div class="pending-section" id="pendingSection"></div>
   <div class="columns" id="columnsArea"></div>
   <div class="notes-box">
     <label>Notes</label>
@@ -91,7 +124,6 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
 <script>
-// Get params from URL
 var params = new URLSearchParams(window.location.search);
 var SHIFT = params.get('shift') || 'lunch';
 var DATE = params.get('date') || new Date().toISOString().slice(0,10);
@@ -107,13 +139,38 @@ var DELIV_TAG_CLASSES = {closed:'tag-closed',pw:'tag-pw',horizon:'tag-horizon',m
 
 var currentUser = null;
 var dayData = null;
+var prevDayData = null;
 var selectedTags = {};
+var openCols = {};
 
-document.getElementById('shiftTitle').textContent = SHIFT.charAt(0).toUpperCase() + SHIFT.slice(1);
+// Date display
 var d = new Date(DATE + 'T12:00:00');
 document.getElementById('dateMeta').textContent = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
 
-COLS.forEach(function(c){ selectedTags[c] = ''; selectedTags[c+'_multi'] = []; });
+// Shift toggle UI
+function updateShiftUI(){
+  document.getElementById('btnAM').classList.toggle('active', SHIFT==='lunch');
+  document.getElementById('btnPM').classList.toggle('active', SHIFT==='dinner');
+}
+updateShiftUI();
+
+function switchShift(s){
+  SHIFT = s;
+  updateShiftUI();
+  // Update URL without reload
+  var url = new URL(window.location);
+  url.searchParams.set('shift', s);
+  window.history.replaceState(null, '', url);
+  // Re-init data keys
+  COLS.forEach(function(c){
+    var key = SHIFT + '_' + c;
+    if(!dayData[key]) dayData[key] = [];
+  });
+  render();
+  renderPending();
+}
+
+COLS.forEach(function(c){ selectedTags[c] = ''; selectedTags[c+'_multi'] = []; openCols[c] = false; });
 
 auth.onAuthStateChanged(function(user){
   if(!user){window.location.href='index.html';return;}
@@ -121,8 +178,10 @@ auth.onAuthStateChanged(function(user){
   logAccess(user,'page_view','somm-shift.html');
   loadDay();
 });
-
+</script>
+<script>
 function loadDay(){
+  // Load today
   db.collection('somm_orders').doc(DATE).get().then(function(doc){
     if(doc.exists){
       dayData = doc.data();
@@ -136,17 +195,130 @@ function loadDay(){
     if(!dayData.notes) dayData.notes = '';
     document.getElementById('notesField').value = dayData.notes;
     render();
+    // Load previous day for pending items
+    loadPrevDay();
   }).catch(function(e){ console.error(e); });
+}
+
+function loadPrevDay(){
+  var prev = new Date(d);
+  prev.setDate(prev.getDate() - 1);
+  var prevDate = prev.toISOString().slice(0,10);
+  db.collection('somm_orders').doc(prevDate).get().then(function(doc){
+    if(doc.exists){
+      prevDayData = doc.data();
+      prevDayData._date = prevDate;
+    } else {
+      prevDayData = null;
+    }
+    renderPending();
+  }).catch(function(e){ console.error(e); prevDayData = null; renderPending(); });
+}
+
+function getPendingItems(){
+  var pending = [];
+  // From previous day - items without doneBy in deliveries/handover
+  if(prevDayData){
+    ['lunch','dinner'].forEach(function(shift){
+      ['deliveries','handover'].forEach(function(col){
+        var key = shift + '_' + col;
+        var items = prevDayData[key] || [];
+        items.forEach(function(item, idx){
+          if(!item.doneBy && !item.done){
+            pending.push({name:item.name, col:col, author:item.author||'', tag:item.tags||item.tag||'', date:prevDayData._date, shift:shift, source:'prev', fieldKey:key, idx:idx});
+          }
+        });
+      });
+    });
+  }
+  // From today - items without doneBy in deliveries/handover
+  ['lunch','dinner'].forEach(function(shift){
+    ['deliveries','handover'].forEach(function(col){
+      var key = shift + '_' + col;
+      var items = dayData[key] || [];
+      items.forEach(function(item, idx){
+        if(!item.doneBy && !item.done){
+          pending.push({name:item.name, col:col, author:item.author||'', tag:item.tags||item.tag||'', date:DATE, shift:shift, source:'today', fieldKey:key, idx:idx});
+        }
+      });
+    });
+  });
+  return pending;
 }
 </script>
 <script>
+function renderPending(){
+  var pending = getPendingItems();
+  var sec = document.getElementById('pendingSection');
+  if(pending.length === 0){
+    sec.innerHTML = '';
+    return;
+  }
+  var h = '<div class="pending-header">Pending <span class="pending-badge">' + pending.length + '</span></div>';
+  h += '<div class="pending-list">';
+  for(var i=0;i<pending.length;i++){
+    var p = pending[i];
+    var dateLabel = new Date(p.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    h += '<div class="pending-item">';
+    h += '<span class="p-col">' + p.col + '</span>';
+    h += '<span class="p-name">' + p.name + '</span>';
+    h += '<span class="p-author">' + p.author + '</span>';
+    h += '<span class="p-date">' + dateLabel + ' ' + (p.shift==='lunch'?'AM':'PM') + '</span>';
+    h += '<span class="pending-done-btn" onclick="markPendingDone(\''+p.source+'\',\''+p.fieldKey+'\','+p.idx+')">✓</span>';
+    h += '</div>';
+  }
+  h += '</div>';
+  sec.innerHTML = h;
+}
+
+function markPendingDone(source, fieldKey, idx){
+  var who = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
+  if(source==='today'){
+    dayData[fieldKey][idx].doneBy = who;
+    dayData[fieldKey][idx].doneAt = new Date().toISOString();
+    render();
+    renderPending();
+    autoSave();
+  } else if(source==='prev' && prevDayData){
+    prevDayData[fieldKey][idx].doneBy = who;
+    prevDayData[fieldKey][idx].doneAt = new Date().toISOString();
+    // Save prev day
+    var prevDate = prevDayData._date;
+    var payload = {};
+    payload[fieldKey] = prevDayData[fieldKey];
+    payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    db.collection('somm_orders').doc(prevDate).set(payload,{merge:true}).then(function(){
+      showStatus('Saved');
+      renderPending();
+    });
+  }
+}
+</script>
+<script>
+function toggleCol(col){
+  openCols[col] = !openCols[col];
+  render();
+}
+
 function render(){
   var area = document.getElementById('columnsArea');
   var html = '';
   COLS.forEach(function(col){
     var key = SHIFT + '_' + col;
     var items = dayData[key] || [];
-    html += '<div class="col"><div class="col-title">' + COL_LABELS[col] + '</div>';
+    var isOpen = openCols[col];
+    var count = items.length;
+
+    html += '<div class="col">';
+    // Collapsible header
+    html += '<div class="col-header" onclick="toggleCol(\'' + col + '\')">';
+    html += '<span class="col-title">' + COL_LABELS[col] + '</span>';
+    if(count > 0) html += '<span class="col-count">' + count + '</span>';
+    html += '<span class="col-arrow ' + (isOpen?'open':'') + '">▼</span>';
+    html += '</div>';
+
+    // Body (hidden unless open)
+    html += '<div class="col-body ' + (isOpen?'open':'') + '">';
 
     if(items.length === 0){
       html += '<div class="empty-col">—</div>';
@@ -155,7 +327,6 @@ function render(){
         var item = items[i];
         html += '<div class="item"><span class="item-name">' + item.name + '</span>';
         if(item.qty) html += '<span class="item-qty">' + item.qty + ' ' + (item.unit||'') + '</span>';
-        // Tags for wine/bar/supplies
         if(col==='wine'||col==='bar'||col==='supplies'){
           if(item.tag) html += '<span class="item-tag ' + (STOCK_TAG_CLASSES[item.tag]||'') + '">' + (STOCK_TAG_LABELS[item.tag]||'') + '</span>';
           if(item.tag==='86'||item.tag==='last-bottle'){
@@ -164,7 +335,6 @@ function render(){
             html += '<span class="item-check ' + dc + '" onclick="toggleWL(\'' + key + '\',' + i + ')">' + lb + '</span>';
           }
         }
-        // Tags for deliveries (multi)
         if(col==='deliveries'){
           if(item.tags && item.tags.length > 0){
             for(var t=0;t<item.tags.length;t++){
@@ -174,12 +344,18 @@ function render(){
             html += '<span class="item-tag tag-pending">Pending</span>';
           }
         }
-        // Handover checkbox
         if(col==='handover'){
           var chk = item.done ? 'checked' : '';
           html += '<input type="checkbox" class="ho-check" ' + chk + ' onchange="toggleHO(\'' + key + '\',' + i + ',this.checked)">';
         }
         html += '<span class="item-author">' + (item.author||'') + '</span>';
+        if(col==='deliveries'||col==='handover'){
+          if(item.doneBy){
+            html += '<span class="item-done-btn completed">✓ ' + item.doneBy + '</span>';
+          } else {
+            html += '<span class="item-done-btn" onclick="markDone(\'' + key + '\',' + i + ')">✓ Done</span>';
+          }
+        }
         html += '<button class="item-remove" onclick="removeItem(\'' + key + '\',' + i + ')">&times;</button>';
         html += '</div>';
       }
@@ -190,7 +366,6 @@ function render(){
     html += '<input type="text" id="input_' + col + '" placeholder="Add..." onkeydown="if(event.key===\'Enter\')addItem(\'' + col + '\')">';
     html += '<button onclick="addItem(\'' + col + '\')">+</button></div>';
 
-    // Tag options
     if(col==='wine'||col==='bar'||col==='supplies'){
       html += '<div class="col-options" id="opts_' + col + '">';
       for(var st=0;st<STOCK_TAGS.length;st++){
@@ -209,7 +384,8 @@ function render(){
       }
       html += '</div>';
     }
-    html += '</div>';
+    html += '</div>'; // col-body
+    html += '</div>'; // col
   });
   area.innerHTML = html;
 }
@@ -246,7 +422,7 @@ function addItem(col){
   if(!name) return;
   var key = SHIFT + '_' + col;
   var author = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
-  var item = {name:name, author:author, wlUpdated:false, done:false};
+  var item = {name:name, author:author, wlUpdated:false, done:false, doneBy:'', doneAt:''};
 
   if(col==='wine'||col==='bar'||col==='supplies'){
     item.tag = selectedTags[col] || '';
@@ -271,13 +447,16 @@ function addItem(col){
   input.value = '';
   selectedTags[col] = '';
   selectedTags[col + '_multi'] = [];
+  openCols[col] = true;
   render();
+  renderPending();
   autoSave();
 }
 
 function removeItem(key, idx){
   dayData[key].splice(idx, 1);
   render();
+  renderPending();
   autoSave();
 }
 
@@ -292,11 +471,26 @@ function toggleHO(key, idx, checked){
   autoSave();
 }
 
+function markDone(key, idx){
+  var who = currentUser.displayName || currentUser.email.split('@')[0].replace(/\./g,' ');
+  if(dayData[key][idx].doneBy){
+    dayData[key][idx].doneBy = '';
+    dayData[key][idx].doneAt = '';
+  } else {
+    dayData[key][idx].doneBy = who;
+    dayData[key][idx].doneAt = new Date().toISOString();
+  }
+  render();
+  renderPending();
+  autoSave();
+}
+
 function updateNotes(val){
   dayData.notes = val;
   autoSave();
 }
-
+</script>
+<script>
 var saveTimer = null;
 function autoSave(){
   if(saveTimer) clearTimeout(saveTimer);
@@ -306,7 +500,11 @@ function autoSave(){
 function saveDay(){
   var payload = {date:DATE, notes:dayData.notes||'', updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
   COLS.forEach(function(c){
-    payload[SHIFT+'_'+c] = dayData[SHIFT+'_'+c] || [];
+    // Save both shifts if data exists
+    var lkey = 'lunch_' + c;
+    var dkey = 'dinner_' + c;
+    if(dayData[lkey]) payload[lkey] = dayData[lkey];
+    if(dayData[dkey]) payload[dkey] = dayData[dkey];
   });
   db.collection('somm_orders').doc(DATE).set(payload, {merge:true}).then(function(){
     showStatus('Saved');
@@ -318,7 +516,8 @@ function saveDay(){
 
 function shareWhatsApp(){
   var dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  var msg = '*Petrus Sommeliers — ' + dateStr + ' ' + SHIFT.charAt(0).toUpperCase()+SHIFT.slice(1) + '*\n';
+  var shiftLabel = SHIFT==='lunch' ? 'AM' : 'PM';
+  var msg = '*Petrus Sommeliers — ' + dateStr + ' ' + shiftLabel + '*\n';
   COLS.forEach(function(col){
     var items = dayData[SHIFT+'_'+col] || [];
     if(items.length === 0) return;
@@ -333,6 +532,7 @@ function shareWhatsApp(){
       if((item.tag==='86'||item.tag==='last-bottle')) l += item.wlUpdated ? ' ✅' : ' ⚠️';
       if(col==='handover') l += item.done ? ' ✅' : ' ○';
       l += ' — ' + item.author;
+      if((col==='deliveries'||col==='handover') && item.doneBy) l += ' ✅ ' + item.doneBy;
       msg += l + '\n';
     });
   });

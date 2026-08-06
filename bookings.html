@@ -59,13 +59,21 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .res-table-edit th{background:var(--green-dark);color:white;padding:7px 5px;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
 .res-table-edit td{padding:3px;border-bottom:1px solid var(--border);vertical-align:middle}
 .res-table-edit input,.res-table-edit select{width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:3px;font-size:0.76rem;font-family:var(--sans);background:var(--cream)}
-.res-table-edit input.narrow{width:50px;min-width:30px}
-.res-table-edit input.med{width:85px}
+.res-table-edit input.narrow{width:40px;min-width:35px}
+.res-table-edit input.med{width:70px}
+.res-table-edit .r-time{width:65px}
+.res-table-edit .r-pax{width:35px}
+.res-table-edit .r-name{min-width:160px}
+.res-table-edit .r-table{width:38px}
 .res-table-edit .r-voucher{min-width:100px}
-.res-table-edit .r-occasion{min-width:80px;max-width:140px}
-.res-table-edit .r-vcode{min-width:80px;max-width:120px}
-.res-table-edit .r-vvalue{width:55px}
-.res-table-edit .r-occpos,.res-table-edit .r-allergypos{width:40px;min-width:30px}
+.res-table-edit .r-occasion{min-width:100px}
+.res-table-edit .r-vcode{min-width:100px;white-space:nowrap}
+.res-table-edit .r-vvalue{width:70px}
+.res-table-edit .r-allergy{min-width:100px;font-size:0.72rem;font-family:var(--sans);padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:var(--cream);resize:vertical;line-height:1.3;width:100%}
+.res-table-edit .r-vprovider{width:65px;font-size:0.72rem}
+.res-table-edit .r-occpos,.res-table-edit .r-allergypos{width:38px;min-width:32px}
+.res-table-edit .r-notes{min-width:400px}
+.res-table-edit .r-menu{min-width:100px}
 .drag-handle{cursor:grab;color:#bbb;font-size:1rem;padding:0 4px;user-select:none}
 .drag-handle:active{cursor:grabbing}
 tr.dragging{opacity:0.4;background:#f0e8d8}
@@ -94,15 +102,20 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .print-page h2{font-family:var(--serif);font-size:11pt;text-align:center;margin-bottom:0;color:var(--green-dark)}
 .print-page .p-service{text-align:center;font-size:9pt;font-weight:700;margin-bottom:4px;color:var(--green)}
 .print-header-info{display:flex;justify-content:space-between;border-bottom:1.5px solid var(--green-dark);padding-bottom:3px;margin-bottom:4px;font-weight:600;font-size:7pt}
-.print-table{width:100%;border-collapse:collapse;font-size:6.5pt;table-layout:fixed}
+.print-table{width:100%;border-collapse:collapse;font-size:6.5pt;table-layout:auto;empty-cells:show}
 .print-table th{background:var(--green-dark);color:white;padding:2px 3px;text-align:left;font-weight:600;text-transform:uppercase;font-size:5.5pt;white-space:nowrap;border-right:0.5px solid rgba(255,255,255,0.3)}
 .print-table th:last-child{border-right:none}
-.print-table td{padding:2px 3px;border-bottom:1px solid #999;border-right:0.5px solid #ccc;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word}
+.print-table td{padding:2px 3px;border-bottom:1px solid #999;border-right:0.5px solid #ccc;vertical-align:top;white-space:nowrap;min-height:14px}
 .print-table td:last-child{border-right:none}
+.print-table td.col-time{white-space:nowrap}
+.print-table td.col-pax{white-space:nowrap;width:3%}
+.print-table td.col-name{white-space:nowrap}
+.print-table td.col-pos{width:2%;white-space:nowrap}
+.print-table td.col-tbl{width:3%;white-space:nowrap}
+.print-table .allergy-cell{background:#f8d7da;color:#5c1a1a;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact;white-space:pre}
+.print-table .notes-cell{white-space:normal;word-wrap:break-word;max-width:150px}
 .print-table tr:nth-child(even){background:#f9f6f0}
-.print-table .allergy-cell{background:#f8d7da;color:#5c1a1a;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact;white-space:normal}
-.print-table .occasion-cell{background:#ffe4c4;color:#5c1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;white-space:normal}
-.print-table .notes-cell{white-space:normal;word-wrap:break-word;max-width:none}
+.print-table .occasion-cell{background:#ffe4c4;color:#5c1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;white-space:nowrap}
 .menu-summary{margin-top:5px;padding:3px 8px;border:1.5px solid var(--gold);border-radius:3px;font-size:6.5pt;font-weight:600}
 .menu-summary span{margin-right:10px}
 .allergy-summary{margin-top:4px;padding:3px 8px;border:1.5px solid var(--green);border-radius:3px;font-size:6.5pt}
@@ -137,7 +150,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .triple-cell h2{font-family:var(--serif);font-size:10pt;text-align:center;margin-bottom:0;color:var(--green-dark)}
 .triple-cell .p-service{text-align:center;font-size:8pt;font-weight:700;margin-bottom:3px;color:var(--green)}
 .triple-cell .print-header-info{display:flex;justify-content:space-between;border-bottom:1px solid var(--green-dark);padding-bottom:2px;margin-bottom:3px;font-weight:600;font-size:6.5pt}
-.triple-cell .print-table{font-size:6.5pt;width:100%;table-layout:fixed;border-collapse:collapse}
+.triple-cell .print-table{font-size:6.5pt;width:100%;table-layout:auto;border-collapse:collapse}
 .triple-cell .print-table th{padding:2px 3px;font-size:5.5pt;text-align:left;white-space:nowrap;background:none;color:#333;font-weight:700;border-bottom:1.5px solid #333;text-transform:uppercase}
 .triple-cell .print-table td{padding:2px 3px;font-size:6.5pt;text-align:left;border-bottom:1px solid #999}
 .triple-cell .menu-summary{font-size:6pt;padding:2px 5px;margin-top:4px}
@@ -220,12 +233,12 @@ tr.drag-over td{border-top:2px solid var(--gold)}
                         <th>Table</th>
                         <th>Sec</th>
                         <th>Menu</th>
-                        <th>Special Occasion</th>
-                        <th>OPos</th>
+                        <th>Occasion</th>
+                        <th>Detail</th>
                         <th>Allergy / Req</th>
-                        <th>APos</th>
-                        <th>Voucher Code</th>
-                        <th>Voucher £</th>
+                        <th>Prov</th>
+                        <th>Code</th>
+                        <th>£</th>
                         <th>Notes</th>
                         <th></th>
                     </tr>
@@ -244,14 +257,10 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <!-- PRINT INDEX -->
         <div class="print-index">
             <div class="print-btn-row" style="margin-bottom:14px">
-                <button class="print-btn-item" onclick="printKitchen()">Kitchen</button>
-                <button class="print-btn-item" onclick="printPastry()">Pastry</button>
-                <button class="print-btn-item" onclick="printSalon(1)">Section 1</button>
-                <button class="print-btn-item" onclick="printSalon(2)">Section 2</button>
-                <button class="print-btn-item" onclick="printReception()">Reception</button>
-                <button class="print-btn-item" style="background:var(--green-dark);color:var(--cream);border-color:var(--green-dark);font-weight:600" onclick="printAll()">Print All</button>
-                <button class="print-btn-item" style="background:var(--green);color:var(--cream);border-color:var(--green);font-weight:600" onclick="printBOH()">Print A5 BOH</button>
-                <button class="print-btn-item" style="background:var(--gold);color:white;border-color:var(--gold);font-weight:600" onclick="printFOH()">Print A5 FOH</button>
+                <button class="print-btn-item" style="background:#f8d7da;color:#5c1a1a;border-color:#f0c0c0;font-weight:600" onclick="printAll()">Print All</button>
+                <button class="print-btn-item" style="background:#f8d7da;color:#5c1a1a;border-color:#f0c0c0;font-weight:600" onclick="printBOH()">Print BOH</button>
+                <button class="print-btn-item" style="background:#f8d7da;color:#5c1a1a;border-color:#f0c0c0;font-weight:600" onclick="printFOH()">Print FOH</button>
+                <button class="print-btn-item" style="background:#f8d7da;color:#5c1a1a;border-color:#f0c0c0;font-weight:600" onclick="printReceptionL()">Reception (L)</button>
             </div>
         </div>
     </div>
@@ -282,12 +291,12 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
-<script src="guard-admin.js"></script>
+<script src="guard.js"></script>
 
 <script>
 document.getElementById('serviceDate').valueAsDate = new Date();
 
-// === AUTO LOAD (no lock needed — guard-admin handles access) ===
+// === AUTO LOAD ===
 autoLoadBooking();
 document.getElementById('serviceDate').addEventListener('change', function() { updateSaveButton(); });
 document.getElementById('service').addEventListener('change', function() { updateSaveButton(); });
@@ -308,11 +317,11 @@ function handleCSV(event) {
     var file = event.target.files[0];
     if (!file) return;
     // Try to extract date from filename
-    // Format: DD-MM-YYYY (e.g. 15-07-2026)
+    // Format: MM-DD-YYYY (OpenTable US format, e.g. 06-08-2026 = August 6)
     var dateMatch = file.name.match(/(\d{2})-(\d{2})-(\d{4})/);
     if (dateMatch) {
-        // DD-MM-YYYY → YYYY-MM-DD for input
-        document.getElementById('serviceDate').value = dateMatch[3]+'-'+dateMatch[2]+'-'+dateMatch[1];
+        // MM-DD-YYYY → YYYY-MM-DD for input
+        document.getElementById('serviceDate').value = dateMatch[3]+'-'+dateMatch[1]+'-'+dateMatch[2];
     }
     if (/dinner/i.test(file.name)) document.getElementById('service').value = 'DINNER';
     else if (/lunch/i.test(file.name)) document.getElementById('service').value = 'LUNCH';
@@ -522,9 +531,12 @@ function extractOccasion(notes) {
         if (!visitDetail && vAnniv) visitDetail = toTitleCase(vAnniv[1]);
         // "Raphael's birthday" style
         if (!visitDetail) {
-            var vName = vt.match(/([\w]+'s)\s+(birthday|anniversary|celebration|engagement|graduation|retirement|promotion)/i);
+            var vName = vt.match(/([\w]+'s)\s+(birthday|anniversary|celebration|engagement|graduation|retirement|promotion|honeymoon|wedding)/i);
             if (vName) visitDetail = toTitleCase(vName[1] + ' ' + vName[2]);
         }
+        // Honeymoon / wedding without possessive name
+        if (!visitDetail && /honeymoon/i.test(vt)) visitDetail = 'Honeymoon';
+        if (!visitDetail && /wedding/i.test(vt) && !/anniversary/i.test(vt)) visitDetail = 'Wedding';
     }
 
     // Then check SPECIAL EVENTS field
@@ -562,6 +574,8 @@ function extractOccasion(notes) {
             if (/promotion/i.test(raw) && !occ.some(function(o){return /promotion/i.test(o);})) occ.push('Promotion');
             if (/graduation/i.test(raw) && !occ.some(function(o){return /graduation/i.test(o);})) occ.push('Graduation');
             if (/retirement/i.test(raw) && !occ.some(function(o){return /retirement/i.test(o);})) occ.push('Retirement');
+            if (/honeymoon/i.test(raw) && !occ.some(function(o){return /honeymoon/i.test(o);})) occ.push('Honeymoon');
+            if (/wedding/i.test(raw) && !occ.some(function(o){return /wedding|anniversary/i.test(o);})) occ.push('Wedding');
             if (/proposal/i.test(raw) && !occ.some(function(o){return /proposal/i.test(o);})) occ.push('Proposal');
             if (/reunion/i.test(raw) && !occ.some(function(o){return /reunion/i.test(o);})) occ.push('Reunion');
             if (/farewell/i.test(raw) && !occ.some(function(o){return /farewell/i.test(o);})) occ.push('Farewell');
@@ -583,6 +597,35 @@ function extractOccasion(notes) {
     }
 
     return occ.filter(function(v,i,a){return a.indexOf(v)===i;}).join(', ');
+}
+
+// Split occasion into type (Birthday, Anniversary, etc.) and detail (70th Linda, etc.)
+function extractOccasionType(notes) {
+    var full = extractOccasion(notes);
+    if (!full) return '';
+    // Known types
+    var types = ['Birthday','Anniversary','Engagement','Promotion','Graduation','Retirement','Honeymoon','Wedding','Proposal','Reunion','Farewell','Hen Party','Stag Party','Welcome','Baby Shower','Celebration','Congratulations','Special Occasion'];
+    for (var i=0; i<types.length; i++) {
+        if (full.toLowerCase().indexOf(types[i].toLowerCase()) >= 0) return types[i];
+    }
+    return full;
+}
+
+function extractOccasionDetail(notes) {
+    var full = extractOccasion(notes);
+    if (!full) return '';
+    // Try to extract name/number detail
+    // "Kerry's Birthday" → "Kerry's"
+    // "70th Wedding Anniversary" → "70th"
+    // "5-year wedding anniversary" → "5-year"
+    // "Congrats Sarah" → "Sarah"
+    var nameMatch = full.match(/([\w']+'s)\s+/i);
+    if (nameMatch) return nameMatch[1];
+    var numMatch = full.match(/(\d+\w*)\s+/i);
+    if (numMatch) return numMatch[1];
+    var congMatch = full.match(/Congrats\s+(\w+)/i);
+    if (congMatch) return congMatch[1];
+    return '';
 }
 
 function extractVoucher(notes) {
@@ -638,7 +681,7 @@ function populateFromCSV(rows) {
         var notesRaw = row['NOTES AND TAGS']||'';
         covers += pax;
         if (table) tblSet[table] = true;
-        addRow(time, pax, name, table, extractMenu(notesRaw), extractOccasion(notesRaw), extractAllergies(notesRaw), extractNotes(notesRaw), '', '', '', extractVoucherCode(notesRaw), extractVoucherValue(notesRaw));
+        addRow(time, pax, name, table, extractMenu(notesRaw), extractOccasionType(notesRaw), extractAllergies(notesRaw), extractNotes(notesRaw), '', '', '', extractVoucherCode(notesRaw), extractVoucherValue(notesRaw), extractOccasionDetail(notesRaw));
     });
     document.getElementById('covers').value = covers;
     document.getElementById('tables').value = Object.keys(tblSet).length;
@@ -647,9 +690,10 @@ function populateFromCSV(rows) {
 }
 
 // === ROW MANAGEMENT ===
-function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher, visits, allergyPos, voucherCode, voucherValue, occasionPos, star) {
+function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher, visits, allergyPos, voucherCode, voucherValue, occasionPos, star, voucherProvider) {
     // Handle old-style calls where voucher is a single field
     if (!voucherCode && voucher) { voucherCode = voucher; }
+    if (!voucherProvider) voucherProvider = '';
     if (!allergyPos) allergyPos = '';
     if (!occasionPos) occasionPos = '';
     if (!voucherCode) voucherCode = '';
@@ -657,7 +701,7 @@ function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher,
     if (!star) star = '';
     var tbody = document.getElementById('resBody');
     var tr = document.createElement('tr');
-    tr.draggable = true;
+    tr.draggable = false;
 
     // Determine section based on table number
     function getSectionLabel(tbl) {
@@ -678,11 +722,11 @@ function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher,
 
     tr.innerHTML =
         '<td><span class="drag-handle">&#9776;</span></td>' +
-        '<td><input type="text" value="'+esc(time)+'" class="r-time med"></td>' +
-        '<td><input type="number" value="'+(pax||'')+'" class="r-pax narrow" min="1"></td>' +
+        '<td><input type="text" value="'+esc(time)+'" class="r-time"></td>' +
+        '<td><input type="number" value="'+(pax||'')+'" class="r-pax" min="1"></td>' +
         '<td><button class="star-badge'+starActive+'" onclick="toggleStar(this)" title="VIP / High spender">'+(star?'\u2605':'')+' </button></td>' +
         '<td><input type="text" value="'+esc(name)+'" class="r-name"></td>' +
-        '<td><input type="text" value="'+esc(table)+'" class="r-table narrow"></td>' +
+        '<td><input type="text" value="'+esc(table)+'" class="r-table"></td>' +
         '<td><button class="sec-badge '+secClass+'" onclick="toggleSection(this)" title="Click to move to other section">'+secLabel+'</button></td>' +
         '<td><select class="r-menu">'+
             '<option value=""'+(!menu?' selected':'')+'>—</option>'+
@@ -691,12 +735,36 @@ function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher,
             '<option value="ALC"'+(menu.indexOf('ALC')>=0?' selected':'')+'>ALC</option>'+
             '<option value="Lunch Menu"'+(menu.indexOf('Lunch Menu')>=0?' selected':'')+'>Lunch Menu</option>'+
         '</select></td>' +
-        '<td><input type="text" value="'+esc(occasion)+'" class="r-occasion"></td>' +
-        '<td><input type="text" value="'+esc(occasionPos||'')+'" class="r-occpos narrow" placeholder="p1.."></td>' +
-        '<td><input type="text" value="'+esc(allergy)+'" class="r-allergy"></td>' +
-        '<td><input type="text" value="'+esc(allergyPos||'')+'" class="r-allergypos narrow" placeholder="p1.."></td>' +
+        '<td><select class="r-occasion">'+
+            '<option value=""'+(!occasion?' selected':'')+'>—</option>'+
+            '<option value="Birthday"'+((occasion||'')==='Birthday'?' selected':'')+'>Birthday</option>'+
+            '<option value="Anniversary"'+((occasion||'')==='Anniversary'?' selected':'')+'>Anniversary</option>'+
+            '<option value="Engagement"'+((occasion||'')==='Engagement'?' selected':'')+'>Engagement</option>'+
+            '<option value="Graduation"'+((occasion||'')==='Graduation'?' selected':'')+'>Graduation</option>'+
+            '<option value="Retirement"'+((occasion||'')==='Retirement'?' selected':'')+'>Retirement</option>'+
+            '<option value="Honeymoon"'+((occasion||'')==='Honeymoon'?' selected':'')+'>Honeymoon</option>'+
+            '<option value="Wedding"'+((occasion||'')==='Wedding'?' selected':'')+'>Wedding</option>'+
+            '<option value="Proposal"'+((occasion||'')==='Proposal'?' selected':'')+'>Proposal</option>'+
+            '<option value="Celebration"'+((occasion||'')==='Celebration'?' selected':'')+'>Celebration</option>'+
+            '<option value="Congratulations"'+((occasion||'')==='Congratulations'?' selected':'')+'>Congratulations</option>'+
+            '<option value="Farewell"'+((occasion||'')==='Farewell'?' selected':'')+'>Farewell</option>'+
+            '<option value="Baby Shower"'+((occasion||'')==='Baby Shower'?' selected':'')+'>Baby Shower</option>'+
+            '<option value="Hen Party"'+((occasion||'')==='Hen Party'?' selected':'')+'>Hen Party</option>'+
+            '<option value="Stag Party"'+((occasion||'')==='Stag Party'?' selected':'')+'>Stag Party</option>'+
+            '<option value="Welcome"'+((occasion||'')==='Welcome'?' selected':'')+'>Welcome</option>'+
+            '<option value="Reunion"'+((occasion||'')==='Reunion'?' selected':'')+'>Reunion</option>'+
+        '</select></td>' +
+        '<td><input type="text" value="'+esc(occasionPos||'')+'" class="r-occpos" placeholder="70th Linda"></td>' +
+        '<td><textarea class="r-allergy" rows="2">'+esc(allergy)+'</textarea></td>' +
+        '<td><select class="r-vprovider">'+
+            '<option value=""'+(!(voucherProvider)?' selected':'')+'>—</option>'+
+            '<option value="GRR"'+((voucherProvider||'')==='GRR'?' selected':'')+'>GRR</option>'+
+            '<option value="Buyagift"'+((voucherProvider||'')==='Buyagift'?' selected':'')+'>Buyagift</option>'+
+            '<option value="Virgin"'+((voucherProvider||'')==='Virgin'?' selected':'')+'>Virgin</option>'+
+            '<option value="Deposit"'+((voucherProvider||'')==='Deposit'?' selected':'')+'>Deposit</option>'+
+        '</select></td>' +
         '<td><input type="text" value="'+esc(voucherCode||'')+'" class="r-vcode"></td>' +
-        '<td><input type="text" value="'+esc(voucherValue||'')+'" class="r-vvalue narrow"></td>' +
+        '<td><input type="text" value="'+esc(voucherValue||'')+'" class="r-vvalue" placeholder="£"></td>' +
         '<td><input type="text" value="'+esc(notes||'')+'" class="r-notes"></td>' +
         '<td><button class="btn-remove-row" onclick="this.closest(\'tr\').remove();recalc();">&#215;</button></td>';
     tbody.appendChild(tr);
@@ -762,7 +830,30 @@ function toggleStar(btn) {
 // Format allergy text with line breaks for print
 function formatAllergyPrint(allergy) {
     if (!allergy) return '';
-    return allergy.replace(/,\s*/g, '<br>');
+    return allergy.replace(/\n/g, '<br>').replace(/,\s*/g, '<br>');
+}
+
+// Format time with am/pm for print
+function formatTimePrint(time, service) {
+    if (!time) return '';
+    // If already has am/pm, return as-is
+    if (/am|pm/i.test(time)) return time;
+    // Parse hour
+    var match = time.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return time;
+    var h = parseInt(match[1]);
+    var m = match[2];
+    // If 24h format (13-23), convert to 12h
+    if (h >= 13) return (h-12)+':'+m+' pm';
+    if (h === 12) return '12:'+m+' pm';
+    if (h === 0) return '12:'+m+' am';
+    // If 1-11, determine am/pm by service
+    if (service === 'DINNER') return h+':'+m+' pm';
+    if (service === 'LUNCH') {
+        if (h >= 7 && h < 12) return h+':'+m+' am';
+        return h+':'+m+' pm';
+    }
+    return h+':'+m+' pm';
 }
 
 // Helper: filter rows by section, respecting manual override
@@ -800,11 +891,18 @@ function clearAll() {
 // === DRAG TO REORDER ===
 var dragRow = null;
 function enableDrag(tr) {
+    // Only start drag from the handle
+    var handle = tr.querySelector('.drag-handle');
+    if (handle) {
+        handle.addEventListener('mousedown', function() { tr.draggable = true; });
+        handle.addEventListener('mouseup', function() { tr.draggable = false; });
+    }
     tr.addEventListener('dragstart', function(e) {
         dragRow = tr; tr.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
     });
     tr.addEventListener('dragend', function() {
         tr.classList.remove('dragging');
+        tr.draggable = false;
         document.querySelectorAll('#resBody tr').forEach(function(r){r.classList.remove('drag-over');});
         dragRow = null;
     });
@@ -840,8 +938,9 @@ function gatherRows() {
             occasion: tr.querySelector('.r-occasion').value,
             occasionPos: tr.querySelector('.r-occpos').value,
             allergy: tr.querySelector('.r-allergy').value,
-            allergyPos: tr.querySelector('.r-allergypos').value,
+            allergyPos: '',
             notes: tr.querySelector('.r-notes').value,
+            voucherProvider: tr.querySelector('.r-vprovider').value,
             voucherCode: tr.querySelector('.r-vcode').value,
             voucherValue: tr.querySelector('.r-vvalue').value,
             section: secOverride,
@@ -934,6 +1033,16 @@ function printReception() {
     setTimeout(function(){ window.print(); }, 300);
 }
 
+// === PRINT RECEPTION (L) — same as Pastry but titled Reception (L) ===
+function printReceptionL() {
+    var info = getHeaderInfo();
+    var rows = gatherRows();
+    setPrintOrientation(rows.length, 8);
+    document.getElementById('printPage1').innerHTML = buildReceptionLHTML(info, rows);
+    document.getElementById('printArea').style.display = 'block';
+    setTimeout(function(){ window.print(); }, 300);
+}
+
 // === PRINT ALL (Statement, each section gets its own page) ===
 function printAll() {
     var info = getHeaderInfo();
@@ -978,9 +1087,9 @@ function buildKitchenHTML(info, rows) {
         if (r.menu && menuCount[r.menu] !== undefined) menuCount[r.menu] += parseInt(r.pax)||1;
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
-        html += '<tr><td>'+esc(r.time)+'</td><td>'+esc(r.pax)+'</td><td><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td>'+esc(r.allergyPos||'')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
-    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
 
     var mp = [];
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
@@ -1005,9 +1114,9 @@ function buildPastryHTML(info, rows) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+esc(r.time)+'</td><td>'+esc(r.pax)+'</td><td><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td>'+esc(r.allergyPos||'')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
-    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
 
     var mp = [];
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
@@ -1022,6 +1131,33 @@ function buildPastryHTML(info, rows) {
     return '<h2>PETRUS</h2><div class="p-service">PASTRY \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:7%"><col style="width:4%"><col style="width:16%"><col style="width:5%"><col style="width:9%"><col style="width:14%"><col style="width:5%"><col style="width:18%"><col style="width:5%"><col style="width:17%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
+function buildReceptionLHTML(info, rows) {
+    var html = '';
+    var menuCount = {Prestige:0,Discovery:0,ALC:0,'Lunch Menu':0};
+    var allergyList = [];
+
+    rows.forEach(function(r) {
+        if (r.menu && menuCount[r.menu] !== undefined) menuCount[r.menu] += parseInt(r.pax)||1;
+        if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
+        var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
+        var occClass = r.occasion ? 'occasion-cell' : '';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+    });
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+
+    var mp = [];
+    Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
+    var menuHTML = mp.length ? '<div class="menu-summary">'+mp.join('')+'</div>' : '';
+
+    var allergyHTML = '';
+    if (allergyList.length) {
+        var ar = allergyList.map(function(a){return '<tr><td><strong>'+esc(a.name)+'</strong></td><td>Tbl '+esc(a.table)+'</td><td class="allergy-cell">'+formatAllergyPrint(a.allergies)+'</td></tr>';}).join('');
+        allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
+    }
+
+    return '<h2>PETRUS</h2><div class="p-service">RECEPTION (L) \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+}
+
 function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
     var sectionCovers = 0;
     var html = '';
@@ -1034,9 +1170,9 @@ function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+esc(r.time)+'</td><td>'+esc(r.pax)+'</td><td><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td>'+esc(r.allergyPos||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+esc(r.voucherValue||'')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+(r.voucherValue ? '\u00a3'+esc(r.voucherValue) : '')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
-    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td></td><td></td><td></td></tr>';
 
     var mp = [];
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
@@ -1048,7 +1184,7 @@ function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
         allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
     }
 
-    return '<h2>PETRUS</h2><div class="p-service">'+sectionLabel+' \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+sectionCovers+'</span><span>Tbls: '+filtered.length+'</span></div><table class="print-table"><colgroup><col style="width:7%"><col style="width:4%"><col style="width:15%"><col style="width:4%"><col style="width:9%"><col style="width:12%"><col style="width:4%"><col style="width:15%"><col style="width:4%"><col style="width:8%"><col style="width:5%"><col style="width:13%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="2">Voucher</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return '<h2>PETRUS</h2><div class="p-service">'+sectionLabel+' \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+sectionCovers+'</span><span>Tbls: '+filtered.length+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
 // === PRINT A5 BOH (Kitchen x2 on page 1, Pastry on page 2) ===
@@ -1134,9 +1270,9 @@ function buildReceptionHTML(info, rows) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+esc(r.time)+'</td><td>'+esc(r.pax)+'</td><td><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td>'+esc(r.allergyPos||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+esc(r.voucherValue||'')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+(r.voucherValue ? '\u00a3'+esc(r.voucherValue) : '')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
-    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td></td><td></td><td></td></tr>';
 
     var mp = [];
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
@@ -1148,7 +1284,7 @@ function buildReceptionHTML(info, rows) {
         allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
     }
 
-    return '<h2>PETRUS</h2><div class="p-service">RECEPTION \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:7%"><col style="width:4%"><col style="width:15%"><col style="width:4%"><col style="width:9%"><col style="width:12%"><col style="width:4%"><col style="width:15%"><col style="width:4%"><col style="width:8%"><col style="width:5%"><col style="width:13%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="2">Voucher</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return '<h2>PETRUS</h2><div class="p-service">RECEPTION \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
 // === SAVE / LOAD BOOKINGS (Firestore) ===
@@ -1206,7 +1342,7 @@ function loadBooking(key) {
         var tbody = document.getElementById('resBody');
         tbody.innerHTML = '';
         data.rows.forEach(function(r) {
-            addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"");
+            addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"");
         });
         document.getElementById('formArea').classList.add('visible');
         updateSaveButton();
@@ -1260,7 +1396,7 @@ function autoLoadBooking() {
             var tbody = document.getElementById('resBody');
             tbody.innerHTML = '';
             data.rows.forEach(function(r) {
-                addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"");
+                addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"");
             });
             document.getElementById('formArea').classList.add('visible');
         }

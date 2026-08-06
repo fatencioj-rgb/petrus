@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deliveries — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:960px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:6px 14px;border:1px solid rgba(92,26,26,0.2);border-radius:14px;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn)}
+.tab:hover{background:#f0d4d4}
+.tab.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+.box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px}
+.box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
+/* Saved delivery groups */
+.del-group{border:1px solid #f0ebe5;border-radius:8px;padding:12px;margin-bottom:10px;background:#fdf9f2}
+.del-group-head{font-size:11px;color:#888;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.del-group-head strong{color:var(--grn);font-size:12px}
+.del-group-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f5f0ea;font-size:11px}
+.del-group-item:last-child{border-bottom:none}
+.del-group-item .qty{color:#888;min-width:24px}
+.del-group-item .name{flex:1;font-weight:500}
+.dots{display:flex;gap:6px}
+.dot-col{display:flex;flex-direction:column;align-items:center;gap:2px}
+.dot-label{font-size:6px;color:#999;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.dot-btn{width:12px;height:12px;border-radius:50%;border:1.5px solid #ddd;cursor:pointer;transition:all .12s}
+.dot-btn:hover{transform:scale(1.3)}
+.dot-btn.st-none{background:#f0f0f0;border-color:#ddd}
+.dot-btn.st-done{background:#28a745;border-color:#28a745}
+.dot-btn.st-already{background:#007bff;border-color:#007bff}
+.dot-btn.st-pending{background:#fd7e14;border-color:#fd7e14}
+.dot-static{width:10px;height:10px;border-radius:50%;display:inline-block}
+.chg-note{font-size:9px;color:#dc3545;font-style:italic}
+.s-remove{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer}
+.s-remove:hover{color:#c0392b}
+/* Add form */
+.add-header{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.add-header label{font-size:9px;color:#888}
+.add-header select,.add-header input{padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none}
+.add-header select:focus,.add-header input:focus{border-color:var(--gld)}
+/* Staging area */
+.stage-item{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f5f0ea;font-size:11px}
+.stage-item:last-child{border-bottom:none}
+.stage-item .name{flex:1;font-weight:500}
+.stage-item .qty{color:#888;min-width:24px}
+.input-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.input-row input{padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none;flex:1;min-width:0}
+.input-row input[type="number"]{flex:0 0 45px}
+.input-row input:focus{border-color:var(--gld)}
+.tag-opt{padding:4px 10px;border:1px solid rgba(92,26,26,0.2);border-radius:10px;font-size:9px;cursor:pointer;background:var(--pink);color:var(--grn)}
+.tag-opt:hover{border-color:var(--grn)}
+.tag-opt.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+.btn-plus{padding:4px 12px;background:var(--gld);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer}
+.btn-plus:hover{background:#a07e3a}
+.btn-add{padding:6px 18px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;text-transform:uppercase}
+.btn-add:hover{background:var(--grn2)}
+.footer-row{display:flex;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f0ebe5}
+.footer-row label{font-size:9px;color:#888}
+.footer-row select{padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--s)}
+/* Legend */
+.legend{margin-top:20px;padding:12px;background:#fff;border:1px solid #e8e0d4;border-radius:8px;font-size:9px;color:#888;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.legend .ds{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:3px}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Deliveries</h1>
+<div class="tabs" id="tabs"></div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+  <span style="font-size:9px;color:#888">View date:</span>
+  <input type="date" id="viewDate" onchange="loadItems()" style="padding:5px 8px;border:1px solid var(--gld);border-radius:4px;font-size:11px;font-family:var(--s)">
+  <button onclick="document.getElementById('viewDate').value=new Date().toISOString().slice(0,10);loadItems()" style="padding:4px 10px;border:1px solid var(--gld);border-radius:4px;background:transparent;color:var(--grn);font-size:9px;cursor:pointer">Today</button>
+</div>
+<div id="listArea"></div>
+<div id="addArea"></div>
+<div class="legend">
+  <span><span class="ds" style="background:#f0f0f0;border:1px solid #ddd"></span>Not set</span>
+  <span><span class="ds" style="background:#28a745"></span>Done</span>
+  <span><span class="ds" style="background:#007bff"></span>Already</span>
+  <span><span class="ds" style="background:#fd7e14"></span>Pending</span>
+  <span style="border-left:1px solid #ddd;padding-left:12px">PW Inv = Invoice closed in PW</span>
+  <span>PW Prod = Product created in PW</span>
+  <span>HOR = Created in Horizon</span>
+  <span>Menu = Added to Wine List</span>
+</div>
+</div>
+<div class="sm" id="sm"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null,TAB='wine';
+var TABS=['wine','bar','supplies'];
+var SUPPLIERS={wine:['Liberty Wines','Hallgarten','Les Caves de Pyrene','LCB','Robertson Wine','Corney & Barrow','Ripley Wines'],bar:['Champers'],supplies:['Coravin']};
+var TASK_KEYS=['invoicePW','createdPW','createdHorizon','addedMenu'];
+var TASK_LABELS=['PW Inv','PW Prod','HOR','Menu'];
+var TASK_DUTY_TEXT={invoicePW:'Close invoice in PW for',createdPW:'Create product in PW for',createdHorizon:'Create product in Horizon for',addedMenu:'Add to Wine List:'};
+var MENU_OPTS=['BTG','BTB','Wine Pairing','Bar Menu'];
+var STATES=['none','done','already','pending'];
+var TEAM=['Fiorella','Christian','Milena','First in'];
+var items=[],staged=[];
+var _selectedSupplier='',_selectedDate=new Date().toISOString().slice(0,10);
+var _selectedAssignee='';
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  U=u;logAccess(u,'page_view','somm-deliveries.html');
+  document.getElementById('viewDate').value=new Date().toISOString().slice(0,10);
+  loadItems();
+});
+
+function setTab(t){TAB=t;staged=[];render();}
+
+function loadItems(){
+  var viewDate=document.getElementById('viewDate').value;
+  db.collection('somm_deliveries').get().then(function(snap){
+    items=[];snap.forEach(function(doc){
+      var d=doc.data();
+      if(d.date===viewDate)items.push({id:doc.id,data:d});
+    });
+    items.sort(function(a,b){return a.data.supplier>b.data.supplier?1:-1;});
+    render();
+  });
+}
+
+function render(){
+  var th='';TABS.forEach(function(t){th+='<span class="tab'+(TAB===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+t.charAt(0).toUpperCase()+t.slice(1)+'</span>';});
+  document.getElementById('tabs').innerHTML=th;
+  renderList();
+  renderAdd();
+}
+
+function renderList(){
+  var filtered=items.filter(function(it){return it.data.section===TAB;});
+  var h='';
+  if(filtered.length===0){h='<div class="box"><div class="em">No deliveries for this date</div></div>';}
+  else{
+    // Group by supplier
+    var groups={};
+    filtered.forEach(function(it){
+      var key=it.data.supplier;
+      if(!groups[key])groups[key]={supplier:it.data.supplier,date:it.data.date,author:it.data.author,items:[],notes:[],assignee:''};
+      groups[key].items.push(it);
+      if(it.data.changed&&it.data.changeDetail)groups[key].notes.push(it.data.changeDetail);
+      if(it.data.assignee)groups[key].assignee=it.data.assignee;
+    });
+
+    var NAME_COLORS={f:'#7c3aed',c:'#2563eb',m:'#d97706'};
+    var NAME_INITIALS={fiorella:{i:'F',c:'#7c3aed'},christian:{i:'C',c:'#2563eb'},milena:{i:'M',c:'#d97706'}};
+
+    for(var gk in groups){
+      var grp=groups[gk];
+      h+='<div class="del-group">';
+      // Header: date, supplier, author
+      h+='<div style="font-size:10px;color:#888;margin-bottom:2px">'+grp.date+'</div>';
+      h+='<div class="del-group-head"><strong>'+grp.supplier+'</strong><span style="font-size:9px;color:#888;margin-left:8px">'+grp.author+'</span></div>';
+
+      // Column headers
+      h+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0ebe5;margin-bottom:4px">';
+      h+='<span style="min-width:24px"></span><span style="flex:1"></span>';
+      h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">PW Inv</span>';
+      h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">PW Prod</span>';
+      h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">HOR</span>';
+      h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">Menu</span>';
+      h+='<span style="width:16px"></span></div>';
+
+      for(var i=0;i<grp.items.length;i++){
+        var it=grp.items[i].data;
+        var tasks=it.tasks||{};
+        var taskLog=it.taskLog||[];
+        h+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f9f5ef;font-size:11px">';
+        h+='<span style="min-width:24px;color:#888;font-size:10px">'+it.qty+'</span>';
+        h+='<span style="flex:1;font-weight:500">'+it.name+'</span>';
+
+        // 4 status dots with initial of who did it
+        for(var k=0;k<TASK_KEYS.length;k++){
+          var st=tasks[TASK_KEYS[k]]||'none';
+          var dotColor=st==='done'?'#28a745':st==='pending'?'#fd7e14':st==='already'?'#007bff':'#e0e0e0';
+          var initial='';
+          if(st==='done'){
+            var by='';for(var tl=0;tl<taskLog.length;tl++){if(taskLog[tl].task===TASK_KEYS[k])by=taskLog[tl].by;}
+            if(by){var ni=NAME_INITIALS[by.toLowerCase()];initial=ni?'<span style="font-size:6px;color:'+ni.c+';font-weight:700;margin-left:1px">'+ni.i+'</span>':'';}
+          }
+          h+='<span style="width:40px;text-align:center"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+dotColor+'"></span>'+initial+'</span>';
+        }
+
+        h+='<button class="s-remove" onclick="removeItem(\''+grp.items[i].id+'\')">&times;</button>';
+        h+='</div>';
+      }
+
+      // Footer: assignee + notes
+      var footer=[];
+      if(grp.assignee)footer.push('<span style="font-size:9px;color:#888">Unfinished work assigned to: <strong>'+grp.assignee+'</strong></span>');
+      if(grp.notes.length)footer.push('<span style="font-size:9px;color:#dc3545;font-style:italic">'+grp.notes.join(' | ')+'</span>');
+      if(footer.length){
+        h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #f0ebe5">'+footer.join('<br>')+'</div>';
+      }
+
+      h+='</div>';
+    }
+  }
+  document.getElementById('listArea').innerHTML=h;
+}
+
+function renderAdd(){
+  var a='<div class="box"><h3>Add delivery received</h3>';
+  // Header: supplier + date + order status
+  a+='<div class="add-header">';
+  a+='<label>Supplier:</label>';
+  a+='<select id="d_supplier" onchange="toggleOther();_selectedSupplier=this.value"><option value="">Select...</option>';
+  var supList=SUPPLIERS[TAB]||[];
+  for(var s=0;s<supList.length;s++){a+='<option value="'+supList[s]+'"'+(_selectedSupplier===supList[s]?' selected':'')+'>'+supList[s]+'</option>';}
+  a+='<option value="__other"'+(_selectedSupplier==='__other'?' selected':'')+'>Other...</option></select>';
+  a+='<input type="text" id="d_supplier_other" placeholder="Other..." style="display:'+(_selectedSupplier==='__other'?'inline-block':'none')+';width:100px">';
+  a+='<label>Date:</label>';
+  a+='<input type="date" id="d_date" value="'+_selectedDate+'" onchange="checkDay(this);_selectedDate=this.value" style="width:120px">';
+  a+='<span class="tag-opt'+(_ok?' on':'')+'" id="okBtn" onclick="togOk()">Received as ordered</span>';
+  a+='<span class="tag-opt'+(_chg?' on':'')+'" id="chgBtn" onclick="togChg()">Order changed</span>';
+  a+='<input type="text" id="d_chg_detail" placeholder="What happened?" style="max-width:140px;display:'+(_chg?'inline-block':'none')+'">';
+  a+='</div>';
+
+  // Staged items
+  if(staged.length>0){
+    a+='<div style="margin-bottom:10px;padding:8px;background:#fdf9f2;border-radius:6px">';
+    for(var si=0;si<staged.length;si++){
+      var st=staged[si];
+      a+='<div class="stage-item">';
+      a+='<span class="qty">x'+st.qty+'</span>';
+      a+='<span class="name">'+st.name+'</span>';
+      a+='<span class="dots">';
+      for(var k=0;k<TASK_KEYS.length;k++){
+        var sv=st.tasks[TASK_KEYS[k]]||'none';
+        a+='<span class="dot-col"><span class="dot-label">'+TASK_LABELS[k]+'</span><span class="dot-btn st-'+sv+'" onclick="cycleStagedDot('+si+','+k+')"></span></span>';
+      }
+      a+='</span>';
+      if(st.changed)a+='<span class="chg-note">'+st.changeDetail+'</span>';
+      a+='<button class="s-remove" onclick="removeStaged('+si+')">&times;</button>';
+      a+='</div>';
+    }
+    a+='</div>';
+  }
+
+  // Input row for new product
+  a+='<div class="input-row">';
+  a+='<input type="text" id="d_name" placeholder="Product" style="flex:2" onkeydown="if(event.key===\'Enter\')stageItem()">';
+  a+='<input type="number" id="d_qty" placeholder="Qty" min="1" value="1">';
+  // Dots for the new item
+  a+='<span class="dots" id="newDots">';
+  for(var k=0;k<TASK_KEYS.length;k++){
+    a+='<span class="dot-col"><span class="dot-label">'+TASK_LABELS[k]+'</span><span class="dot-btn st-none" id="newDot_'+k+'" onclick="cycleNewDot('+k+')"></span></span>';
+  }
+  a+='</span>';
+  a+='</div>';
+  a+='<div style="display:flex;gap:8px;align-items:center;margin-top:6px">';
+  a+='<button class="btn-plus" onclick="stageItem()">+ Add another</button>';
+  a+='</div>';
+
+  // Footer: assign + final Add
+  var hasPending=false;
+  for(var sp=0;sp<staged.length;sp++){
+    for(var kk=0;kk<TASK_KEYS.length;kk++){if(staged[sp].tasks[TASK_KEYS[kk]]==='pending')hasPending=true;}
+  }
+  for(var nd=0;nd<newDotStates.length;nd++){if(STATES[newDotStates[nd]]==='pending')hasPending=true;}
+
+  a+='<div class="footer-row">';
+  a+='<span id="assignRow" style="display:'+(hasPending?'flex':'none')+';gap:6px;align-items:center">';
+  a+='<label>Please finish what\'s pending:</label>';
+  a+='<select id="d_assign" onchange="_selectedAssignee=this.value"><option value="">Unassigned</option>';
+  for(var t=0;t<TEAM.length;t++){a+='<option value="'+TEAM[t]+'"'+(_selectedAssignee===TEAM[t]?' selected':'')+'>'+TEAM[t]+'</option>';}
+  a+='</select></span>';
+  a+='<button class="btn-add" onclick="submitAll()">Add delivery</button>';
+  a+='</div>';
+  a+='</div>';
+  document.getElementById('addArea').innerHTML=a;
+}
+
+// New item dot states
+var newDotStates=[0,0,0,0]; // index into STATES
+function cycleNewDot(k){
+  newDotStates[k]=(newDotStates[k]+1)%STATES.length;
+  var el=document.getElementById('newDot_'+k);
+  if(el){el.className='dot-btn st-'+STATES[newDotStates[k]];}
+  // Show assign row if any dot is pending
+  var show=false;
+  for(var i=0;i<newDotStates.length;i++){if(STATES[newDotStates[i]]==='pending')show=true;}
+  for(var s=0;s<staged.length;s++){for(var kk=0;kk<TASK_KEYS.length;kk++){if(staged[s].tasks[TASK_KEYS[kk]]==='pending')show=true;}}
+  var row=document.getElementById('assignRow');
+  if(row)row.style.display=show?'flex':'none';
+}
+function cycleStagedDot(si,k){
+  var cur=STATES.indexOf(staged[si].tasks[TASK_KEYS[k]]);
+  var next=(cur+1)%STATES.length;
+  staged[si].tasks[TASK_KEYS[k]]=STATES[next];
+  renderAdd();
+}
+function removeStaged(i){staged.splice(i,1);renderAdd();}
+
+var _chg=false,_ok=false;
+function togOk(){
+  _ok=!_ok;if(_ok)_chg=false;
+  var btn=document.getElementById('okBtn');if(btn)btn.classList.toggle('on',_ok);
+  var btn2=document.getElementById('chgBtn');if(btn2)btn2.classList.remove('on');
+  var inp=document.getElementById('d_chg_detail');if(inp)inp.style.display='none';
+}
+function togChg(){
+  _chg=!_chg;if(_chg)_ok=false;
+  var btn=document.getElementById('chgBtn');if(btn)btn.classList.toggle('on',_chg);
+  var btn2=document.getElementById('okBtn');if(btn2)btn2.classList.remove('on');
+  var inp=document.getElementById('d_chg_detail');if(inp)inp.style.display=_chg?'inline-block':'none';
+}
+function toggleOther(){var s=document.getElementById('d_supplier'),o=document.getElementById('d_supplier_other');if(s&&o)o.style.display=s.value==='__other'?'inline-block':'none';}
+
+function stageItem(){
+  var name=(document.getElementById('d_name')||{}).value.trim();
+  if(!name)return;
+  var tasks={};
+  for(var k=0;k<TASK_KEYS.length;k++){tasks[TASK_KEYS[k]]=STATES[newDotStates[k]];}
+  var item={name:name,qty:(document.getElementById('d_qty')||{}).value||'1',tasks:tasks,asInvoice:_ok,changed:_chg,changeDetail:_chg?(document.getElementById('d_chg_detail')||{}).value.trim():''};
+  staged.push(item);
+  document.getElementById('d_name').value='';
+  document.getElementById('d_qty').value='1';
+  newDotStates=[0,0,0,0];_chg=false;_ok=false;
+  renderAdd();
+}
+
+function submitAll(){
+  // Stage current input if there's something
+  var curName=(document.getElementById('d_name')||{}).value.trim();
+  if(curName)stageItem();
+  if(staged.length===0){msg('Add at least one product');return;}
+  var supplier=(document.getElementById('d_supplier')||{}).value||'';
+  if(supplier==='__other')supplier=(document.getElementById('d_supplier_other')||{}).value.trim()||'';
+  if(!supplier){msg('Select supplier');return;}
+  var date=(document.getElementById('d_date')||{}).value||new Date().toISOString().slice(0,10);
+  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  var assignee=_selectedAssignee||(document.getElementById('d_assign')||{}).value||'';
+
+  var batch=db.batch();
+  var pendingDuties=[];
+
+  for(var i=0;i<staged.length;i++){
+    var st=staged[i];
+    var docRef=db.collection('somm_deliveries').doc();
+    var item={section:TAB,date:date,supplier:supplier,qty:st.qty,name:st.name,author:author,assignee:assignee,asInvoice:st.asInvoice||false,changed:st.changed,changeDetail:st.changeDetail,tasks:st.tasks,menuPlacement:[],taskLog:[],createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    batch.set(docRef,item);
+    // Check for pending tasks -> create duties
+    for(var k=0;k<TASK_KEYS.length;k++){
+      if(st.tasks[TASK_KEYS[k]]==='pending'){
+        pendingDuties.push({text:TASK_DUTY_TEXT[TASK_KEYS[k]]+' "'+st.name+'"',assignee:assignee,author:author,date:date});
+      }
+    }
+    // Auto-restock matching stock
+    db.collection('somm_stock').where('section','==',TAB).where('name','==',st.name).where('restocked','==',false).get().then(function(snap){
+      snap.forEach(function(doc){doc.ref.update({restocked:true,restockedDate:date,restockedBy:'delivery'});});
+    });
+  }
+
+  batch.commit().then(function(){
+    // Create duties for pending items
+    var dutyPromises=pendingDuties.map(function(d){
+      return db.collection('somm_duties').add({text:d.text,author:d.author,assignee:d.assignee,date:d.date,done:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    });
+    return Promise.all(dutyPromises);
+  }).then(function(){
+    staged=[];newDotStates=[0,0,0,0];_chg=false;_ok=false;_selectedAssignee='';
+    loadItems();msg('Delivery saved ✓');
+  }).catch(function(e){console.error(e);msg('Error');});
+}
+
+function removeItem(id){db.collection('somm_deliveries').doc(id).delete().then(function(){loadItems();msg('Removed');});}
+function checkDay(el){var d=new Date(el.value+'T12:00:00').getDay();if(d===0||d===1){msg('Closed on Sun/Mon');el.value=new Date().toISOString().slice(0,10);}}
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wastages — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:960px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{padding:6px 14px;border:1px solid rgba(92,26,26,0.2);border-radius:14px;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn)}
+.tab:hover{background:#f0d4d4}
+.tab.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+.box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px}
+.box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--grn2);color:#fff;padding:7px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:6px 8px;border-bottom:1px solid #f5f0ea}
+.tbl tr:hover td{background:#fdf9f2}
+.fields{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.fields input,.fields select{padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none;flex:1;min-width:0}
+.fields input[type="number"]{flex:0 0 50px}
+.fields select{flex:0 0 auto}
+.fields input:focus{border-color:var(--gld)}
+.btn-add{padding:6px 18px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;text-transform:uppercase}
+.btn-add:hover{background:var(--grn2)}
+.s-remove{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer}
+.s-remove:hover{color:#c0392b}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Wastages</h1>
+<div class="tabs" id="tabs"></div>
+<div id="listArea"></div>
+<div id="addArea"></div>
+</div>
+<div class="sm" id="sm"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null,TAB='wine',items=[];
+auth.onAuthStateChanged(function(u){if(!u){window.location.href='index.html';return;}U=u;logAccess(u,'page_view','somm-wastages.html');loadItems();});
+function setTab(t){TAB=t;render();}
+function loadItems(){
+  var today=new Date().toISOString().slice(0,10);
+  db.collection('somm_wastages').where('date','==',today).get().then(function(snap){
+    items=[];snap.forEach(function(doc){items.push({id:doc.id,data:doc.data()});});render();
+  });
+}
+function render(){
+  document.getElementById('tabs').innerHTML='<span class="tab'+(TAB==='wine'?' on':'')+'" onclick="setTab(\'wine\')">Wine</span><span class="tab'+(TAB==='bar'?' on':'')+'" onclick="setTab(\'bar\')">Bar</span>';
+  var filtered=items.filter(function(it){return it.data.type===TAB;});
+  var h='<div class="box">';
+  if(filtered.length===0){h+='<div class="em">No wastages today</div>';}
+  else{
+    h+='<table class="tbl"><thead><tr><th>Date</th><th>Product</th><th>Qty</th><th>Unit</th><th>By</th><th></th></tr></thead><tbody>';
+    for(var i=0;i<filtered.length;i++){var it=filtered[i].data;var id=filtered[i].id;
+      h+='<tr><td>'+it.date+'</td><td>'+it.name+'</td>';
+      h+='<td>'+it.qty+'</td><td>'+it.unit+'</td><td>'+it.author+'</td>';
+      h+='<td><button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button></td></tr>';
+    }
+    h+='</tbody></table>';
+  }
+  h+='</div>';
+  document.getElementById('listArea').innerHTML=h;
+  // Add
+  var a='<div class="box"><h3>Add wastage</h3><div class="fields">';
+  a+='<input type="date" id="w_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)" style="width:120px">';
+  a+='<input type="text" id="w_name" placeholder="Product">';
+  a+='<input type="number" id="w_qty" placeholder="Qty" min="0">';
+  a+='<select id="w_unit"><option value="ml">ml</option><option value="btl">btl</option></select>';
+  a+='</div><button class="btn-add" onclick="addItem()">Add</button></div>';
+  document.getElementById('addArea').innerHTML=a;
+}
+function addItem(){
+  var name=(document.getElementById('w_name')||{}).value||'';if(!name){msg('Product required');return;}
+  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  var item={type:TAB,date:(document.getElementById('w_date')||{}).value||new Date().toISOString().slice(0,10),name:name,author:author,qty:(document.getElementById('w_qty')||{}).value||'',unit:(document.getElementById('w_unit')||{}).value||'ml',createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+  db.collection('somm_wastages').add(item).then(function(){loadItems();msg('Added');}).catch(function(){msg('Error');});
+}
+function removeItem(id){db.collection('somm_wastages').doc(id).delete().then(function(){loadItems();msg('Removed');});}
+function checkDay(el){var d=new Date(el.value+'T12:00:00').getDay();if(d===0||d===1){msg('Closed on Sun/Mon');el.value=new Date().toISOString().slice(0,10);}}
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+</script>
+</body>
+</html>

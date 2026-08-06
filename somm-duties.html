@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duties — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:700px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:14px}
+.box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px}
+.box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
+.duty{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f0ea;font-size:12px}
+.duty:last-child{border-bottom:none}
+.duty .text{flex:1}
+.duty .by{font-size:9px;color:var(--grn);min-width:55px}
+.duty .assign{padding:3px 8px;background:var(--pink);color:var(--grn);border:1px solid rgba(92,26,26,0.15);border-radius:4px;font-size:9px}
+.duty .done-btn{padding:3px 8px;background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:4px;font-size:9px;cursor:pointer}
+.duty .done-btn:hover{background:#155724;color:#fff}
+.duty.completed .text{text-decoration:line-through;color:#999}
+.s-remove{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer}
+.s-remove:hover{color:#c0392b}
+.fields{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.fields input,.fields select{padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none;flex:1;min-width:0}
+.fields select{flex:0 0 auto}
+.fields input:focus{border-color:var(--gld)}
+.btn-add{padding:6px 18px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;text-transform:uppercase}
+.btn-add:hover{background:var(--grn2)}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Duties</h1>
+<div id="listArea"></div>
+<div id="addArea"></div>
+</div>
+<div class="sm" id="sm"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null,items=[];
+var TEAM=['Fiorella','Christian','Milena','First in'];
+auth.onAuthStateChanged(function(u){if(!u){window.location.href='index.html';return;}U=u;logAccess(u,'page_view','somm-duties.html');loadItems();});
+
+function loadItems(){
+  db.collection('somm_duties').where('done','==',false).get().then(function(snap){
+    items=[];snap.forEach(function(doc){items.push({id:doc.id,data:doc.data()});});
+    items.sort(function(a,b){return (a.data.date||'')>(b.data.date||'')?-1:1;});
+    render();
+  });
+}
+
+function render(){
+  var h='<div class="box">';
+  if(items.length===0){h+='<div class="em">No pending duties</div>';}
+  else{
+    for(var i=0;i<items.length;i++){var it=items[i].data;var id=items[i].id;
+      h+='<div class="duty">';
+      h+='<span class="text">'+it.text+'</span>';
+      h+='<span class="by">'+it.author+'</span>';
+      h+='<span class="assign">'+(it.assignee||'Unassigned')+'</span>';
+      h+='<button class="done-btn" onclick="markDone(\''+id+'\')">✓ Done</button>';
+      h+='<button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button>';
+      h+='</div>';
+    }
+  }
+  h+='</div>';
+  document.getElementById('listArea').innerHTML=h;
+  // Add
+  var a='<div class="box"><h3>Add duty</h3><div class="fields">';
+  a+='<input type="date" id="dt_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)">';
+  a+='<input type="text" id="dt_text" placeholder="Duty..." onkeydown="if(event.key===\'Enter\')addItem()">';
+  a+='<select id="dt_assign"><option value="">Assign to...</option>';
+  for(var t=0;t<TEAM.length;t++){a+='<option value="'+TEAM[t]+'">'+TEAM[t]+'</option>';}
+  a+='</select></div><button class="btn-add" onclick="addItem()">Add</button></div>';
+  document.getElementById('addArea').innerHTML=a;
+}
+
+function addItem(){
+  var text=(document.getElementById('dt_text')||{}).value||'';if(!text){msg('Text required');return;}
+  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  var item={text:text,author:author,assignee:(document.getElementById('dt_assign')||{}).value||'',date:(document.getElementById('dt_date')||{}).value||new Date().toISOString().slice(0,10),done:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+  db.collection('somm_duties').add(item).then(function(){loadItems();msg('Added');}).catch(function(){msg('Error');});
+}
+
+function markDone(id){
+  var who=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  db.collection('somm_duties').doc(id).update({done:true,doneBy:who,doneDate:new Date().toISOString().slice(0,10)}).then(function(){loadItems();msg('Done ✓');});
+}
+
+function removeItem(id){db.collection('somm_duties').doc(id).delete().then(function(){loadItems();msg('Removed');});}
+function checkDay(el){var d=new Date(el.value+'T12:00:00').getDay();if(d===0||d===1){msg('Closed on Sun/Mon');el.value=new Date().toISOString().slice(0,10);}}
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+</script>
+</body>
+</html>

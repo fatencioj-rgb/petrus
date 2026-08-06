@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:960px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:14px}
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:6px 14px;border:1px solid rgba(92,26,26,0.2);border-radius:14px;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn);transition:all .15s}
+.tab:hover{background:#f0d4d4;border-color:var(--grn)}
+.tab.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+/* Pending section */
+.pending-box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px}
+.pending-title{font-family:var(--f);font-size:16px;color:var(--grn);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.pending-title .badge{font-size:9px;background:var(--grn);color:#fff;padding:2px 7px;border-radius:10px}
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--grn2);color:#fff;padding:7px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:6px 8px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
+.tbl tr:hover td{background:#fdf9f2}
+.s-tag{font-size:8px;padding:2px 6px;border-radius:8px;text-transform:uppercase;font-weight:600;white-space:nowrap}
+.s-tag.low{background:#fff3cd;color:#856404}
+.s-tag.t86{background:#f8d7da;color:#721c24}
+.s-tag.back{background:#d4edda;color:#155724}
+.restock-btn{padding:3px 8px;background:var(--pink);color:var(--grn);border:1px solid rgba(92,26,26,0.2);border-radius:4px;font-size:8px;cursor:pointer}
+.restock-btn:hover{background:var(--grn);color:#fff}
+.s-remove{background:none;border:none;color:#ccc;font-size:12px;cursor:pointer}
+.s-remove:hover{color:#c0392b}
+/* Add form */
+.add-box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-top:14px}
+.add-box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
+.fields{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.fields input,.fields select{padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none;flex:1;min-width:0}
+.fields input[type="number"]{flex:0 0 50px}
+.fields select{flex:0 0 auto}
+.fields input:focus{border-color:var(--gld)}
+.tag-opts{display:flex;gap:6px;margin-bottom:8px}
+.tag-opt{padding:4px 10px;border:1px solid #ddd;border-radius:10px;font-size:9px;cursor:pointer;background:#fff;color:#666}
+.tag-opt:hover{border-color:var(--grn);color:var(--grn)}
+.tag-opt.on{background:var(--grn);color:#fff;border-color:var(--grn)}
+.qty-row{display:none;gap:6px;align-items:center;margin-bottom:8px}
+.qty-row.show{display:flex}
+.btn-add{padding:6px 18px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.btn-add:hover{background:var(--grn2)}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Stock</h1>
+<div class="tabs" id="tabs"></div>
+<div id="pendingArea"></div>
+<div id="addArea"></div>
+</div>
+<div class="sm" id="sm"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null;
+var TAB='wine';
+var TABS=['wine','bar','supplies','kitchen'];
+var KITCHEN_ITEMS=['Ruby Port Cockburn','Madeira Blandys','Bacardi Rum 8y','Prosecco','Kirsh'];
+var selTag='';
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  U=u;logAccess(u,'page_view','somm-stock.html');
+  loadStock();
+});
+
+function setTab(t){TAB=t;renderTabs();renderPending();renderAdd();}
+
+function renderTabs(){
+  var h='';
+  TABS.forEach(function(t){
+    h+='<span class="tab'+(TAB===t?' on':'')+'" onclick="setTab(\''+t+'\')">'+t.charAt(0).toUpperCase()+t.slice(1)+'</span>';
+  });
+  document.getElementById('tabs').innerHTML=h;
+}
+
+// Load all active stock items (not restocked)
+var stockItems=[];
+function loadStock(){
+  db.collection('somm_stock').where('restocked','==',false).get().then(function(snap){
+    stockItems=[];
+    snap.forEach(function(doc){stockItems.push({id:doc.id,data:doc.data()});});
+    renderTabs();renderPending();renderAdd();
+  }).catch(function(e){console.error(e);});
+}
+
+function renderPending(){
+  var filtered=stockItems.filter(function(it){return it.data.section===TAB;});
+  var area=document.getElementById('pendingArea');
+  if(filtered.length===0){area.innerHTML='<div class="pending-box"><div class="em">No pending stock alerts</div></div>';return;}
+  var h='<div class="pending-box">';
+  h+='<div class="pending-title">Pending <span class="badge">'+filtered.length+'</span></div>';
+  h+='<table class="tbl"><thead><tr><th>Date</th><th>Product</th>';
+  if(TAB==='wine')h+='<th>Where</th>';
+  if(TAB==='bar'||TAB==='kitchen')h+='<th>Category</th>';
+  h+='<th>Tag</th><th>Qty</th><th>By</th><th>Restock</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<filtered.length;i++){
+    var it=filtered[i].data;var id=filtered[i].id;
+    h+='<tr><td>'+it.date+'</td><td>'+it.name+'</td>';
+    if(TAB==='wine')h+='<td>'+(it.location||'')+'</td>';
+    if(TAB==='bar'||TAB==='kitchen')h+='<td>'+(it.category||'')+'</td>';
+    var tagCls=it.tag==='86'?'t86':'low';
+    h+='<td><span class="s-tag '+tagCls+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
+    h+='<td>'+(it.qty?(it.qty+' '+(it.unit||'')):'—')+'</td>';
+    h+='<td>'+(it.author||'')+'</td>';
+    h+='<td><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:9px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;width:100px"><button class="restock-btn" onclick="restockItem(\''+id+'\')">✓ Back in stock</button></td>';
+    h+='<td><button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button></td>';
+    h+='</tr>';
+  }
+  h+='</tbody></table></div>';
+  area.innerHTML=h;
+}
+
+function renderAdd(){
+  var area=document.getElementById('addArea');
+  var h='<div class="add-box"><h3>Add '+TAB+' stock alert</h3>';
+  h+='<div class="fields">';
+  h+='<input type="date" id="stk_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)" style="width:110px;flex:0 0 110px">';
+  if(TAB==='wine'){
+    h+='<input type="text" id="stk_name" placeholder="Product">';
+  }else if(TAB==='bar'){
+    h+='<input type="text" id="stk_cat" placeholder="Category">';
+    h+='<input type="text" id="stk_name" placeholder="Product">';
+  }else if(TAB==='supplies'){
+    h+='<input type="text" id="stk_name" placeholder="Product">';
+  }else if(TAB==='kitchen'){
+    h+='<select id="stk_name"><option value="">Name...</option>';
+    for(var k=0;k<KITCHEN_ITEMS.length;k++){h+='<option value="'+KITCHEN_ITEMS[k]+'">'+KITCHEN_ITEMS[k]+'</option>';}
+    h+='<option value="__other">Other...</option></select>';
+    h+='<input type="text" id="stk_name_other" placeholder="Other..." style="display:none">';
+    h+='<input type="text" id="stk_note" placeholder="Notes (optional)">';
+  }
+  // Tag buttons inline
+  h+='<span class="tag-opt'+(selTag==='low-stock'?' on':'')+'" onclick="pickTag(\'low-stock\',this)">Low in stock</span>';
+  h+='<span class="tag-opt'+(selTag==='86'?' on':'')+'" onclick="pickTag(\'86\',this)">86</span>';
+  // Wine 86: location + remove + assign ALL in same row
+  if(TAB==='wine'){
+    h+='<select id="stk_location" style="display:'+(selTag==='86'?'inline-block':'none')+'"><option value="">Where...</option><option value="BTG">BTG</option><option value="BTB">BTB</option><option value="BTG + BTB">BTG + BTB</option><option value="Wine Pairing">Wine Pairing</option><option value="Everywhere">Everywhere</option></select>';
+    h+='<label style="font-size:8px;color:#888;display:'+(selTag==='86'?'flex':'none')+';align-items:center;gap:3px;cursor:pointer" id="removeLabel"><input type="checkbox" id="stk_remove_list">Remove from list</label>';
+    h+='<select id="stk_assign" style="font-size:9px;padding:2px 5px;border:1px solid #ddd;border-radius:4px;display:'+(selTag==='86'?'inline-block':'none')+'"><option value="">Assign...</option><option value="Fiorella">Fiorella</option><option value="Christian">Christian</option><option value="Milena">Milena</option><option value="First in">First in</option></select>';
+  }
+  h+='</div>';
+  h+='<div class="qty-row'+(selTag==='low-stock'?' show':'')+'" id="qtyRow"><input type="number" id="stk_qty" placeholder="Qty" style="flex:0 0 50px" min="0"><select id="stk_unit"><option value="uni">uni</option><option value="btl">btl</option></select></div>';
+  // Wine 86 row removed - now inline above
+  h+='<button class="btn-add" onclick="addItem()">Add</button>';
+  h+='</div>';
+  area.innerHTML=h;
+  // Kitchen other toggle
+  if(TAB==='kitchen'){
+    var sel=document.getElementById('stk_name');
+    if(sel)sel.onchange=function(){
+      var o=document.getElementById('stk_name_other');
+      if(o)o.style.display=sel.value==='__other'?'inline-block':'none';
+    };
+  }
+}
+
+function pickTag(tag,el){
+  var opts=document.querySelectorAll('.tag-opt');
+  for(var i=0;i<opts.length;i++)opts[i].classList.remove('on');
+  var loc=document.getElementById('stk_location');
+  var rem=document.getElementById('removeLabel');
+  var asgn=document.getElementById('stk_assign');
+  if(selTag===tag){
+    selTag='';
+    document.getElementById('qtyRow').classList.remove('show');
+    if(loc)loc.style.display='none';if(rem)rem.style.display='none';if(asgn)asgn.style.display='none';
+  } else {
+    el.classList.add('on');selTag=tag;
+    if(tag==='low-stock'){
+      document.getElementById('qtyRow').classList.add('show');
+      if(loc)loc.style.display='none';if(rem)rem.style.display='none';if(asgn)asgn.style.display='none';
+    } else {
+      document.getElementById('qtyRow').classList.remove('show');
+      if(loc)loc.style.display='inline-block';if(rem)rem.style.display='flex';if(asgn)asgn.style.display='inline-block';
+    }
+  }
+}
+
+function addItem(){
+  var date=document.getElementById('stk_date').value;
+  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  var item={section:TAB,date:date,author:author,tag:selTag||'low-stock',restocked:false,restockedDate:'',qty:'',unit:'',name:'',producer:'',vintage:'',category:'',notes:'',location:''};
+
+  if(TAB==='wine'){
+    item.name=(document.getElementById('stk_name')||{}).value||'';
+    if(selTag==='86'){
+      item.location=(document.getElementById('stk_location')||{}).value||'';
+    }
+  }else if(TAB==='bar'){
+    item.category=(document.getElementById('stk_cat')||{}).value||'';
+    item.name=(document.getElementById('stk_name')||{}).value||'';
+  }else if(TAB==='supplies'){
+    item.name=(document.getElementById('stk_name')||{}).value||'';
+  }else if(TAB==='kitchen'){
+    var sel=document.getElementById('stk_name');
+    item.name=sel?sel.value:'';
+    if(item.name==='__other')item.name=(document.getElementById('stk_name_other')||{}).value||'';
+    item.notes=(document.getElementById('stk_note')||{}).value||'';
+  }
+  if(!item.name){msg('Name required');return;}
+  if(selTag==='low-stock'){
+    item.qty=(document.getElementById('stk_qty')||{}).value||'';
+    item.unit=(document.getElementById('stk_unit')||{}).value||'';
+  }
+  item.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+  db.collection('somm_stock').add(item).then(function(){
+    // If "Remove from Wine List" is checked, create a task
+    if(TAB==='wine'&&selTag==='86'){
+      var removeChk=document.getElementById('stk_remove_list');
+      if(removeChk&&removeChk.checked){
+        var assignEl=document.getElementById('stk_assign');
+        var assignee=assignEl?assignEl.value:'';
+        db.collection('somm_duties').add({
+          text:'Remove "'+item.name+'" from Wine List'+(item.location?' ('+item.location+')':''),
+          author:author,assignee:assignee,date:date,done:false,
+          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+    selTag='';loadStock();msg('Added');
+  }).catch(function(e){console.error(e);msg('Error');});
+}
+
+function restockItem(id){
+  var dateEl=document.getElementById('redate_'+id);
+  var restockDate=dateEl?dateEl.value:new Date().toISOString().slice(0,10);
+  db.collection('somm_stock').doc(id).update({
+    restocked:true,
+    restockedDate:restockDate,
+    restockedBy:U.displayName||U.email.split('@')[0].replace(/\./g,' ')
+  }).then(function(){loadStock();msg('Back in stock ✓');});
+}
+
+function removeItem(id){
+  db.collection('somm_stock').doc(id).delete().then(function(){loadStock();msg('Removed');});
+}
+
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+function checkDay(el){var d=new Date(el.value+'T12:00:00').getDay();if(d===0||d===1){msg('Closed on Sun/Mon');el.value=new Date().toISOString().slice(0,10);}}
+</script>
+</body>
+</html>

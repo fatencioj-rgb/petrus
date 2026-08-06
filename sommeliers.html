@@ -7,31 +7,53 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --gold-light:#d4b87a; --cream:#faf7f1; --sans:'Inter',sans-serif; --serif:'Cormorant Garamond',serif; }
+:root { --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --gold-light:#d4b87a; --cream:#faf7f1; --pink:#f8e8e8; --sans:'Inter',sans-serif; --serif:'Cormorant Garamond',serif; }
 body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-height:100vh; }
 .top-bar { background:var(--green-dark); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
 .top-bar a { color:var(--gold); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 .top-bar a:hover { color:#fff; }
 .top-bar h2 { font-family:var(--serif); color:#fff; font-size:18px; margin:0; }
-.page { max-width:700px; margin:0 auto; padding:60px 24px; text-align:center; }
+.page { max-width:700px; margin:0 auto; padding:40px 24px; text-align:center; }
 .page h1 { font-family:var(--serif); font-size:34px; color:var(--green); margin-bottom:8px; }
-.page .sub { font-size:13px; color:#888; letter-spacing:1px; margin-bottom:40px; }
-.profiles { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; }
+@keyframes fadeSlideIn {
+  from { opacity:0; transform:translateY(-8px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.page .sub { font-size:13px; color:#888; letter-spacing:1px; margin-bottom:24px; }
+/* Today feed */
+.today-feed { text-align:left; background:#fff; border:1px solid #e8e0d4; border-radius:10px; padding:18px 20px; margin-bottom:30px; }
+.today-feed .feed-title { font-family:var(--serif); font-size:18px; color:var(--green); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.today-feed .feed-title .dot { width:8px; height:8px; border-radius:50%; background:#28a745; }
+.feed-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid #f9f5ef; font-size:11px; line-height:1.5; }
+.feed-item:last-child { border-bottom:none; }
+.feed-item .f-time { font-size:9px; color:#999; min-width:38px; padding-top:1px; }
+.feed-item .f-text { flex:1; }
+.feed-item .f-author { font-weight:600; color:var(--green); }
+.feed-item .f-highlight { font-weight:600; }
+.feed-item .f-tag { font-size:8px; padding:1px 5px; border-radius:5px; font-weight:600; }
+.f-tag.low { background:#fff3cd; color:#856404; }
+.f-tag.t86 { background:#f8d7da; color:#721c24; }
+.f-tag.deliv { background:#d4edda; color:#155724; }
+.f-tag.wast { background:#e2d6f3; color:#4a235a; }
+.f-tag.duty { background:#cce5ff; color:#004085; }
+.feed-empty { text-align:center; color:#ccc; font-size:11px; padding:10px 0; }
+/* Buttons */
+.profiles { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
 .profile-card {
-  flex:1; min-width:200px; max-width:280px;
-  background:#fff; border:1px solid #e8e0d4; border-radius:10px;
-  padding:40px 24px; text-decoration:none; color:#2c2c2c;
+  flex:1; min-width:180px; max-width:260px;
+  background:var(--pink); border:1px solid rgba(92,26,26,0.12); border-radius:10px;
+  padding:30px 20px; text-decoration:none; color:var(--green);
   transition:all 0.3s ease; text-align:center;
 }
 .profile-card:hover {
-  border-color:var(--gold); transform:translateY(-4px);
-  box-shadow:0 8px 30px rgba(92,26,26,0.08);
+  border-color:var(--green); transform:translateY(-3px);
+  box-shadow:0 6px 24px rgba(92,26,26,0.1);
 }
 .profile-card h3 {
-  font-family:var(--serif); font-size:22px; color:var(--green);
-  margin-bottom:8px; letter-spacing:1px;
+  font-family:var(--serif); font-size:20px; color:var(--green);
+  margin-bottom:6px; letter-spacing:0.5px;
 }
-.profile-card p { font-size:12px; color:#888; line-height:1.5; }
+.profile-card p { font-size:11px; color:#888; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -42,11 +64,48 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 </div>
 <div class="page">
   <h1>Sommeliers</h1>
-  <p class="sub">Team tools</p>
+  <p class="sub" id="greeting" style="text-align:left;color:var(--green);font-family:var(--serif);font-size:22px;letter-spacing:0;margin-bottom:20px;opacity:0;animation:fadeSlideIn 0.8s ease forwards;animation-delay:0.3s"><span id="greetName"></span><span id="carousel" style="margin-left:12px;font-family:var(--sans);font-size:11px;color:var(--gold);font-style:italic;opacity:0;transition:opacity 0.5s"></span></p>
+  <div style="text-align:left;margin-bottom:10px">
+    <a href="somm-weekly.html" style="display:inline-block;padding:4px 12px;border:1px solid rgba(92,26,26,0.2);border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;background:var(--pink);color:var(--green)">Weekly Log</a>
+  </div>
+  <div class="today-feed" id="todayFeed">
+    <div class="feed-title">
+      <span class="dot"></span>
+      <span id="feedDateLabel">Today</span>
+      <span style="margin-left:auto;display:flex;gap:6px">
+        <span style="cursor:pointer;font-size:14px;color:var(--gold);user-select:none" onclick="feedPrev()">&larr;</span>
+        <span style="cursor:pointer;font-size:14px;color:var(--gold);user-select:none" onclick="feedNext()">&rarr;</span>
+      </span>
+    </div>
+    <div id="feedContent"><div class="feed-empty">Loading...</div></div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f0ebe5">
+      <input type="text" id="quickTask" placeholder="Add a task..." style="flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);outline:none" onkeydown="if(event.key==='Enter')addQuickTask()">
+      <select id="quickAssign" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:9px;font-family:var(--sans)">
+        <option value="">Assign...</option>
+        <option value="Fiorella">Fiorella</option>
+        <option value="Christian">Christian</option>
+        <option value="Milena">Milena</option>
+        <option value="First in">First in</option>
+      </select>
+      <span style="cursor:pointer;padding:4px 10px;background:var(--green);color:#fff;border-radius:4px;font-size:9px" onclick="addQuickTask()">+</span>
+    </div>
+  </div>
   <div class="profiles">
-    <a href="somm-orders.html" class="profile-card">
-      <h3>Daily Log</h3>
-      <p>Stock updates, 86s &amp; orders</p>
+    <a href="somm-stock.html" class="profile-card">
+      <h3>Stock</h3>
+      <p>Low stock, 86 &amp; restocked</p>
+    </a>
+    <a href="somm-deliveries.html" class="profile-card">
+      <h3>Deliveries</h3>
+      <p>Incoming orders &amp; changes</p>
+    </a>
+    <a href="somm-wastages.html" class="profile-card">
+      <h3>Wastages</h3>
+      <p>Wine &amp; bar wastage log</p>
+    </a>
+    <a href="somm-transfers.html" class="profile-card">
+      <h3>Transfers</h3>
+      <p>Transfers to kitchen</p>
     </a>
     <a href="somm-reports.html" class="profile-card">
       <h3>Reports</h3>
@@ -61,6 +120,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       <p>Inventory counts</p>
     </a>
   </div>
+  <div style="margin-top:40px;font-size:10px;color:#ccc;cursor:pointer" onclick="promptAdmin()">fiorella</div>
 </div>
 
 <!-- Firebase + Auth -->
@@ -69,10 +129,323 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
 <script>
+var TODAY=new Date().toISOString().slice(0,10);
+var feedOffset=0;
+var _isAdmin=false;
+
+function getFeedDate(){
+  var d=new Date();
+  d.setDate(d.getDate()+feedOffset);
+  return d.toISOString().slice(0,10);
+}
+
+function feedPrev(){feedOffset--;loadFeed();}
+function feedNext(){if(feedOffset<0){feedOffset++;loadFeed();}}
+
 auth.onAuthStateChanged((user) => {
   if (!user) { window.location.href = 'index.html'; }
-  else { logAccess(user, 'page_view', 'sommeliers.html'); }
+  else {
+    logAccess(user, 'page_view', 'sommeliers.html');
+    var name = user.displayName || user.email.split('@')[0].replace(/\./g,' ');
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    document.getElementById('greetName').textContent = 'Hello, ' + name;
+    _isAdmin=user.email&&user.email.startsWith('fiorella');
+    loadFeed();
+    loadCarousel();
+  }
 });
+
+function promptAdmin(){
+  var pw=prompt('Enter admin key:');
+  if(pw==='petrus2026'){window.location.href='somm-admin.html';}
+}
+
+function markDutyDone(dutyId){
+  var who=firebase.auth().currentUser;
+  var name=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  name=name.charAt(0).toUpperCase()+name.slice(1);
+  db.collection('somm_duties').doc(dutyId).update({done:true,doneBy:name,doneDate:new Date().toISOString().slice(0,10)}).then(function(){loadFeed();});
+}
+
+function markDelivTaskDone(docId,taskKey){
+  var who=firebase.auth().currentUser;
+  var name=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  name=name.charAt(0).toUpperCase()+name.slice(1);
+  db.collection('somm_deliveries').doc(docId).get().then(function(doc){
+    if(!doc.exists)return;
+    var data=doc.data();
+    var tasks=data.tasks||{};
+    tasks[taskKey]='done';
+    var taskLog=data.taskLog||[];
+    taskLog.push({task:taskKey,by:name,date:new Date().toISOString().slice(0,10)});
+    return db.collection('somm_deliveries').doc(docId).update({tasks:tasks,taskLog:taskLog});
+  }).then(function(){loadFeed();});
+}
+
+function markAllDelivTasks(docId,keysStr){
+  var keys=keysStr.split(',');
+  var who=firebase.auth().currentUser;
+  var name=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  name=name.charAt(0).toUpperCase()+name.slice(1);
+  db.collection('somm_deliveries').doc(docId).get().then(function(doc){
+    if(!doc.exists)return;
+    var data=doc.data();
+    var tasks=data.tasks||{};
+    var taskLog=data.taskLog||[];
+    for(var i=0;i<keys.length;i++){
+      tasks[keys[i]]='done';
+      taskLog.push({task:keys[i],by:name,date:new Date().toISOString().slice(0,10)});
+    }
+    return db.collection('somm_deliveries').doc(docId).update({tasks:tasks,taskLog:taskLog});
+  }).then(function(){loadFeed();});
+}
+
+function deleteDuty(dutyId){
+  db.collection('somm_duties').doc(dutyId).delete().then(function(){loadFeed();});
+}
+
+function addQuickTask(){
+  var input=document.getElementById('quickTask');
+  var text=input.value.trim();
+  if(!text)return;
+  var who=firebase.auth().currentUser;
+  var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+  var assignee=(document.getElementById('quickAssign')||{}).value||'';
+  db.collection('somm_duties').add({
+    text:text,author:author,assignee:assignee,
+    date:new Date().toISOString().slice(0,10),
+    done:false,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    input.value='';
+    document.getElementById('quickAssign').value='';
+    loadFeed();
+  });
+}
+
+function loadCarousel(){
+  db.collection('somm_messages').get().then(function(snap){
+    var msgs=[];
+    snap.forEach(function(doc){msgs.push(doc.data().text);});
+    if(msgs.length===0)return;
+    var el=document.getElementById('carousel');
+    var idx=0;
+    function showNext(){
+      el.style.opacity='0';
+      setTimeout(function(){
+        el.textContent='\u2014 '+msgs[idx];
+        el.style.opacity='1';
+        idx=(idx+1)%msgs.length;
+      },500);
+    }
+    showNext();
+    if(msgs.length>1)setInterval(showNext,5000);
+  }).catch(function(e){console.error('Carousel error:',e);});
+}
+
+function loadFeed(){
+  var FEED_DATE=getFeedDate();
+  var labelEl=document.getElementById('feedDateLabel');
+  if(feedOffset===0) labelEl.textContent='Today';
+  else if(feedOffset===-1) labelEl.textContent='Yesterday';
+  else {var dd=new Date(FEED_DATE+'T12:00:00');labelEl.textContent=dd.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});}
+
+  Promise.all([
+    db.collection('somm_stock').where('date','==',FEED_DATE).get(),
+    db.collection('somm_deliveries').get(),
+    db.collection('somm_wastages').where('date','==',FEED_DATE).get(),
+    db.collection('somm_duties').get(),
+    db.collection('somm_transfers').where('date','==',FEED_DATE).get(),
+    db.collection('somm_recipes').where('date','==',FEED_DATE).get()
+  ]).then(function(results){
+    var feed=[];
+    results[0].forEach(function(doc){var d=doc.data();feed.push({type:'stock',data:d,ts:d.createdAt});});
+    var delivDocs=[];
+    results[1].forEach(function(doc){delivDocs.push({id:doc.id,data:doc.data()});});
+    delivDocs.forEach(function(d){
+      if(d.data.date===FEED_DATE){feed.push({type:'delivery',data:d.data,docId:d.id,ts:d.data.createdAt});}
+      else if(feedOffset===0){
+        var tasks=d.data.tasks||{};
+        var hasPending=false;
+        ['invoicePW','createdPW','createdHorizon','addedMenu'].forEach(function(k){if(tasks[k]==='pending')hasPending=true;});
+        // Also show if tasks were completed today
+        var doneToday=false;
+        var log=d.data.taskLog||[];
+        for(var tl=0;tl<log.length;tl++){if(log[tl].date===FEED_DATE)doneToday=true;}
+        if(hasPending||doneToday)feed.push({type:'delivery',data:d.data,docId:d.id,ts:d.data.createdAt});
+      }
+    });
+    results[2].forEach(function(doc){var d=doc.data();feed.push({type:'wastage',data:d,ts:d.createdAt});});
+    // Duties: show all pending ones + completed today
+    results[3].forEach(function(doc){var d=doc.data();
+      if(!d.done)feed.push({type:'duty',data:d,id:doc.id,ts:d.createdAt});
+      else if(d.done&&d.doneDate===FEED_DATE)feed.push({type:'duty-done',data:d,id:doc.id,ts:d.createdAt});
+    });
+    results[4].forEach(function(doc){var d=doc.data();feed.push({type:'transfer',data:d,ts:d.createdAt});});
+    // Recipes created or modified today
+    results[5].forEach(function(doc){var d=doc.data();feed.push({type:'recipe',data:d,ts:d.updatedAt||d.createdAt});});
+    renderFeed(feed);
+  }).catch(function(e){console.error(e);});
+}
+
+function renderFeed(feed){
+  var el=document.getElementById('feedContent');
+  var h='';
+  if(feed.length===0){
+    h='<div class="feed-empty">No activity</div>';
+    el.innerHTML=h;return;
+  }
+
+  // Group deliveries by author+supplier
+  var delivGroups={};
+  var otherFeed=[];
+  for(var i=0;i<feed.length;i++){
+    var f=feed[i];
+    if(f.type==='delivery'){
+      var key=f.data.author+'|||'+f.data.supplier;
+      if(!delivGroups[key])delivGroups[key]={author:f.data.author,supplier:f.data.supplier,items:[],ts:f.ts};
+      delivGroups[key].items.push({data:f.data,docId:f.docId});
+      if(f.ts&&f.ts.seconds>(delivGroups[key].ts?delivGroups[key].ts.seconds||0:0))delivGroups[key].ts=f.ts;
+    }else{
+      otherFeed.push(f);
+    }
+  }
+  // Convert delivery groups to feed items
+  for(var k in delivGroups){
+    var g=delivGroups[k];
+    otherFeed.push({type:'delivery-group',data:g,ts:g.ts});
+  }
+
+  // Sort by type first, then by timestamp within same type
+  var typeOrder={'delivery-group':0,'stock':1,'wastage':2,'transfer':3,'recipe':4,'duty':5,'duty-done':6};
+  otherFeed.sort(function(a,b){
+    var ta=typeOrder[a.type]!==undefined?typeOrder[a.type]:9;
+    var tb=typeOrder[b.type]!==undefined?typeOrder[b.type]:9;
+    if(ta!==tb)return ta-tb;
+    var tsa=a.ts?a.ts.seconds||0:0;
+    var tsb=b.ts?b.ts.seconds||0:0;
+    return tsb-tsa;
+  });
+
+  for(var i=0;i<Math.min(otherFeed.length,12);i++){
+    var f=otherFeed[i];var d=f.data;
+    h+='<div class="feed-item">';
+    if(f.type==='stock'){
+      var tagCls='low'; // always same color for stock
+      var tagLbl=d.tag==='86'?'86':'low in stock';
+      var aName=d.author.charAt(0).toUpperCase()+d.author.slice(1);
+      // Build full product name with producer + vintage
+      var fullName=d.name;
+      if(d.producer)fullName+=' '+d.producer;
+      if(d.vintage)fullName+=' '+d.vintage;
+      // If low-stock with qty=1, show as "last bottle available"
+      var desc='';
+      if(d.tag==='low-stock'&&d.qty==='1'){
+        desc='as <span class="f-tag low">last bottle available</span>';
+      } else {
+        desc='as <span class="f-tag '+tagCls+'">'+tagLbl+'</span>';
+        if(d.tag==='86'&&d.location)desc+=' <span style="font-size:9px;color:#888">('+d.location+')</span>';
+      }
+      h+='<span class="f-tag '+tagCls+'">Stock</span>';
+      h+='<span class="f-text"><span class="f-author">'+aName+'</span> logged <span class="f-highlight">"'+fullName+'"</span> '+desc+'</span>';
+    }else if(f.type==='delivery-group'){
+      var authorName=d.author.charAt(0).toUpperCase()+d.author.slice(1);
+      h+='<span class="f-tag deliv">Delivery</span>';
+      h+='<span class="f-text"><span class="f-author">'+authorName+'</span> received delivery from <span class="f-highlight">'+d.supplier+'</span>:';
+      var DONE_LABELS={invoicePW:'Invoice cl.',createdPW:'+ PW',createdHorizon:'+ Horizon',addedMenu:'+ Menu'};
+      var PEND_LABELS={invoicePW:'Close the invoice',createdPW:'Create product in PW',createdHorizon:'Create product in Horizon',addedMenu:'Update the Menu'};
+      for(var di=0;di<d.items.length;di++){
+        var itm=d.items[di].data;
+        var docId=d.items[di].docId;
+        var tasks=itm.tasks||{};
+        var pendList=[];
+        ['invoicePW','createdPW','createdHorizon','addedMenu'].forEach(function(k){
+          if(tasks[k]==='pending')pendList.push({key:k,label:PEND_LABELS[k],docId:docId});
+        });
+        h+='<br><span style="margin-left:12px;font-size:10px">'+itm.qty+' '+itm.name+'</span>';
+        // Show completed tasks for today
+        var doneToday=[];
+        var log=itm.taskLog||[];
+        var FEED_DATE_LOCAL=getFeedDate();
+        var DONE_FULL={invoicePW:'Closed the invoice',createdPW:'Created product in PW',createdHorizon:'Created product in Horizon',addedMenu:'Updated the Menu'};
+        var NAME_COLORS={fiorella:'#7c3aed',christian:'#2563eb',milena:'#d97706'};
+        var donePeople={};
+        for(var tl=0;tl<log.length;tl++){
+          if(log[tl].date===FEED_DATE_LOCAL){
+            var dLabel=DONE_FULL[log[tl].task]||log[tl].task;
+            doneToday.push(dLabel);
+            var byKey=log[tl].by.toLowerCase();
+            donePeople[byKey]=log[tl].by.charAt(0).toUpperCase()+log[tl].by.slice(1);
+          }
+        }
+        if(doneToday.length){
+          h+='&nbsp;&nbsp;<span style="font-size:9px;color:#155724">\u2713 '+doneToday.join(', ');
+          // Show unique names as pills at the end
+          var names=Object.keys(donePeople);
+          for(var np=0;np<names.length;np++){
+            var nameColor=NAME_COLORS[names[np]]||'#666';
+            h+=' <span style="font-size:7px;padding:1px 5px;border-radius:3px;background:'+nameColor+'22;color:'+nameColor+';font-weight:600">'+donePeople[names[np]]+'</span>';
+          }
+          h+='</span>';
+        }
+        if(pendList.length){
+          var pendLabels=[];
+          for(var pi=0;pi<pendList.length;pi++){pendLabels.push(pendList[pi].label);}
+          var pendText=pendLabels[0];
+          for(var pi2=1;pi2<pendLabels.length;pi2++){
+            if(pi2===pendLabels.length-1)pendText+=' and '+pendLabels[pi2];
+            else pendText+=', '+pendLabels[pi2];
+          }
+          var allKeys=[];for(var pk=0;pk<pendList.length;pk++){allKeys.push(pendList[pk].key);}
+          var docId=pendList[0].docId;
+          h+='&nbsp;&nbsp;<span style="font-size:9px;color:var(--green);font-weight:500">\u2014 Pending to: '+pendText+' <span style="cursor:pointer;padding:1px 6px;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:3px;font-size:8px;font-weight:400" onclick="markAllDelivTasks(\''+docId+'\',\''+allKeys.join(',')+'\')">Done</span></span>';
+        }
+      }
+      // Assignee note at the end
+      var groupAssignee='';
+      for(var ai=0;ai<d.items.length;ai++){if(d.items[ai].data.assignee)groupAssignee=d.items[ai].data.assignee;}
+      if(groupAssignee)h+='<br><span style="margin-left:12px;font-size:9px;font-style:italic;color:#888">Unfinished work assigned to: '+groupAssignee+'</span>';
+      h+='</span>';
+    }else if(f.type==='delivery-pending'){
+      h+='';
+    }else if(f.type==='task-done'){
+      h+='';
+    }else if(f.type==='wastage'){
+      var aName2=d.author.charAt(0).toUpperCase()+d.author.slice(1);
+      h+='<span class="f-tag wast">Wastage</span>';
+      h+='<span class="f-text"><span class="f-author">'+aName2+'</span> logged wastage: <span class="f-highlight">"'+d.name+'"</span> '+d.qty+' '+d.unit+'</span>';
+    }else if(f.type==='duty'){
+      var aName3=(d.assignee||'').charAt(0).toUpperCase()+(d.assignee||'').slice(1);
+      var assignLabel=d.assignee?'<span class="f-author">'+aName3+'</span> needs to':'Pending:';
+      // Style location tags like (BTG), (BTB), etc.
+      var dutyText=d.text.replace(/\((BTG|BTB|BTG \+ BTB|Wine Pairing|Everywhere)\)/g,'<span style="font-size:8px;padding:1px 6px;border-radius:4px;background:#f0f0f0;color:#888">$1</span>');
+      h+='<span class="f-tag duty">Pending</span>';
+      h+='<span class="f-text">'+assignLabel+' <span class="f-highlight">'+dutyText+'</span> <span style="cursor:pointer;padding:2px 8px;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:4px;font-size:8px;margin-left:6px" onclick="markDutyDone(\''+f.id+'\')">Done</span>';
+      if(_isAdmin)h+=' <span style="cursor:pointer;color:#ccc;font-size:10px;margin-left:4px" onclick="deleteDuty(\''+f.id+'\')">&times;</span>';
+      h+='</span>';
+    }else if(f.type==='duty-done'){
+      var doneByName=(d.doneBy||'').charAt(0).toUpperCase()+(d.doneBy||'').slice(1);
+      h+='<span class="f-tag" style="background:#d4edda;color:#155724">✓ Done</span>';
+      h+='<span class="f-text"><span class="f-highlight">'+d.text+'</span> <span style="color:#155724;font-size:9px">✓ Done by <strong>'+doneByName+'</strong></span>';
+      if(_isAdmin)h+=' <span style="cursor:pointer;color:#ccc;font-size:10px;margin-left:6px" onclick="deleteDuty(\''+f.id+'\')">&times;</span>';
+      h+='</span>';
+    }else if(f.type==='transfer'){
+      var aName4=d.author.charAt(0).toUpperCase()+d.author.slice(1);
+      h+='<span class="f-tag" style="background:#e8f4fd;color:#0c5460">Transfer</span>';
+      h+='<span class="f-text"><span class="f-author">'+aName4+'</span> transferred <span class="f-highlight">"'+d.name+'"</span> '+d.qty+' '+d.unit+' \u2192 '+d.destination+(d.receivedBy?' (received: '+d.receivedBy+')':'')+'</span>';
+    }else if(f.type==='recipe'){
+      var aName5=(d.lastEditBy||d.author||'').charAt(0).toUpperCase()+(d.lastEditBy||d.author||'').slice(1);
+      var isNew=d.createdAt&&d.updatedAt&&d.createdAt.seconds===d.updatedAt.seconds;
+      var action=isNew?'created':'modified';
+      h+='<span class="f-tag" style="background:#f3e8ff;color:#6b21a8">Recipe</span>';
+      h+='<span class="f-text"><span class="f-author">'+aName5+'</span> '+action+' <span class="f-highlight">"'+d.name+'"</span></span>';
+    }
+    h+='</div>';
+  }
+  if(otherFeed.length>12)h+='<div class="feed-empty">+'+(otherFeed.length-12)+' more today</div>';
+  el.innerHTML=h;
+}
 </script>
 </body>
 </html>
