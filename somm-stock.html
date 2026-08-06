@@ -160,16 +160,7 @@ function renderAdd(){
   }
   h+='</div>';
   h+='<div class="qty-row'+(selTag==='low-stock'?' show':'')+'" id="qtyRow"><input type="number" id="stk_qty" placeholder="Qty" style="flex:0 0 50px" min="0"><select id="stk_unit"><option value="uni">uni</option><option value="btl">btl</option></select></div>';
-  // Low-stock + Wine: "Do we need to remove?" row
-  if(TAB==='wine'){
-    h+='<div class="qty-row'+(selTag==='low-stock'?' show':'')+'" id="removeRow" style="gap:8px;align-items:center;flex-wrap:wrap">';
-    h+='<span style="font-size:9px;color:#666;font-weight:500">Do we need to remove?</span>';
-    h+='<span class="tag-opt" id="removeYes" onclick="toggleRemoveOpt(true)" style="font-size:8px;padding:3px 8px">Yes</span>';
-    h+='<span class="tag-opt" id="removeNo" onclick="toggleRemoveOpt(false)" style="font-size:8px;padding:3px 8px">No</span>';
-    h+='<select id="stk_low_location" style="display:none;font-size:9px;padding:2px 5px;border:1px solid #ddd;border-radius:4px"><option value="">From...</option><option value="BTG">BTG</option><option value="BTB">BTB</option><option value="BTG + BTB">BTG + BTB</option><option value="Wine Pairing">Wine Pairing</option><option value="Everywhere">Everywhere</option></select>';
-    h+='<select id="stk_low_assign" style="display:none;font-size:9px;padding:2px 5px;border:1px solid #ddd;border-radius:4px"><option value="">Assign...</option><option value="Fiorella">Fiorella</option><option value="Christian">Christian</option><option value="Milena">Milena</option><option value="First in">First in</option></select>';
-    h+='</div>';
-  }
+  // Wine 86 row removed - now inline above
   h+='<button class="btn-add" onclick="addItem()">Add</button>';
   h+='</div>';
   area.innerHTML=h;
@@ -183,47 +174,26 @@ function renderAdd(){
   }
 }
 
-var lowRemove=false;
 function pickTag(tag,el){
   var opts=document.querySelectorAll('.tag-opt');
-  for(var i=0;i<opts.length;i++){
-    // Don't clear removeYes/removeNo buttons
-    if(opts[i].id==='removeYes'||opts[i].id==='removeNo')continue;
-    opts[i].classList.remove('on');
-  }
+  for(var i=0;i<opts.length;i++)opts[i].classList.remove('on');
   var loc=document.getElementById('stk_location');
   var rem=document.getElementById('removeLabel');
   var asgn=document.getElementById('stk_assign');
-  var removeRow=document.getElementById('removeRow');
   if(selTag===tag){
-    selTag='';lowRemove=false;
+    selTag='';
     document.getElementById('qtyRow').classList.remove('show');
     if(loc)loc.style.display='none';if(rem)rem.style.display='none';if(asgn)asgn.style.display='none';
-    if(removeRow)removeRow.classList.remove('show');
   } else {
-    el.classList.add('on');selTag=tag;lowRemove=false;
+    el.classList.add('on');selTag=tag;
     if(tag==='low-stock'){
       document.getElementById('qtyRow').classList.add('show');
       if(loc)loc.style.display='none';if(rem)rem.style.display='none';if(asgn)asgn.style.display='none';
-      if(removeRow)removeRow.classList.add('show');
     } else {
       document.getElementById('qtyRow').classList.remove('show');
       if(loc)loc.style.display='inline-block';if(rem)rem.style.display='flex';if(asgn)asgn.style.display='inline-block';
-      if(removeRow)removeRow.classList.remove('show');
     }
   }
-}
-
-function toggleRemoveOpt(yes){
-  lowRemove=yes;
-  var yBtn=document.getElementById('removeYes');
-  var nBtn=document.getElementById('removeNo');
-  var locEl=document.getElementById('stk_low_location');
-  var asgnEl=document.getElementById('stk_low_assign');
-  if(yBtn)yBtn.classList.toggle('on',yes);
-  if(nBtn)nBtn.classList.toggle('on',!yes);
-  if(locEl)locEl.style.display=yes?'inline-block':'none';
-  if(asgnEl)asgnEl.style.display=yes?'inline-block':'none';
 }
 
 function addItem(){
@@ -254,7 +224,7 @@ function addItem(){
   }
   item.createdAt=firebase.firestore.FieldValue.serverTimestamp();
   db.collection('somm_stock').add(item).then(function(){
-    // If Wine + 86: "Remove from Wine List" checkbox creates a task
+    // If "Remove from Wine List" is checked, create a task
     if(TAB==='wine'&&selTag==='86'){
       var removeChk=document.getElementById('stk_remove_list');
       if(removeChk&&removeChk.checked){
@@ -267,17 +237,7 @@ function addItem(){
         });
       }
     }
-    // If Wine + low-stock + "Yes" remove: create a task
-    if(TAB==='wine'&&selTag==='low-stock'&&lowRemove){
-      var lowLoc=(document.getElementById('stk_low_location')||{}).value||'';
-      var lowAssign=(document.getElementById('stk_low_assign')||{}).value||'';
-      db.collection('somm_duties').add({
-        text:'Remove "'+item.name+'" from Wine List'+(lowLoc?' ('+lowLoc+')':''),
-        author:author,assignee:lowAssign,date:date,done:false,
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    selTag='';lowRemove=false;loadStock();msg('Added');
+    selTag='';loadStock();msg('Added');
   }).catch(function(e){console.error(e);msg('Error');});
 }
 
