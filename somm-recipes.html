@@ -72,6 +72,7 @@ var recipes=[];
 var staged=[];
 var _recipeName='',_recipeDate=new Date().toISOString().slice(0,10);
 var _editingId=null; // null = new recipe, string = editing existing
+var _editingNotes='';
 var _recipeIndex=0;
 
 auth.onAuthStateChanged(function(u){
@@ -214,6 +215,7 @@ function renderAdd(){
   a+='<button class="btn-plus" onclick="stageIng()">+</button>';
   a+='</div>';
 
+  a+='<div style="margin-top:10px"><textarea id="r_notes" placeholder="Notes (optional)..." style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--s);resize:vertical;min-height:30px;outline:none">'+(_editingNotes||'')+'</textarea></div>';
   a+='<div style="margin-top:10px"><button class="btn-save" onclick="saveRecipe()">'+(_editingId?'Update recipe':'Save recipe')+'</button>';
   if(_editingId)a+=' <button class="btn-plus" onclick="cancelEdit()" style="background:#999">Cancel</button>';
   a+='</div>';
@@ -235,7 +237,7 @@ function stageIng(){
 function removeStaged(i){staged.splice(i,1);renderAdd();}
 
 function cancelEdit(){
-  _editingId=null;_recipeName='';_recipeDate=new Date().toISOString().slice(0,10);staged=[];
+  _editingId=null;_recipeName='';_editingNotes='';_recipeDate=new Date().toISOString().slice(0,10);staged=[];
   renderAdd();
 }
 
@@ -244,6 +246,7 @@ function editRecipe(id){
   if(!rec)return;
   _editingId=id;
   _recipeName=rec.data.name;
+  _editingNotes=rec.data.notes||'';
   _recipeDate=rec.data.date;
   staged=rec.data.ingredients.slice();
   renderAdd();
@@ -264,20 +267,21 @@ function saveRecipe(){
     author:author,
     lastEditBy:author,
     ingredients:staged,
+    notes:(document.getElementById('r_notes')||{}).value||'',
     updatedAt:firebase.firestore.FieldValue.serverTimestamp()
   };
 
   if(_editingId){
     // Update existing
     db.collection('somm_recipes').doc(_editingId).update(data).then(function(){
-      staged=[];_recipeName='';_recipeDate=new Date().toISOString().slice(0,10);_editingId=null;
+      staged=[];_recipeName='';_editingNotes='';_recipeDate=new Date().toISOString().slice(0,10);_editingId=null;
       loadRecipes();msg('Recipe updated');
     }).catch(function(e){console.error(e);msg('Error');});
   } else {
     // Create new
     data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     db.collection('somm_recipes').add(data).then(function(){
-      staged=[];_recipeName='';_recipeDate=new Date().toISOString().slice(0,10);_editingId=null;
+      staged=[];_recipeName='';_editingNotes='';_recipeDate=new Date().toISOString().slice(0,10);_editingId=null;
       loadRecipes();msg('Recipe saved');
     }).catch(function(e){console.error(e);msg('Error');});
   }
