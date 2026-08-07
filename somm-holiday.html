@@ -71,16 +71,18 @@ auth.onAuthStateChanged(function(u){
 });
 
 function loadHoliday(){
-  var today=new Date().toISOString().slice(0,10);
-  db.collection('somm_holidays').orderBy('startDate','desc').limit(1).get().then(function(snap){
+  db.collection('somm_holidays').get().then(function(snap){
     activeHol=null;
+    var today=new Date().toISOString().slice(0,10);
     snap.forEach(function(doc){
       var d=doc.data();d.id=doc.id;
-      activeHol=d;
+      if(!activeHol)activeHol=d;
+      // Prefer active one
+      if(d.startDate<=today&&d.endDate>=today)activeHol=d;
     });
     renderBanner();
     if(activeHol)loadEntries();
-  });
+  }).catch(function(e){console.error('Holiday load error:',e);});
 }
 
 function renderBanner(){

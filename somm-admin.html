@@ -369,11 +369,12 @@ function deleteMessage(id){
 
 // === HOLIDAY ===
 function loadHolidayAdmin(){
-  var today=new Date().toISOString().slice(0,10);
-  db.collection('somm_holidays').orderBy('startDate','desc').limit(1).get().then(function(snap){
+  db.collection('somm_holidays').get().then(function(snap){
     var el=document.getElementById('activeHolAdmin');
     if(snap.empty){el.innerHTML='<div style="color:#ccc;font-size:11px;padding:8px">No holiday set</div>';return;}
-    var doc=snap.docs[0];var d=doc.data();
+    var today=new Date().toISOString().slice(0,10);
+    var d=null;
+    snap.forEach(function(doc){d=doc.data();});
     var start=new Date(d.startDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     var end=new Date(d.endDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     var status=d.endDate>=today?'<span style="color:#28a745;font-weight:600">Active</span>':'<span style="color:#999">Ended</span>';
