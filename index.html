@@ -279,8 +279,7 @@ body {
   <!-- Login prompt (shown when NOT logged in) -->
   <div id="loginPrompt" style="display:none;">
     <p style="color:var(--gold-light);font-size:13px;margin-bottom:24px;opacity:0.8;">Sign in to access the site</p>
-    <button class="nav-btn" onclick="openModal()">Team Login</button>
-    <div style="display:flex;gap:14px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
       <div onclick="quickLogin('fiorella')" style="cursor:pointer;padding:20px 24px;background:#f8e8e8;border:1px solid rgba(92,26,26,0.15);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
         <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">F</div>
         <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Fiorella</div>
@@ -293,6 +292,17 @@ body {
         <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">M</div>
         <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Milena</div>
       </div>
+      <div onclick="quickLogin('liza')" style="cursor:pointer;padding:20px 24px;background:#f8e8e8;border:1px solid rgba(92,26,26,0.15);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">L</div>
+        <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Liza</div>
+      </div>
+      <div onclick="quickLogin('francesco')" style="cursor:pointer;padding:20px 24px;background:#f8e8e8;border:1px solid rgba(92,26,26,0.15);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#5c1a1a;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">Fr</div>
+        <div style="color:#5c1a1a;font-size:11px;letter-spacing:.5px;font-weight:500">Francesco</div>
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <div onclick="quickLogin('guest')" style="cursor:pointer;display:inline-block;padding:10px 28px;border:1px solid rgba(184,150,80,0.3);border-radius:6px;color:var(--gold-light);font-size:12px;letter-spacing:1px;text-transform:uppercase;transition:all .2s">Guest</div>
     </div>
   </div>
 
@@ -340,11 +350,16 @@ auth.onAuthStateChanged((user) => {
 
     // Guest: only show Training
     var isGuest = user.email && user.email.startsWith('guest');
+    var sommAllowed = ['christian@petrus.local','milena@petrus.local','fiorella@petrus.local'];
+    var isSomm = sommAllowed.indexOf(user.email) >= 0;
     if (isGuest) {
       nav.style.display = 'flex';
       nav.innerHTML = '<a href="training.html" class="nav-btn">Training</a>';
     } else {
       nav.style.display = 'flex';
+      // Hide Sommeliers link for non-somm users
+      var sommLink = nav.querySelector('a[href="sommeliers.html"]');
+      if (sommLink && !isSomm) sommLink.style.display = 'none';
     }
   } else {
     status.style.display = 'none';
