@@ -4,10 +4,6 @@
 *.key
 *.pem
 
-# Work in progress - do not deploy
-operations.html
-rota.html
-
 # OS files
 .DS_Store
 Thumbs.db
