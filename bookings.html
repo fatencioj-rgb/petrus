@@ -250,7 +250,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <div class="actions">
             <button class="btn btn-add" onclick="addEmptyRow()">+ Add</button>
             <button class="btn btn-clear" onclick="clearAll()">Clear</button>
-            <button class="btn" id="saveBtn" style="background:#2d7d46;color:white" onclick="saveBooking()">Save</button>
+            <button class="btn" id="saveBtn" style="background:#5c1a1a;color:white" onclick="saveBooking()">Save</button>
             <span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span>
         </div>
 
@@ -1323,10 +1323,10 @@ function updateSaveButton() {
         var btn = document.getElementById('saveBtn');
         if (doc.exists) {
             btn.textContent = 'Update';
-            btn.style.background = '#b89650';
+            btn.style.background = '#5c1a1a';
         } else {
             btn.textContent = 'Save';
-            btn.style.background = '#2d7d46';
+            btn.style.background = '#5c1a1a';
         }
     });
 }
