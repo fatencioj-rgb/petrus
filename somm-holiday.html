@@ -48,7 +48,6 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 <div class="box" id="addBox" style="display:none">
   <h3>Add update</h3>
   <div class="add-entry">
-    <div style="margin-bottom:6px"><input type="date" id="entryDate" style="padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s)"></div>
     <textarea id="entryText" placeholder="What happened today..."></textarea>
     <div style="margin-top:6px"><button class="btn btn-primary" onclick="addEntry()">Post</button></div>
   </div>
@@ -95,7 +94,6 @@ function renderBanner(){
     var end=new Date(activeHol.endDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     el.innerHTML='<div class="banner"><strong>'+activeHol.person+' on Holiday</strong><span class="dates">'+start+' — '+end+'</span></div>';
     document.getElementById('addBox').style.display='block';
-    document.getElementById('entryDate').value=new Date().toISOString().slice(0,10);
   } else {
     el.innerHTML='<div class="box"><div class="em">No active holiday</div></div>';
     document.getElementById('addBox').style.display='none';
@@ -152,11 +150,10 @@ function renderEntries(){
 function addEntry(){
   var text=document.getElementById('entryText').value.trim();
   if(!text){msg('Write something');return;}
-  var date=document.getElementById('entryDate').value||new Date().toISOString().slice(0,10);
   var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
   db.collection('somm_holiday_entries').add({
     holidayId:activeHol.id,
-    date:date,
+    date:new Date().toISOString().slice(0,10),
     author:author,
     text:text,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
