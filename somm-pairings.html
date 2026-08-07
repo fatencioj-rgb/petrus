@@ -3,240 +3,402 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wine Pairings — Petrus Sommeliers</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Wine Pairings — Petrus</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
-body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
-.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
-.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
-.tb h2{font-family:var(--f);color:#fff;font-size:18px}
-.pg{max-width:900px;margin:0 auto;padding:20px 14px 60px}
-.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:14px}
-/* Tabs */
-.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.tab{padding:6px 14px;border:1px solid rgba(92,26,26,0.2);border-radius:14px;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn);transition:all .15s}
-.tab:hover{background:#f0d4d4;border-color:var(--grn)}
-.tab.on{background:var(--grn);color:#fff;border-color:var(--grn)}
-.sub-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-.stab{padding:4px 10px;border:1px solid #ddd;border-radius:10px;font-size:9px;cursor:pointer;background:#fff;color:#666}
-.stab:hover{border-color:var(--gld);color:var(--grn)}
-.stab.on{background:var(--gld);color:#fff;border-color:var(--gld)}
-/* Editor */
-.box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
-.course{border:1px solid #f0ebe5;border-radius:6px;padding:12px;margin-bottom:10px;background:#fdfbf8}
-.course-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.course-num{font-family:var(--f);font-size:14px;color:var(--gld);font-weight:600;min-width:20px}
-.course-fields{display:grid;gap:6px}
-.course-fields input{padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none;width:100%}
-.course-fields input:focus{border-color:var(--gld)}
-.course-fields .dish-name{font-weight:600;font-size:12px}
-.wine-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;padding-top:6px;border-top:1px dashed #e8e0d4}
-.wine-row input{flex:1;min-width:80px}
-.wine-row .vintage{flex:0 0 60px}
-.btn{padding:5px 14px;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--s);text-transform:uppercase;letter-spacing:.5px}
-.btn-primary{background:var(--grn);color:#fff}
-.btn-primary:hover{background:var(--grn2)}
-.btn-sm{padding:3px 8px;font-size:8px;background:var(--pink);color:var(--grn);border:1px solid rgba(92,26,26,0.2);border-radius:3px;cursor:pointer}
-.btn-sm:hover{background:var(--grn);color:#fff}
-.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.meta{font-size:9px;color:#999;font-style:italic;margin-top:8px}
-/* Print buttons */
-.print-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.print-btn{padding:6px 14px;border:1px solid rgba(92,26,26,0.2);border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn)}
-.print-btn:hover{background:var(--grn);color:#fff}
-/* Print styles */
-.print-area{display:none}
-.print-page{width:100%;background:white;padding:20mm 25mm;font-family:var(--f);text-align:center;page-break-after:always}
-.print-page.statement{padding:10mm 15mm}
-.print-logo{width:30px;height:30px;background:var(--grn);border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
-.print-logo span{color:var(--gld);font-family:var(--f);font-size:14px;font-weight:700}
-.print-title{font-family:var(--f);font-size:22px;color:var(--grn2);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-.print-subtitle{font-size:11px;color:var(--gld);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;font-family:var(--s);font-weight:600}
-.print-course{margin-bottom:16px}
-.print-dish{font-family:var(--f);font-size:14px;font-weight:700;color:var(--grn2);margin-bottom:2px}
-.print-desc{font-family:var(--f);font-size:11px;color:#555;font-style:italic;margin-bottom:3px}
-.print-wine{font-family:var(--s);font-size:9px;color:var(--gld);letter-spacing:.3px}
-.print-divider{color:#ccc;font-size:10px;margin:8px 0}
-.print-footer{margin-top:24px;padding-top:12px;border-top:1px solid #e8e0d4}
-.print-footer .name{font-family:var(--f);font-size:13px;color:var(--grn2);font-weight:600}
-.print-footer .role{font-family:var(--s);font-size:9px;color:#888;letter-spacing:1px;text-transform:uppercase}
-@media print{
-  body{background:white;padding:0;margin:0}
-  .tb,.pg>h1,.tabs,.sub-tabs,.box,.print-btns{display:none !important}
-  .print-area{display:block !important}
-  .print-area.active{display:block !important}
-  @page{margin:0}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #5c1a1a; --green-dark: #2d0a0a;
+  --gold: #b89650; --gold-light: #d4b87a; --cream: #faf7f1;
+  --sans: 'Inter', sans-serif; --serif: 'Cormorant Garamond', serif;
 }
-.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
-.sm.show{opacity:1}
+body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-height: 100vh; }
+.top-bar { background: var(--green-dark); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.top-bar a { color: var(--gold); text-decoration: none; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.top-bar a:hover { color: #fff; }
+.top-bar h2 { font-family: var(--serif); color: #fff; font-size: 18px; margin: 0; }
+.content { max-width: 1400px; margin: 32px auto; padding: 0 20px; }
+.content > h1 { font-family: var(--serif); font-size: 32px; color: var(--green); margin-bottom: 8px; }
+.content > .subtitle { font-size: 13px; color: #888; margin-bottom: 28px; }
+.selectors { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.selectors select { padding: 10px 14px; border: 1px solid #d4b87a; border-radius: 6px; font-family: var(--sans); font-size: 13px; background: #fff; color: #333; cursor: pointer; outline: none; min-width: 160px; }
+.selectors select:focus { border-color: var(--green); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+.btn { padding: 10px 20px; border-radius: 6px; font-family: var(--sans); font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; border: none; }
+.btn-gold { background: var(--gold); color: #fff; }
+.btn-gold:hover { background: #a07e3a; }
+.btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--green); }
+.btn-outline:hover { background: var(--gold); color: #fff; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+<style>
+/* Preview — replicates the printed pairing card */
+.split-view { display: flex; gap: 24px; align-items: flex-start; }
+.split-left { flex: 1; min-width: 0; position: sticky; top: 20px; }
+.split-right { flex: 1; min-width: 0; max-height: 85vh; overflow-y: auto; }
+.menu-preview { background: #fff; border: 1px solid #e8e0d4; border-radius: 8px; padding: 48px 32px; min-height: 500px; text-align: center; }
+.preview-logo { display: block; width: 60px; height: auto; margin: 0 auto 16px; }
+.menu-title { font-family: var(--serif); font-size: 22px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #1a1a1a; margin-bottom: 8px; }
+.menu-subtitle { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 40px; }
+.course-separator { font-size: 14px; color: #999; margin: 16px 0; user-select: none; }
+.course-dish { font-family: var(--serif); font-size: 17px; font-weight: 600; color: #1a1a1a; line-height: 1.3; }
+.course-desc { font-family: var(--serif); font-size: 15px; font-weight: 300; font-style: italic; color: #333; margin-top: 2px; }
+.course-wine { font-family: var(--serif); font-size: 13px; font-style: italic; color: var(--gold); margin-top: 6px; }
+.preview-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; }
+.preview-footer .name { font-family: var(--serif); font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.preview-footer .role { font-family: var(--sans); font-size: 9px; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+/* Editor */
+.editor-panel { background: #f5f0e8; border: 1px solid #e0d5c5; border-radius: 8px; padding: 20px; display: none; }
+.editor-panel h3 { font-family: var(--serif); font-size: 20px; color: var(--green); margin-bottom: 16px; }
+.editor-section { margin-bottom: 20px; }
+.editor-section h4 { font-family: var(--sans); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.course-editor { margin-bottom: 12px; padding: 12px; background: #fff; border-radius: 6px; border: 1px solid #e8e0d4; }
+.course-editor label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-bottom: 3px; }
+.course-editor input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: var(--sans); font-size: 13px; outline: none; margin-bottom: 6px; }
+.course-editor input:focus { border-color: var(--gold); }
+.wine-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; padding-top: 8px; border-top: 1px dashed #e8e0d4; }
+.wine-fields div { }
+.wine-fields .vintage-field input { max-width: 80px; }
+.add-course-btn { width: 100%; padding: 10px; border: 2px dashed var(--gold); background: transparent; border-radius: 6px; color: var(--gold); font-size: 13px; cursor: pointer; margin-top: 8px; }
+.add-course-btn:hover { background: rgba(184,150,80,0.08); }
+.remove-course { float: right; background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; }
+.meta-info { font-size: 11px; color: #888; font-style: italic; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e0d5c5; }
+.status-msg { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: var(--cream); padding: 12px 20px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
+.status-msg.show { opacity: 1; }
+</style>
+<style>
+@media print {
+  body { background: #fff !important; margin: 0; padding: 0; }
+  .top-bar, .content > h1, .content > .subtitle, .selectors, .actions, .editor-panel, .status-msg, .split-right, #previewPlaceholder { display: none !important; }
+  .content { max-width: 100%; margin: 0; padding: 0; }
+  .split-view { display: block !important; }
+  .split-left { position: static; }
+  .menu-preview { border: none !important; border-radius: 0 !important; padding: 0 !important; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .preview-logo { width: 50px; margin-bottom: 12px; }
+  .menu-title { font-size: 18px; margin-bottom: 4px; }
+  .menu-subtitle { font-size: 9px; margin-bottom: 28px; }
+  .course-dish { font-size: 15px; }
+  .course-desc { font-size: 13px; }
+  .course-wine { font-size: 11px; }
+  .course-separator { margin: 12px 0; }
+  .preview-footer .name { font-size: 12px; }
+}
+@media (max-width: 600px) {
+  .selectors { flex-direction: column; }
+  .selectors select { min-width: 100%; }
+  .menu-preview { padding: 32px 16px; }
+  .split-view { flex-direction: column; }
+  .split-left { position: static; }
+  .split-right { max-height: none; }
+  .wine-fields { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
-<div class="pg">
-<h1>Wine Pairings</h1>
-<div class="tabs" id="menuTabs"></div>
-<div class="sub-tabs" id="wineTabs"></div>
-<div class="print-btns">
-  <button class="print-btn" onclick="printPairing('a4')">Print A4</button>
-  <button class="print-btn" onclick="printPairing('statement')">Print Statement</button>
+<div class="top-bar">
+  <a href="sommeliers.html">&larr; Back</a>
+  <h2>Petrus</h2>
+  <span></span>
 </div>
-<div class="box" id="editorArea"></div>
+<div class="content">
+  <h1>Wine Pairings</h1>
+  <p class="subtitle">Select a menu and pairing to view, edit, or print for service.</p>
+  <div class="selectors">
+    <select id="menuType">
+      <option value="">— Select Menu —</option>
+      <option value="prestige">Prestige</option>
+      <option value="discovery">Discovery</option>
+      <option value="lunch">Lunch Menu</option>
+      <option value="alc">À la Carte</option>
+      <option value="kt">Kitchen Table</option>
+    </select>
+    <select id="menuVariant"><option value="">— Pairing —</option></select>
+    <select id="menuSize"><option value="">— Print Size —</option></select>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline" id="btnLoad" disabled onclick="loadMenu()">Load Menu</button>
+    <button class="btn btn-gold" id="btnPrint" disabled onclick="printMenu()">🖨 Print</button>
+    <button class="btn btn-gold" id="btnSave" style="display:none" onclick="saveMenu()">Save Changes</button>
+  </div>
+  <div class="split-view" id="splitView" style="display:none;">
+    <div class="split-left">
+      <div class="menu-preview" id="menuPreview"></div>
+    </div>
+    <div class="split-right">
+      <div class="editor-panel" id="editorPanel">
+        <h3>Edit Pairing</h3>
+        <div class="editor-section"><h4>Courses</h4><div id="courseEditors"></div>
+          <button class="add-course-btn" onclick="addCourseEditor()">+ Add Course</button>
+        </div>
+        <div class="meta-info" id="metaInfo"></div>
+      </div>
+    </div>
+  </div>
+  <div class="menu-preview" id="menuPreviewPlaceholder">
+    <p style="font-family:var(--serif);font-size:18px;color:#aaa;padding:80px 20px;">Select a menu above to begin</p>
+  </div>
 </div>
-<div class="print-area" id="printArea"></div>
-<div class="sm" id="sm"></div>
+<div class="status-msg" id="statusMsg"></div>
 
+<!-- Firebase + Auth -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
 <script>
-var U=null;
-var MENU='prestige';
-var WINE='matching';
-var MENUS=[{id:'prestige',label:'Prestige'},{id:'discovery',label:'Discovery'},{id:'lunch',label:'Lunch Menu'},{id:'alc',label:'ALC'},{id:'kt',label:'Kitchen Table'}];
-var WINES=[{id:'matching',label:'Matching'},{id:'connoisseur',label:'Connoisseur'},{id:'indulgence',label:'Indulgence'},{id:'kt-matching',label:'KT Matching',onlyFor:'kt'}];
-var courses=[];
-var docMeta={lastEditBy:'',lastEditDate:''};
+// ─── Config ─────────────────────────────────────────────────────
+const MENU_CONFIG = {
+  prestige:  { label:'PRESTIGE MENU', pairings:['matching','connoisseur','indulgence','3wines'] },
+  discovery: { label:'DISCOVERY MENU', pairings:['matching','connoisseur','indulgence','3wines'] },
+  lunch:     { label:'LUNCH MENU', pairings:['matching','connoisseur','indulgence','3wines'] },
+  alc:       { label:'À LA CARTE', pairings:['matching','connoisseur','indulgence','3wines'] },
+  kt:        { label:'KITCHEN TABLE', pairings:['matching','connoisseur','indulgence','kt-matching'] }
+};
+const PAIRING_LABELS = {'matching':'Matching','connoisseur':'Connoisseur','indulgence':'Indulgence','3wines':'3 Wines','kt-matching':'KT Matching'};
+const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.7 cm)'};
 
-auth.onAuthStateChanged(function(u){
-  if(!u){window.location.href='index.html';return;}
-  U=u;logAccess(u,'page_view','somm-pairings.html');
-  renderTabs();load();
+let currentMenu = null;
+let U = null;
+const selType = document.getElementById('menuType');
+const selVariant = document.getElementById('menuVariant');
+const selSize = document.getElementById('menuSize');
+const btnLoad = document.getElementById('btnLoad');
+const btnPrint = document.getElementById('btnPrint');
+const btnSave = document.getElementById('btnSave');
+
+// ─── Auth ───────────────────────────────────────────────────────
+auth.onAuthStateChanged(function(user) {
+  if (!user) { window.location.href = 'index.html'; return; }
+  U = user;
+  logAccess(user, 'page_view', 'somm-pairings.html');
 });
 
-function setMenu(m){MENU=m;WINE='matching';renderTabs();load();}
-function setWine(w){WINE=w;renderTabs();load();}
+// ─── Selectors ──────────────────────────────────────────────────
+selType.addEventListener('change', () => {
+  const type = selType.value;
+  selVariant.innerHTML = '<option value="">— Pairing —</option>';
+  selSize.innerHTML = '<option value="">— Print Size —</option>';
+  btnLoad.disabled = true; btnPrint.disabled = true;
+  if (!type) return;
+  const cfg = MENU_CONFIG[type];
+  cfg.pairings.forEach(p => { selVariant.innerHTML += `<option value="${p}">${PAIRING_LABELS[p]}</option>`; });
+  Object.keys(SIZE_LABELS).forEach(s => { selSize.innerHTML += `<option value="${s}">${SIZE_LABELS[s]}</option>`; });
+  // Auto-select if only one size
+  if (Object.keys(SIZE_LABELS).length === 1) selSize.value = Object.keys(SIZE_LABELS)[0];
+  checkReady();
+});
+selVariant.addEventListener('change', checkReady);
+selSize.addEventListener('change', checkReady);
+function checkReady() { btnLoad.disabled = !(selType.value && selVariant.value && selSize.value); }
+</script>
+<script>
+// ─── TEMPLATES (pre-loaded data) ────────────────────────────────
+const TEMPLATES = {
+  'discovery_matching': [
+    { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'Pieropan', wine:'Soave Classico "Calvarino"', region:'Veneto, Italy', vintage:'2024' },
+    { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'Olifantsberg', wine:'"Lark" Chenin Blanc', region:'South Africa', vintage:'2024' },
+    { dish:'100 Days Aged Blue Grey', desc:'Violet artichoke, pomme soufflé, girolles', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'discovery_connoisseur': [
+    { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Weingut Wittmann', wine:'Westhofener, Ersten Lagen, Riesling Trocken', region:'Rheinhessen, Germany', vintage:'2024' },
+    { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'Coudoulet de Beaucastel', wine:'Château de Beaucastel', region:'Rhône Valley, France', vintage:'2022' },
+    { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'Kongsgaard', wine:'Chardonnay', region:'Napa Valley, USA', vintage:'2023' },
+    { dish:'100 Days Aged Blue Grey', desc:'Violet artichoke, pomme soufflé, girolles', producer:'Ferrando', wine:'Carema, Etichetta Nera', region:'Piedmont, Italy', vintage:'2018' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:'Hugel', wine:'Sélection de Grains Nobles, Gewürztraminer', region:'Alsace, France', vintage:'1999' }
+  ],
+  'discovery_indulgence': [
+    { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Domaine Zind-Humbrecht', wine:'Pinot Gris Grand Cru "Rangen de Thann"', region:'Alsace, France', vintage:'2005' },
+    { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'Domaine Paul Pillot', wine:'Chevalier-Montrachet Grand Cru', region:'Burgundy, France', vintage:'2019' },
+    { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'Gaja', wine:'"Gaia & Rey", Langhe', region:'Piedmont, Italy', vintage:'2016' },
+    { dish:'100 Days Aged Blue Grey', desc:'Violet artichoke, pomme soufflé, girolles', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Château d'Yquem", wine:'1er Cru Classé Supérieur', region:'Bordeaux, France', vintage:'1999' }
+  ],
+  'discovery_3wines': [
+    { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'100 Days Aged Blue Grey', desc:'Violet artichoke, pomme soufflé, girolles', producer:'Michele Chiarlo', wine:'Barbaresco "Reyna"', region:'Piedmont, Italy', vintage:'2022' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'prestige_3wines': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:'Coteaux de l\'Aubance', region:'Loire Valley, France', vintage:'2024' }
+  ],
+  'prestige_matching': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:'Coteaux de l\'Aubance', region:'Loire Valley, France', vintage:'2024' }
+  ],
+  'prestige_connoisseur': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Wittmann', wine:'Westhofener, Ersten Lagen, Riesling Trocken', region:'Rheinhessen, Germany', vintage:'2024' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Coudoulet de Beaucastel', wine:'Château de Beaucastel', region:'Rhône Valley, France', vintage:'2022' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Kongsgaard', wine:'Chardonnay', region:'Napa Valley, USA', vintage:'2023' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Ferrando', wine:'Carema, Etichetta Nera', region:'Piedmont, Italy', vintage:'2018' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Hugel', wine:'Sélection de Grains Nobles, Gewürztraminer', region:'Alsace, France', vintage:'1999' }
+  ],
+  'prestige_indulgence': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Domaine Zind-Humbrecht', wine:'Pinot Gris Grand Cru "Rangen de Thann"', region:'Alsace, France', vintage:'2005' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de Montille', wine:'Puligny-Montrachet, "Les Folatières"', region:'Burgundy, France', vintage:'2022' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Gaja', wine:'"Gaia & Rey", Langhe', region:'Piedmont, Italy', vintage:'2016' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:"Château d'Yquem", wine:'1er Cru Classé Supérieur', region:'Bordeaux, France', vintage:'2008' }
+  ]
+};
 
-function renderTabs(){
-  var h='';
-  MENUS.forEach(function(m){h+='<span class="tab'+(MENU===m.id?' on':'')+'" onclick="setMenu(\''+m.id+'\')">'+m.label+'</span>';});
-  document.getElementById('menuTabs').innerHTML=h;
-  var wh='';
-  WINES.forEach(function(w){
-    if(w.onlyFor&&w.onlyFor!==MENU)return;
-    wh+='<span class="stab'+(WINE===w.id?' on':'')+'" onclick="setWine(\''+w.id+'\')">'+w.label+'</span>';
-  });
-  document.getElementById('wineTabs').innerHTML=wh;
+// ─── LOAD ───────────────────────────────────────────────────────
+async function loadMenu() {
+  const type = selType.value, variant = selVariant.value, size = selSize.value;
+  const docId = `${type}_${variant}`;
+  btnLoad.disabled = true; btnLoad.textContent = 'Loading...';
+
+  let data = null;
+  try { const doc = await db.collection('somm_pairings').doc(docId).get(); if (doc.exists) data = doc.data(); } catch(e) { console.log('Firestore unavailable, using template'); }
+
+  if (data) {
+    currentMenu = { id: docId, type, variant, size, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '' };
+  } else {
+    // Use template if available, otherwise empty
+    const tpl = TEMPLATES[docId];
+    currentMenu = {
+      id: docId, type, variant, size,
+      courses: tpl ? JSON.parse(JSON.stringify(tpl)) : [{ dish:'', desc:'', producer:'', wine:'', region:'', vintage:'' }],
+      lastEditBy: '', lastEditDate: ''
+    };
+  }
+  renderPreview();
+  renderEditor();
+  btnPrint.disabled = false;
+  btnLoad.disabled = false; btnLoad.textContent = 'Load Menu';
+  showStatus('Pairing loaded');
 }
 
-function getDocId(){return MENU+'_'+WINE;}
+// ─── RENDER PREVIEW ─────────────────────────────────────────────
+function renderPreview() {
+  if (!currentMenu) return;
+  const p = document.getElementById('menuPreview');
+  const menuLabel = MENU_CONFIG[currentMenu.type].label;
+  const pairingLabel = PAIRING_LABELS[currentMenu.variant];
+  const author = getAuthorName();
 
-function load(){
-  db.collection('somm_pairings').doc(getDocId()).get().then(function(doc){
-    if(doc.exists){
-      var d=doc.data();
-      courses=d.courses||[];
-      docMeta.lastEditBy=d.lastEditBy||'';
-      docMeta.lastEditDate=d.lastEditDate||'';
-    }else{
-      courses=[{dish:'',desc:'',producer:'',wine:'',region:'',vintage:''}];
-      docMeta={lastEditBy:'',lastEditDate:''};
+  let h = `<img src="Petrus logo cmyk_01.jpg" alt="Petrus" class="preview-logo">`;
+  h += `<div class="menu-title">${menuLabel}</div>`;
+  h += `<div class="menu-subtitle">${pairingLabel}</div>`;
+
+  (currentMenu.courses || []).forEach((c, i) => {
+    if (i > 0) h += '<div class="course-separator">~</div>';
+    h += '<div class="course-block">';
+    h += c.dish ? `<div class="course-dish">${esc(c.dish)}</div>` : '<div class="course-dish" style="color:#ccc">· · ·</div>';
+    if (c.desc) h += `<div class="course-desc">${esc(c.desc)}</div>`;
+    if (c.wine || c.producer) {
+      let parts = [];
+      if (c.producer) parts.push(c.producer);
+      if (c.wine) parts.push(c.wine);
+      if (c.region) parts.push(c.region);
+      if (c.vintage) parts.push(c.vintage);
+      h += `<div class="course-wine">${esc(parts.join(', '))}</div>`;
     }
+    h += '</div>';
+  });
+
+  h += `<div class="preview-footer"><div class="name">${esc(author)}</div><div class="role">Sommelier</div></div>`;
+  p.innerHTML = h;
+}
+</script>
+<script>
+// ─── EDITOR ─────────────────────────────────────────────────────
+function renderEditor() {
+  document.getElementById('splitView').style.display = 'flex';
+  document.getElementById('menuPreviewPlaceholder').style.display = 'none';
+  const panel = document.getElementById('editorPanel');
+  const container = document.getElementById('courseEditors');
+  panel.style.display = 'block';
+  btnSave.style.display = 'inline-block';
+  container.innerHTML = '';
+
+  (currentMenu.courses || []).forEach((c, i) => {
+    container.innerHTML += `<div class="course-editor">
+      <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
+      <label>Dish</label><input type="text" value="${esc(c.dish)}" oninput="upd(${i},'dish',this.value)">
+      <label>Description</label><input type="text" value="${esc(c.desc)}" oninput="upd(${i},'desc',this.value)">
+      <div class="wine-fields">
+        <div><label>Producer</label><input type="text" value="${esc(c.producer)}" oninput="upd(${i},'producer',this.value)"></div>
+        <div><label>Wine Name</label><input type="text" value="${esc(c.wine)}" oninput="upd(${i},'wine',this.value)"></div>
+        <div><label>Region / Country</label><input type="text" value="${esc(c.region)}" oninput="upd(${i},'region',this.value)"></div>
+        <div class="vintage-field"><label>Vintage</label><input type="text" value="${esc(c.vintage)}" oninput="upd(${i},'vintage',this.value)"></div>
+      </div>
+    </div>`;
+  });
+
+  // Meta info
+  const metaEl = document.getElementById('metaInfo');
+  if (currentMenu.lastEditBy) {
+    metaEl.textContent = 'Last edited by ' + currentMenu.lastEditBy + ' — ' + currentMenu.lastEditDate;
+  } else {
+    metaEl.textContent = '';
+  }
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function upd(i, f, v) { currentMenu.courses[i][f] = v; renderPreview(); }
+function addCourseEditor() { currentMenu.courses.push({dish:'',desc:'',producer:'',wine:'',region:'',vintage:''}); renderEditor(); }
+function removeCourse(i) { currentMenu.courses.splice(i,1); renderEditor(); renderPreview(); }
+
+// ─── SAVE TO FIRESTORE ──────────────────────────────────────────
+async function saveMenu() {
+  if (!currentMenu) return;
+  btnSave.disabled = true; btnSave.textContent = 'Saving...';
+  const author = getAuthorName();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  try {
+    await db.collection('somm_pairings').doc(currentMenu.id).set({
+      menu: currentMenu.type,
+      wine: currentMenu.variant,
+      courses: currentMenu.courses,
+      lastEditBy: author,
+      lastEditDate: dateStr,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    currentMenu.lastEditBy = author;
+    currentMenu.lastEditDate = dateStr;
     renderEditor();
-  });
+    showStatus('Saved ✓');
+  } catch(e) { console.error(e); showStatus('Error saving'); }
+  btnSave.disabled = false; btnSave.textContent = 'Save Changes';
 }
 
-function renderEditor(){
-  var h='';
-  for(var i=0;i<courses.length;i++){
-    var c=courses[i];
-    h+='<div class="course"><div class="course-head"><span class="course-num">'+(i+1)+'</span><button class="btn-sm" onclick="removeCourse('+i+')" title="Remove">&times;</button></div>';
-    h+='<div class="course-fields">';
-    h+='<input type="text" class="dish-name" value="'+esc(c.dish)+'" placeholder="Dish name" onchange="updateCourse('+i+',\'dish\',this.value)">';
-    h+='<input type="text" value="'+esc(c.desc)+'" placeholder="Description (ingredients, garnish)" onchange="updateCourse('+i+',\'desc\',this.value)">';
-    h+='<div class="wine-row">';
-    h+='<input type="text" value="'+esc(c.producer)+'" placeholder="Producer" onchange="updateCourse('+i+',\'producer\',this.value)">';
-    h+='<input type="text" value="'+esc(c.wine)+'" placeholder="Wine name" onchange="updateCourse('+i+',\'wine\',this.value)">';
-    h+='<input type="text" value="'+esc(c.region)+'" placeholder="Region, Country" onchange="updateCourse('+i+',\'region\',this.value)">';
-    h+='<input type="text" class="vintage" value="'+esc(c.vintage)+'" placeholder="Year" onchange="updateCourse('+i+',\'vintage\',this.value)">';
-    h+='</div></div></div>';
-  }
-  h+='<div class="actions">';
-  h+='<button class="btn btn-primary" onclick="addCourse()">+ Add course</button>';
-  h+='<button class="btn btn-primary" onclick="save()">Save</button>';
-  h+='</div>';
-  if(docMeta.lastEditBy){
-    h+='<div class="meta">Last edited by '+docMeta.lastEditBy+' — '+docMeta.lastEditDate+'</div>';
-  }
-  document.getElementById('editorArea').innerHTML=h;
+// ─── PRINT ──────────────────────────────────────────────────────
+function printMenu() {
+  const size = selSize.value || 'statement';
+  let ps = document.getElementById('printSizeStyle');
+  if (!ps) { ps = document.createElement('style'); ps.id = 'printSizeStyle'; document.head.appendChild(ps); }
+  ps.textContent = size === 'statement' ? '@page{size:5.5in 8.5in;margin:0.6in 0.5in}' : '@page{size:A4;margin:20mm 25mm}';
+  setTimeout(() => window.print(), 150);
 }
 
-function updateCourse(i,field,val){courses[i][field]=val;}
-function addCourse(){courses.push({dish:'',desc:'',producer:'',wine:'',region:'',vintage:''});renderEditor();}
-function removeCourse(i){courses.splice(i,1);renderEditor();}
-
-function save(){
-  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
-  author=author.charAt(0).toUpperCase()+author.slice(1);
-  var now=new Date();
-  var dateStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  db.collection('somm_pairings').doc(getDocId()).set({
-    menu:MENU,wine:WINE,
-    courses:courses,
-    lastEditBy:author,
-    lastEditDate:dateStr,
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
-    docMeta.lastEditBy=author;docMeta.lastEditDate=dateStr;
-    renderEditor();msg('Saved');
-  });
+// ─── HELPERS ────────────────────────────────────────────────────
+function getAuthorName() {
+  if (!U) return '';
+  var name = U.displayName || U.email.split('@')[0].replace(/\./g,' ');
+  return name.split(' ').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
 }
 
-function printPairing(size){
-  var menuLabel=MENUS.find(function(m){return m.id===MENU;}).label;
-  var wineLabel=WINES.find(function(w){return w.id===WINE;}).label;
-  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
-  author=author.split(' ').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
-
-  var pageClass=size==='statement'?'print-page statement':'print-page';
-  var h='<div class="'+pageClass+'">';
-  h+='<div class="print-logo"><span>P</span></div>';
-  h+='<div class="print-title">Petrus</div>';
-  h+='<div class="print-subtitle">'+menuLabel.toUpperCase()+' — '+wineLabel.toUpperCase()+'</div>';
-
-  for(var i=0;i<courses.length;i++){
-    var c=courses[i];
-    if(!c.dish&&!c.wine)continue;
-    if(i>0)h+='<div class="print-divider">~</div>';
-    h+='<div class="print-course">';
-    if(c.dish)h+='<div class="print-dish">'+esc(c.dish)+'</div>';
-    if(c.desc)h+='<div class="print-desc">'+esc(c.desc)+'</div>';
-    if(c.wine||c.producer){
-      var wineParts=[];
-      if(c.producer)wineParts.push(c.producer);
-      if(c.wine)wineParts.push(c.wine);
-      if(c.region)wineParts.push(c.region);
-      if(c.vintage)wineParts.push(c.vintage);
-      h+='<div class="print-wine">'+esc(wineParts.join(', '))+'</div>';
-    }
-    h+='</div>';
-  }
-
-  h+='<div class="print-footer"><div class="name">'+esc(author)+'</div><div class="role">Sommelier</div></div>';
-  h+='</div>';
-
-  var area=document.getElementById('printArea');
-  area.innerHTML=h;
-  area.classList.add('active');
-
-  // Set page size
-  var existing=document.getElementById('pairingPrintStyle');
-  if(existing)existing.remove();
-  var style=document.createElement('style');
-  style.id='pairingPrintStyle';
-  if(size==='statement')style.textContent='@page{size:5.5in 8.5in;margin:0}';
-  else style.textContent='@page{size:A4;margin:0}';
-  document.head.appendChild(style);
-
-  setTimeout(function(){window.print();},300);
-  setTimeout(function(){area.classList.remove('active');},1000);
-}
-
-function esc(s){if(!s)return '';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+function showStatus(msg) { const el = document.getElementById('statusMsg'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2500); }
 </script>
 </body>
 </html>
