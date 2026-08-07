@@ -107,6 +107,20 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
   </div>
 </div>
 <div class="actions">
+  <h3>Holiday Setup</h3>
+  <div id="activeHolAdmin"></div>
+  <div class="action-row">
+    <label>Person</label>
+    <select id="holPerson"><option value="">Who...</option><option value="Fiorella">Fiorella</option><option value="Christian">Christian</option><option value="Milena">Milena</option></select>
+    <label>From</label><input type="date" id="holStart">
+    <label>To</label><input type="date" id="holEnd">
+    <button class="btn btn-export" onclick="saveHoliday()">Set</button>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-danger" onclick="clearHoliday()">Remove active holiday</button>
+  </div>
+</div>
+<div class="actions">
   <h3>Team Messages (carousel)</h3>
   <div id="msgList"></div>
   <div class="action-row">
@@ -179,6 +193,7 @@ auth.onAuthStateChanged(function(u){
   loadStats();
   loadActivity();
   loadMessages();
+  loadHolidayAdmin();
   // Set default dates
   var today=new Date().toISOString().slice(0,10);
   var twoMonths=new Date();twoMonths.setMonth(twoMonths.getMonth()-2);
@@ -350,6 +365,48 @@ function addMessage(){
 
 function deleteMessage(id){
   db.collection('somm_messages').doc(id).delete().then(function(){loadMessages();msg('Removed');});
+}
+
+// === HOLIDAY ===
+function loadHolidayAdmin(){
+  var today=new Date().toISOString().slice(0,10);
+  db.collection('somm_holidays').orderBy('startDate','desc').limit(1).get().then(function(snap){
+    var el=document.getElementById('activeHolAdmin');
+    if(snap.empty){el.innerHTML='<div style="color:#ccc;font-size:11px;padding:8px">No holiday set</div>';return;}
+    var doc=snap.docs[0];var d=doc.data();
+    var start=new Date(d.startDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var end=new Date(d.endDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var status=d.endDate>=today?'<span style="color:#28a745;font-weight:600">Active</span>':'<span style="color:#999">Ended</span>';
+    el.innerHTML='<div class="action-row"><span style="font-size:12px"><strong>'+d.person+'</strong> — '+start+' to '+end+' '+status+'</span></div>';
+  });
+}
+
+function saveHoliday(){
+  var person=document.getElementById('holPerson').value;
+  var start=document.getElementById('holStart').value;
+  var end=document.getElementById('holEnd').value;
+  if(!person||!start||!end){msg('Fill all fields');return;}
+  // Clear old holidays first
+  db.collection('somm_holidays').get().then(function(snap){
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){
+    return db.collection('somm_holidays').add({
+      person:person,startDate:start,endDate:end,
+      createdBy:'Fiorella',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }).then(function(){loadHolidayAdmin();msg('Holiday set');});
+}
+
+function clearHoliday(){
+  if(!confirm('Remove active holiday?'))return;
+  db.collection('somm_holidays').get().then(function(snap){
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){loadHolidayAdmin();msg('Holiday removed');});
 }
 </script>
 </body>

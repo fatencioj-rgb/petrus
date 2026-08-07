@@ -14,18 +14,16 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .tb h2{font-family:var(--f);color:#fff;font-size:18px}
 .pg{max-width:700px;margin:0 auto;padding:20px 14px 60px}
 .pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:6px}
-.pg>.sub{font-size:11px;color:#888;margin-bottom:16px}
+.banner{background:var(--pink);border:1px solid rgba(92,26,26,0.15);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;display:flex;align-items:center;gap:8px}
+.banner strong{color:var(--grn);font-size:14px}
+.banner .dates{color:#888;font-size:10px}
 .box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
 .box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
-.setup-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.setup-row select,.setup-row input{padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s)}
 .btn{padding:5px 14px;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--s);text-transform:uppercase;letter-spacing:.5px}
 .btn-primary{background:var(--grn);color:#fff}
 .btn-primary:hover{background:var(--grn2)}
 .btn-sm{padding:3px 8px;font-size:8px;background:var(--pink);color:var(--grn);border:1px solid rgba(92,26,26,0.2);border-radius:3px;cursor:pointer}
 .btn-sm:hover{background:var(--grn);color:#fff}
-.active-holiday{background:var(--pink);border:1px solid rgba(92,26,26,0.15);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;display:flex;align-items:center;gap:8px}
-.active-holiday strong{color:var(--grn)}
 .day-block{margin-bottom:16px}
 .day-header{font-family:var(--f);font-size:16px;color:var(--grn);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f0ebe5}
 .entry{padding:8px 0;border-bottom:1px solid #f9f5ef;font-size:11px;line-height:1.5}
@@ -34,7 +32,6 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .entry .e-time{font-size:9px;color:#999;margin-left:6px}
 .entry .e-text{margin-top:3px;white-space:pre-wrap}
 .entry .e-actions{margin-top:4px}
-.add-entry{margin-top:10px}
 .add-entry textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);resize:vertical;min-height:50px;outline:none}
 .add-entry textarea:focus{border-color:var(--gld)}
 .em{text-align:center;padding:14px;color:#ccc;font-size:11px}
@@ -46,25 +43,8 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 <div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
 <div class="pg">
 <h1>Holiday Update</h1>
-<p class="sub" id="holidaySub">Daily diary for the team</p>
-
-<!-- Setup: select who is on holiday -->
-<div class="box" id="setupBox">
-  <h3>Set Holiday</h3>
-  <div class="setup-row">
-    <select id="holPerson"><option value="">Who...</option><option value="Fiorella">Fiorella</option><option value="Christian">Christian</option><option value="Milena">Milena</option></select>
-    <input type="date" id="holStart">
-    <span style="font-size:10px;color:#888">to</span>
-    <input type="date" id="holEnd">
-    <button class="btn btn-primary" onclick="saveHoliday()">Set</button>
-  </div>
-  <div id="activeHoliday"></div>
-</div>
-
-<!-- Diary entries -->
+<div id="bannerArea"></div>
 <div id="diaryArea"></div>
-
-<!-- Add entry -->
 <div class="box" id="addBox" style="display:none">
   <h3>Add update</h3>
   <div class="add-entry">
@@ -92,42 +72,28 @@ auth.onAuthStateChanged(function(u){
 
 function loadHoliday(){
   var today=new Date().toISOString().slice(0,10);
-  db.collection('somm_holidays').orderBy('startDate','desc').limit(5).get().then(function(snap){
+  db.collection('somm_holidays').orderBy('startDate','desc').limit(1).get().then(function(snap){
     activeHol=null;
     snap.forEach(function(doc){
       var d=doc.data();d.id=doc.id;
-      if(d.startDate<=today&&d.endDate>=today)activeHol=d;
-      if(!activeHol)activeHol=d; // show most recent even if ended
+      activeHol=d;
     });
-    renderHoliday();
-    loadEntries();
+    renderBanner();
+    if(activeHol)loadEntries();
   });
 }
 
-function renderHoliday(){
-  var el=document.getElementById('activeHoliday');
+function renderBanner(){
+  var el=document.getElementById('bannerArea');
   if(activeHol){
     var start=new Date(activeHol.startDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     var end=new Date(activeHol.endDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    el.innerHTML='<div class="active-holiday"><strong>'+activeHol.person+'</strong> on holiday: '+start+' — '+end+'</div>';
-    document.getElementById('holidaySub').textContent='Updates for '+activeHol.person+"'s holiday";
+    el.innerHTML='<div class="banner"><strong>'+activeHol.person+' on Holiday</strong><span class="dates">'+start+' — '+end+'</span></div>';
     document.getElementById('addBox').style.display='block';
   } else {
-    el.innerHTML='<div class="em">No active holiday set</div>';
+    el.innerHTML='<div class="box"><div class="em">No active holiday</div></div>';
     document.getElementById('addBox').style.display='none';
   }
-}
-
-function saveHoliday(){
-  var person=document.getElementById('holPerson').value;
-  var start=document.getElementById('holStart').value;
-  var end=document.getElementById('holEnd').value;
-  if(!person||!start||!end){msg('Fill all fields');return;}
-  db.collection('somm_holidays').add({
-    person:person,startDate:start,endDate:end,
-    createdBy:U.displayName||U.email.split('@')[0].replace(/\./g,' '),
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){loadHoliday();msg('Holiday set');});
 }
 
 function loadEntries(){
@@ -147,8 +113,7 @@ function loadEntries(){
 
 function renderEntries(){
   var area=document.getElementById('diaryArea');
-  if(entries.length===0){area.innerHTML='<div class="box"><div class="em">No entries yet</div></div>';return;}
-  // Group by date
+  if(entries.length===0){area.innerHTML='<div class="box"><div class="em">No entries yet — be the first to post an update</div></div>';return;}
   var groups={};
   entries.forEach(function(e){
     var d=e.data.date;
@@ -167,7 +132,6 @@ function renderEntries(){
       var time=d.createdAt?new Date(d.createdAt.seconds*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
       h+='<div class="entry"><span class="e-author">'+author+'</span><span class="e-time">'+time+'</span>';
       h+='<div class="e-text">'+esc(d.text)+'</div>';
-      // Edit button if current user is author
       var currentName=(U.displayName||U.email.split('@')[0].replace(/\./g,' ')).toLowerCase();
       if(d.author.toLowerCase()===currentName){
         h+='<div class="e-actions"><button class="btn-sm" onclick="editEntry(\''+e.id+'\')">Edit</button></div>';
