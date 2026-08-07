@@ -77,12 +77,14 @@ function loadHoliday(){
     snap.forEach(function(doc){
       var d=doc.data();d.id=doc.id;
       if(!activeHol)activeHol=d;
-      // Prefer active one
       if(d.startDate<=today&&d.endDate>=today)activeHol=d;
     });
     renderBanner();
     if(activeHol)loadEntries();
-  }).catch(function(e){console.error('Holiday load error:',e);});
+  }).catch(function(e){
+    console.error('Holiday load error:',e);
+    document.getElementById('bannerArea').innerHTML='<div class="box"><div class="em">No active holiday</div></div>';
+  });
 }
 
 function renderBanner(){
