@@ -65,8 +65,9 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 <div class="page">
   <h1>Sommeliers</h1>
   <p class="sub" id="greeting" style="text-align:left;color:var(--green);font-family:var(--serif);font-size:22px;letter-spacing:0;margin-bottom:20px;opacity:0;animation:fadeSlideIn 0.8s ease forwards;animation-delay:0.3s"><span id="greetName"></span><span id="carousel" style="margin-left:12px;font-family:var(--sans);font-size:11px;color:var(--gold);font-style:italic;opacity:0;transition:opacity 0.5s"></span></p>
-  <div style="text-align:left;margin-bottom:10px">
+  <div style="text-align:left;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
     <a href="somm-weekly.html" style="display:inline-block;padding:4px 12px;border:1px solid rgba(92,26,26,0.2);border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;background:var(--pink);color:var(--green)">Weekly Log</a>
+    <a href="somm-holiday.html" id="holidayBtn" style="display:inline-block;padding:4px 12px;border:1px solid rgba(92,26,26,0.2);border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;text-decoration:none;background:var(--pink);color:var(--green)">Holiday Update</a>
   </div>
   <div class="today-feed" id="todayFeed">
     <div class="feed-title">
@@ -446,6 +447,23 @@ function renderFeed(feed){
   if(otherFeed.length>12)h+='<div class="feed-empty">+'+(otherFeed.length-12)+' more today</div>';
   el.innerHTML=h;
 }
+
+// Load active holiday to update button text
+function loadHolidayBtn(){
+  var today=new Date().toISOString().slice(0,10);
+  db.collection('somm_holidays').where('startDate','<=',today).get().then(function(snap){
+    var active=null;
+    snap.forEach(function(doc){
+      var d=doc.data();
+      if(d.endDate>=today)active=d;
+    });
+    var btn=document.getElementById('holidayBtn');
+    if(active&&btn){
+      btn.textContent=active.person+"'s Holiday";
+    }
+  }).catch(function(e){console.error(e);});
+}
+loadHolidayBtn();
 </script>
 </body>
 </html>

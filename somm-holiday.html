@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holiday Update — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:700px;margin:0 auto;padding:20px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:6px}
+.pg>.sub{font-size:11px;color:#888;margin-bottom:16px}
+.box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
+.box h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px}
+.setup-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.setup-row select,.setup-row input{padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s)}
+.btn{padding:5px 14px;border:none;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--s);text-transform:uppercase;letter-spacing:.5px}
+.btn-primary{background:var(--grn);color:#fff}
+.btn-primary:hover{background:var(--grn2)}
+.btn-sm{padding:3px 8px;font-size:8px;background:var(--pink);color:var(--grn);border:1px solid rgba(92,26,26,0.2);border-radius:3px;cursor:pointer}
+.btn-sm:hover{background:var(--grn);color:#fff}
+.active-holiday{background:var(--pink);border:1px solid rgba(92,26,26,0.15);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;display:flex;align-items:center;gap:8px}
+.active-holiday strong{color:var(--grn)}
+.day-block{margin-bottom:16px}
+.day-header{font-family:var(--f);font-size:16px;color:var(--grn);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f0ebe5}
+.entry{padding:8px 0;border-bottom:1px solid #f9f5ef;font-size:11px;line-height:1.5}
+.entry:last-child{border-bottom:none}
+.entry .e-author{font-weight:600;color:var(--grn)}
+.entry .e-time{font-size:9px;color:#999;margin-left:6px}
+.entry .e-text{margin-top:3px;white-space:pre-wrap}
+.entry .e-actions{margin-top:4px}
+.add-entry{margin-top:10px}
+.add-entry textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);resize:vertical;min-height:50px;outline:none}
+.add-entry textarea:focus{border-color:var(--gld)}
+.em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+.sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.sm.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+<h1>Holiday Update</h1>
+<p class="sub" id="holidaySub">Daily diary for the team</p>
+
+<!-- Setup: select who is on holiday -->
+<div class="box" id="setupBox">
+  <h3>Set Holiday</h3>
+  <div class="setup-row">
+    <select id="holPerson"><option value="">Who...</option><option value="Fiorella">Fiorella</option><option value="Christian">Christian</option><option value="Milena">Milena</option></select>
+    <input type="date" id="holStart">
+    <span style="font-size:10px;color:#888">to</span>
+    <input type="date" id="holEnd">
+    <button class="btn btn-primary" onclick="saveHoliday()">Set</button>
+  </div>
+  <div id="activeHoliday"></div>
+</div>
+
+<!-- Diary entries -->
+<div id="diaryArea"></div>
+
+<!-- Add entry -->
+<div class="box" id="addBox" style="display:none">
+  <h3>Add update</h3>
+  <div class="add-entry">
+    <textarea id="entryText" placeholder="What happened today..."></textarea>
+    <div style="margin-top:6px"><button class="btn btn-primary" onclick="addEntry()">Post</button></div>
+  </div>
+</div>
+</div>
+<div class="sm" id="sm"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+var U=null;
+var activeHol=null;
+var entries=[];
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  U=u;logAccess(u,'page_view','somm-holiday.html');
+  loadHoliday();
+});
+
+function loadHoliday(){
+  var today=new Date().toISOString().slice(0,10);
+  db.collection('somm_holidays').orderBy('startDate','desc').limit(5).get().then(function(snap){
+    activeHol=null;
+    snap.forEach(function(doc){
+      var d=doc.data();d.id=doc.id;
+      if(d.startDate<=today&&d.endDate>=today)activeHol=d;
+      if(!activeHol)activeHol=d; // show most recent even if ended
+    });
+    renderHoliday();
+    loadEntries();
+  });
+}
+
+function renderHoliday(){
+  var el=document.getElementById('activeHoliday');
+  if(activeHol){
+    var start=new Date(activeHol.startDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var end=new Date(activeHol.endDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    el.innerHTML='<div class="active-holiday"><strong>'+activeHol.person+'</strong> on holiday: '+start+' — '+end+'</div>';
+    document.getElementById('holidaySub').textContent='Updates for '+activeHol.person+"'s holiday";
+    document.getElementById('addBox').style.display='block';
+  } else {
+    el.innerHTML='<div class="em">No active holiday set</div>';
+    document.getElementById('addBox').style.display='none';
+  }
+}
+
+function saveHoliday(){
+  var person=document.getElementById('holPerson').value;
+  var start=document.getElementById('holStart').value;
+  var end=document.getElementById('holEnd').value;
+  if(!person||!start||!end){msg('Fill all fields');return;}
+  db.collection('somm_holidays').add({
+    person:person,startDate:start,endDate:end,
+    createdBy:U.displayName||U.email.split('@')[0].replace(/\./g,' '),
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){loadHoliday();msg('Holiday set');});
+}
+
+function loadEntries(){
+  if(!activeHol)return;
+  db.collection('somm_holiday_entries').where('holidayId','==',activeHol.id).get().then(function(snap){
+    entries=[];
+    snap.forEach(function(doc){entries.push({id:doc.id,data:doc.data()});});
+    entries.sort(function(a,b){
+      if(a.data.date!==b.data.date)return b.data.date>a.data.date?1:-1;
+      var ta=a.data.createdAt?a.data.createdAt.seconds:0;
+      var tb=b.data.createdAt?b.data.createdAt.seconds:0;
+      return tb-ta;
+    });
+    renderEntries();
+  });
+}
+
+function renderEntries(){
+  var area=document.getElementById('diaryArea');
+  if(entries.length===0){area.innerHTML='<div class="box"><div class="em">No entries yet</div></div>';return;}
+  // Group by date
+  var groups={};
+  entries.forEach(function(e){
+    var d=e.data.date;
+    if(!groups[d])groups[d]=[];
+    groups[d].push(e);
+  });
+  var dates=Object.keys(groups).sort().reverse();
+  var h='';
+  dates.forEach(function(date){
+    var dateObj=new Date(date+'T12:00:00');
+    var label=dateObj.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'});
+    h+='<div class="box day-block"><div class="day-header">'+label+'</div>';
+    groups[date].forEach(function(e){
+      var d=e.data;
+      var author=d.author.charAt(0).toUpperCase()+d.author.slice(1);
+      var time=d.createdAt?new Date(d.createdAt.seconds*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+      h+='<div class="entry"><span class="e-author">'+author+'</span><span class="e-time">'+time+'</span>';
+      h+='<div class="e-text">'+esc(d.text)+'</div>';
+      // Edit button if current user is author
+      var currentName=(U.displayName||U.email.split('@')[0].replace(/\./g,' ')).toLowerCase();
+      if(d.author.toLowerCase()===currentName){
+        h+='<div class="e-actions"><button class="btn-sm" onclick="editEntry(\''+e.id+'\')">Edit</button></div>';
+      }
+      h+='</div>';
+    });
+    h+='</div>';
+  });
+  area.innerHTML=h;
+}
+
+function addEntry(){
+  var text=document.getElementById('entryText').value.trim();
+  if(!text){msg('Write something');return;}
+  var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
+  db.collection('somm_holiday_entries').add({
+    holidayId:activeHol.id,
+    date:new Date().toISOString().slice(0,10),
+    author:author,
+    text:text,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    document.getElementById('entryText').value='';
+    loadEntries();msg('Posted');
+  });
+}
+
+function editEntry(id){
+  var entry=entries.find(function(e){return e.id===id;});
+  if(!entry)return;
+  var newText=prompt('Edit your entry:',entry.data.text);
+  if(newText===null)return;
+  db.collection('somm_holiday_entries').doc(id).update({text:newText}).then(function(){
+    loadEntries();msg('Updated');
+  });
+}
+
+function esc(s){if(!s)return '';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
+</script>
+</body>
+</html>
