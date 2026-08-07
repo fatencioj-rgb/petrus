@@ -19,6 +19,19 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// ── Guest Guard (auto-redirect guests away from restricted pages) ──
+(function() {
+  var page = window.location.pathname.split('/').pop() || 'index.html';
+  var guestAllowed = ['training.html', 'winelist.html', 'index.html'];
+  if (guestAllowed.indexOf(page) < 0) {
+    auth.onAuthStateChanged(function(user) {
+      if (user && user.email && user.email.startsWith('guest')) {
+        window.location.href = 'training.html';
+      }
+    });
+  }
+})();
+
 // ── Auth Functions ────────────────────────────────────────────────
 
 /**

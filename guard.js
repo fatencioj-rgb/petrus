@@ -11,6 +11,15 @@
 
   auth.onAuthStateChanged(function(user) {
     if (user) {
+      // Guest users can only access training.html and winelist.html
+      var isGuest = user.email && user.email.startsWith('guest');
+      var page = window.location.pathname.split('/').pop() || 'index.html';
+      var guestAllowed = ['training.html', 'winelist.html', 'index.html'];
+      if (isGuest && guestAllowed.indexOf(page) < 0) {
+        window.location.href = 'training.html';
+        return;
+      }
+
       // User is authenticated — show page
       document.documentElement.style.opacity = '1';
       logAccess(user, 'page_view');
