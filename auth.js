@@ -23,10 +23,19 @@ const db = firebase.firestore();
 (function() {
   var page = window.location.pathname.split('/').pop() || 'index.html';
   var guestAllowed = ['training.html', 'winelist.html', 'index.html'];
+  var sommPages = ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-recipes.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-admin.html'];
+  var sommAllowed = ['christian@petrus.local','milena@petrus.local','fiorella@petrus.local'];
   if (guestAllowed.indexOf(page) < 0) {
     auth.onAuthStateChanged(function(user) {
-      if (user && user.email && user.email.startsWith('guest')) {
+      if (!user) return;
+      // Guest: only training
+      if (user.email && user.email.startsWith('guest')) {
         window.location.href = 'training.html';
+        return;
+      }
+      // Somm pages: only somm team
+      if (sommPages.indexOf(page) >= 0 && sommAllowed.indexOf(user.email) < 0) {
+        window.location.href = 'index.html';
       }
     });
   }
