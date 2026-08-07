@@ -57,8 +57,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .reservations-container{background:white;border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;overflow-x:auto}
 .res-table-edit{width:100%;border-collapse:collapse;font-size:0.78rem;table-layout:auto}
 .res-table-edit th{background:var(--green-dark);color:white;padding:7px 5px;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
-.res-table-edit td{padding:4px 3px;border-bottom:1px solid var(--border);vertical-align:middle}
-.res-table-edit input,.res-table-edit select{width:100%;padding:6px 7px;border:1px solid var(--border);border-radius:3px;font-size:0.76rem;font-family:var(--sans);background:var(--cream)}
+.res-table-edit td{padding:10px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.res-table-edit input,.res-table-edit select{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;font-family:var(--sans);background:var(--cream)}
 .res-table-edit input.narrow{width:40px;min-width:35px}
 .res-table-edit input.med{width:70px}
 .res-table-edit .r-time{width:65px}
@@ -69,7 +69,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .res-table-edit .r-occasion{min-width:100px}
 .res-table-edit .r-vcode{min-width:100px;white-space:nowrap}
 .res-table-edit .r-vvalue{width:70px}
-.res-table-edit .r-allergy{min-width:140px;font-size:0.72rem;font-family:var(--sans);padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:var(--cream);resize:vertical;line-height:1.3;width:100%;min-height:42px}
+.res-table-edit .r-allergy{min-width:160px;font-size:0.74rem;font-family:var(--sans);padding:6px 8px;border:1px solid var(--border);border-radius:3px;background:var(--cream);resize:vertical;line-height:1.4;width:100%;min-height:50px}
 .res-table-edit .r-vprovider{width:65px;font-size:0.72rem}
 .res-table-edit .r-occpos,.res-table-edit .r-allergypos{width:38px;min-width:32px}
 .res-table-edit .r-notes{min-width:280px}
@@ -1171,9 +1171,9 @@ function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+(r.voucherValue ? '\u00a3'+esc(r.voucherValue) : '')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+(r.voucherValue ? '\u00a3'+esc(r.voucherValue) : '')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
-    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td></td><td></td><td></td><td>&nbsp;</td></tr>';
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td></td><td></td><td></td><td></td><td>&nbsp;</td></tr>';
 
     var mp = [];
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
@@ -1185,7 +1185,7 @@ function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
         allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
     }
 
-    return '<h2>PETRUS</h2><div class="p-service">'+sectionLabel+' \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+sectionCovers+'</span><span>Tbls: '+filtered.length+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th>Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return '<h2>PETRUS</h2><div class="p-service">'+sectionLabel+' \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+sectionCovers+'</span><span>Tbls: '+filtered.length+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th>Allergy / Req</th><th style="width:4px;padding:0"></th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
 // === PRINT A5 BOH (Kitchen x2 on page 1, Pastry on page 2) ===
