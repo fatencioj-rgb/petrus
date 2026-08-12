@@ -4,6 +4,7 @@
 *.key
 *.pem
 viniv-server.py
+accounts.json
 firebase-debug.log
 
 # OS files

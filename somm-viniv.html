@@ -21,6 +21,7 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .btn:disabled{background:#ccc;cursor:not-allowed}
 .btn-send{background:var(--gld);color:#fff}
 .btn-send:hover{background:#a07e3a}
+.account-select{padding:7px 12px;border:1px solid var(--gld);border-radius:4px;font-family:var(--s);font-size:11px;background:#fff;color:#2c2c2c}
 .section{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
 .section h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px;font-weight:600}
 .tbl{width:100%;border-collapse:collapse;font-size:11px}
@@ -56,6 +57,9 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
   <p class="subtitle">The Restaurant Collection — sales data from TISSL Hub</p>
 
   <div class="actions">
+    <select id="accountSelect" class="account-select">
+      <option value="">Loading accounts...</option>
+    </select>
     <button class="btn" id="btnGenerate" onclick="generateReport()">Generate Weekly Report</button>
     <span id="status" style="font-size:11px;color:#888"></span>
   </div>
@@ -76,6 +80,30 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 const API = "http://localhost:5050";
 let reportData = null;
 
+// Load accounts on page load
+(async function loadAccounts() {
+  try {
+    const res = await fetch(API + '/api/accounts');
+    const json = await res.json();
+    const select = document.getElementById('accountSelect');
+    select.innerHTML = '';
+    if (json.accounts.length > 1) {
+      const allOpt = document.createElement('option');
+      allOpt.value = 'all';
+      allOpt.textContent = 'All accounts';
+      select.appendChild(allOpt);
+    }
+    for (const acc of json.accounts) {
+      const opt = document.createElement('option');
+      opt.value = acc.id;
+      opt.textContent = acc.name;
+      select.appendChild(opt);
+    }
+  } catch (e) {
+    document.getElementById('accountSelect').innerHTML = '<option value="">Server offline</option>';
+  }
+})();
+
 async function generateReport() {
   const btn = document.getElementById('btnGenerate');
   const output = document.getElementById('output');
@@ -86,9 +114,11 @@ async function generateReport() {
   output.innerHTML = '<div class="loading"><div class="spinner"></div><p>Fetching report from TISSL Hub...</p><p style="font-size:10px;color:#aaa;margin-top:6px">This may take 30-60 seconds</p></div>';
 
   try {
+    const accountId = document.getElementById('accountSelect').value;
     const res = await fetch(API + '/api/generate-report', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountId: accountId })
     });
     const json = await res.json();
 
