@@ -188,6 +188,46 @@ selVariant.addEventListener('change',checkReady);
 selWine.addEventListener('change',checkReady);
 function checkReady(){document.getElementById('btnLoad').disabled=!(selMenu.value&&selVariant.value&&selWine.value);}
 
+function getDefaultCourses(menu){
+  if(menu==='prestige')return[
+    {dish:'Violina Pumpkin',desc:'Maitake, coffee, shiso',supplement:'add seared duck liver £15'},
+    {dish:'Isle of Skye Scallop',desc:'Coastal herbs, lemon, olive oil sabayon',supplement:''},
+    {dish:'Rack of Dover Sole',desc:'Brassica, prawns, Vin Jaune',supplement:''},
+    {dish:'Aynhoe Park Deer',desc:'Beetroot, blueberry, Roquefort',supplement:''},
+    {dish:'Selection of British and French Cheeses',desc:'(3 cheeses £20, 5 cheeses £30)',supplement:''},
+    {dish:'Sorbet',desc:'Calvados, apple',supplement:''},
+    {dish:'Pear Tart',desc:'Frangipane, mascarpone, cardamom',supplement:''}
+  ];
+  if(menu==='discovery')return[
+    {dish:'Smoked Eel',desc:'Oscietra caviar, citrins, apple',supplement:''},
+    {dish:'Lobster Raviolo',desc:'Finger lime, fennel, bisque',supplement:''},
+    {dish:'Confit Turbot',desc:'Courgette, Niçoise olive, bouillabaisse',supplement:''},
+    {dish:'130 Days Aged Blue Grey',desc:'Violet artichoke, porcini soufflé, girolles',supplement:''},
+    {dish:'Sorbet',desc:'Rose, champagne',supplement:''},
+    {dish:'Plaisir sucré',desc:'Chocolate cremeux, hazelnut, milk',supplement:''}
+  ];
+  if(menu==='lunch')return[
+    {dish:'Course 1',desc:'',supplement:''},
+    {dish:'Course 2',desc:'',supplement:''},
+    {dish:'Course 3',desc:'',supplement:''},
+    {dish:'Dessert',desc:'',supplement:''}
+  ];
+  if(menu==='alc')return[
+    {dish:'Starter',desc:'',supplement:''},
+    {dish:'Main',desc:'',supplement:''},
+    {dish:'Dessert',desc:'',supplement:''}
+  ];
+  if(menu==='kt')return[
+    {dish:'Course 1',desc:'',supplement:''},
+    {dish:'Course 2',desc:'',supplement:''},
+    {dish:'Course 3',desc:'',supplement:''},
+    {dish:'Course 4',desc:'',supplement:''},
+    {dish:'Course 5',desc:'',supplement:''},
+    {dish:'Dessert',desc:'',supplement:''}
+  ];
+  return[];
+}
+
 function loadPairing(){
   var menu=selMenu.value,variant=selVariant.value,wine=selWine.value;
   var menuDocId=menu+'_'+variant;
@@ -201,7 +241,8 @@ function loadPairing(){
     if(doc.exists){
       menuCourses=doc.data().courses||[];
     }else{
-      menuCourses=[];
+      // Fallback: use default template (same as menus.html)
+      menuCourses=getDefaultCourses(menu);
     }
     // Load pairings
     return db.collection('somm_pairings').doc(pairingDocId).get();
