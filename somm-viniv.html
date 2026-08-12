@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viniv Report — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:900px;margin:0 auto;padding:24px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:8px}
+.pg>p.subtitle{font-size:11px;color:#888;margin-bottom:24px}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.btn{padding:9px 20px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:var(--s);transition:all .2s}
+.btn:hover{background:var(--grn2)}
+.btn:disabled{background:#ccc;cursor:not-allowed}
+.btn-send{background:var(--gld);color:#fff}
+.btn-send:hover{background:#a07e3a}
+.section{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
+.section h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px;font-weight:600}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--grn2);color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:5px 8px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
+.tbl tr:hover td{background:#fdf9f2}
+.summary{margin-top:14px;padding:14px;background:var(--pink);border-radius:6px;font-size:12px;color:var(--grn)}
+.summary strong{color:var(--grn2)}
+.summary .big{font-size:22px;font-family:var(--f);font-weight:700;display:block;margin-bottom:4px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.summary-card{text-align:center;padding:12px;background:#fff;border-radius:6px;border:1px solid #e8e0d4}
+.summary-card .num{font-size:28px;font-family:var(--f);font-weight:700;color:var(--grn)}
+.summary-card .lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-top:2px}
+.s-tag{font-size:8px;padding:2px 6px;border-radius:8px;text-transform:uppercase;font-weight:600}
+.tag-glass{background:#d4edda;color:#155724}
+.tag-pair{background:#fff3cd;color:#856404}
+.loading{text-align:center;padding:40px;color:#888}
+.loading .spinner{width:30px;height:30px;border:3px solid #e8e0d4;border-top:3px solid var(--gld);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.em{text-align:center;padding:30px;color:#ccc;font-size:11px}
+.email-preview{margin-top:14px;padding:14px;background:#fff;border:1px solid #e8e0d4;border-radius:6px}
+.email-preview textarea{width:100%;min-height:200px;border:1px solid #e8e0d4;border-radius:4px;padding:10px;font-family:'Courier New',monospace;font-size:11px;resize:vertical;line-height:1.5}
+.email-preview .email-actions{margin-top:10px;display:flex;gap:10px;align-items:center}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.toast.show{opacity:1}
+.error{background:#f8d7da;color:#721c24;padding:12px;border-radius:6px;font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="tb"><a href="sommeliers.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+  <h1>Viniv Weekly Report</h1>
+  <p class="subtitle">The Restaurant Collection — sales data from TISSL Hub</p>
+
+  <div class="actions">
+    <button class="btn" id="btnGenerate" onclick="generateReport()">Generate Weekly Report</button>
+    <span id="status" style="font-size:11px;color:#888"></span>
+  </div>
+
+  <div id="output">
+    <div class="em">Click "Generate Weekly Report" to fetch last week's data from TISSL</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script src="guard-admin.js"></script>
+<script>
+const API = "http://localhost:5050";
+let reportData = null;
+
+async function generateReport() {
+  const btn = document.getElementById('btnGenerate');
+  const output = document.getElementById('output');
+  const status = document.getElementById('status');
+
+  btn.disabled = true;
+  status.textContent = '';
+  output.innerHTML = '<div class="loading"><div class="spinner"></div><p>Fetching report from TISSL Hub...</p><p style="font-size:10px;color:#aaa;margin-top:6px">This may take 30-60 seconds</p></div>';
+
+  try {
+    const res = await fetch(API + '/api/generate-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const json = await res.json();
+
+    if (!json.success) {
+      output.innerHTML = '<div class="error">⚠ ' + (json.error || 'Unknown error') + '</div>';
+      btn.disabled = false;
+      return;
+    }
+
+    reportData = json.data;
+    renderReport(json.data);
+    btn.disabled = false;
+    status.textContent = '✓ Report generated';
+
+  } catch (err) {
+    output.innerHTML = '<div class="error">⚠ Could not connect to server. Make sure viniv-server.py is running.</div>';
+    btn.disabled = false;
+  }
+}
+
+function renderReport(data) {
+  let h = '';
+
+  // Summary cards
+  h += '<div class="summary-grid">';
+  h += '<div class="summary-card"><div class="num">' + data.totalGlass + '</div><div class="lbl">By the Glass</div></div>';
+  h += '<div class="summary-card"><div class="num">' + data.totalPairing + '</div><div class="lbl">Pairings</div></div>';
+  h += '<div class="summary-card"><div class="num">' + data.totalAll + '</div><div class="lbl">Total</div></div>';
+  h += '</div>';
+
+  // Week info
+  h += '<div class="section"><h3>Week: ' + data.weekStart + ' — ' + data.weekEnd + '</h3>';
+  h += '<table class="tbl"><thead><tr><th>Date</th><th>Session</th><th>Order Type</th><th>Qty</th><th>Price</th><th>Type</th></tr></thead><tbody>';
+
+  for (const row of data.entries) {
+    const tagClass = row.type === 'By the Glass' ? 'tag-glass' : 'tag-pair';
+    h += '<tr>';
+    h += '<td>' + row.date + '</td>';
+    h += '<td>' + row.session + '</td>';
+    h += '<td>' + row.orderType + '</td>';
+    h += '<td>' + row.qty + '</td>';
+    h += '<td>£' + row.price.toFixed(2) + '</td>';
+    h += '<td><span class="s-tag ' + tagClass + '">' + row.type + '</span></td>';
+    h += '</tr>';
+  }
+  h += '</tbody></table></div>';
+
+  // Email preview
+  h += '<div class="email-preview">';
+  h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b89650;margin-bottom:8px">Email Preview</h3>';
+  h += '<textarea id="emailBody">' + buildEmailBody(data) + '</textarea>';
+  h += '<div class="email-actions">';
+  h += '<button class="btn btn-send" onclick="sendEmail()">Send to my email</button>';
+  h += '<span id="sendStatus" style="font-size:11px;color:#888"></span>';
+  h += '</div></div>';
+
+  document.getElementById('output').innerHTML = h;
+}
+
+function buildEmailBody(data) {
+  let body = 'Hi Giuseppe,\n\n';
+  body += 'Please find below the Viniv weekly sales report for ' + data.weekStart + ' - ' + data.weekEnd + '.\n\n';
+  body += 'The Restaurant Collection - Weekly Summary:\n\n';
+  body += '  By the Glass: ' + data.totalGlass + ' glasses sold\n';
+  body += '  Pairings: ' + data.totalPairing + ' pairings sold\n';
+  body += '  Total: ' + data.totalAll + '\n\n';
+  body += 'Breakdown:\n';
+
+  for (const r of data.entries) {
+    body += '  ' + r.date + '  ' + r.session.padEnd(8) + '  ' + r.qty + '  £' + r.price.toFixed(2) + '  ' + r.type + '\n';
+  }
+
+  body += '\nBest,\nFiorella';
+  return body;
+}
+
+async function sendEmail() {
+  const body = document.getElementById('emailBody').value;
+  const sendStatus = document.getElementById('sendStatus');
+  sendStatus.textContent = 'Sending...';
+
+  try {
+    const res = await fetch(API + '/api/send-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subject: 'Viniv Report - The Restaurant Collection (' + reportData.weekStart + ' - ' + reportData.weekEnd + ')',
+        body: body
+      })
+    });
+    const json = await res.json();
+    if (json.success) {
+      sendStatus.textContent = '✓ Sent!';
+      toast('Email sent successfully');
+    } else {
+      sendStatus.textContent = '✗ ' + json.error;
+    }
+  } catch (err) {
+    sendStatus.textContent = '✗ Server error';
+  }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show';
+  setTimeout(() => el.className = 'toast', 2000);
+}
+</script>
+</body>
+</html>

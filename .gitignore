@@ -3,6 +3,8 @@
 *.env
 *.key
 *.pem
+viniv-server.py
+firebase-debug.log
 
 # OS files
 .DS_Store
