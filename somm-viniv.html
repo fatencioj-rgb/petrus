@@ -21,6 +21,7 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .btn:disabled{background:#ccc;cursor:not-allowed}
 .btn-send{background:var(--gld);color:#fff}
 .btn-send:hover{background:#a07e3a}
+.btn-sm{padding:6px 14px;font-size:10px}
 .account-select{padding:7px 12px;border:1px solid var(--gld);border-radius:4px;font-family:var(--s);font-size:11px;background:#fff;color:#2c2c2c}
 .section{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
 .section h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px;font-weight:600}
@@ -28,9 +29,6 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .tbl th{background:var(--grn2);color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
 .tbl td{padding:5px 8px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
 .tbl tr:hover td{background:#fdf9f2}
-.summary{margin-top:14px;padding:14px;background:var(--pink);border-radius:6px;font-size:12px;color:var(--grn)}
-.summary strong{color:var(--grn2)}
-.summary .big{font-size:22px;font-family:var(--f);font-weight:700;display:block;margin-bottom:4px}
 .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
 .summary-card{text-align:center;padding:12px;background:#fff;border-radius:6px;border:1px solid #e8e0d4}
 .summary-card .num{font-size:28px;font-family:var(--f);font-weight:700;color:var(--grn)}
@@ -38,16 +36,34 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .s-tag{font-size:8px;padding:2px 6px;border-radius:8px;text-transform:uppercase;font-weight:600}
 .tag-glass{background:#d4edda;color:#155724}
 .tag-pair{background:#fff3cd;color:#856404}
+.tag-sent{background:#d4edda;color:#155724}
 .loading{text-align:center;padding:40px;color:#888}
 .loading .spinner{width:30px;height:30px;border:3px solid #e8e0d4;border-top:3px solid var(--gld);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .em{text-align:center;padding:30px;color:#ccc;font-size:11px}
 .email-preview{margin-top:14px;padding:14px;background:#fff;border:1px solid #e8e0d4;border-radius:6px}
-.email-preview textarea{width:100%;min-height:200px;border:1px solid #e8e0d4;border-radius:4px;padding:10px;font-family:'Courier New',monospace;font-size:11px;resize:vertical;line-height:1.5}
+.email-preview textarea{width:100%;min-height:180px;border:1px solid #e8e0d4;border-radius:4px;padding:10px;font-family:'Courier New',monospace;font-size:11px;resize:vertical;line-height:1.5}
 .email-preview .email-actions{margin-top:10px;display:flex;gap:10px;align-items:center}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
 .toast.show{opacity:1}
 .error{background:#f8d7da;color:#721c24;padding:12px;border-radius:6px;font-size:12px;margin-top:10px}
+
+/* History cards */
+.history-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gld);margin:30px 0 12px;font-weight:600;border-top:1px solid #e8e0d4;padding-top:20px}
+.week-cards{display:flex;flex-direction:column;gap:8px}
+.week-card{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between}
+.week-card:hover{border-color:var(--gld);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.week-card.active{border-color:var(--gld);background:var(--pink)}
+.week-card .wc-left{display:flex;align-items:center;gap:14px}
+.week-card .wc-date{font-size:12px;font-weight:500;color:var(--grn)}
+.week-card .wc-account{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888}
+.week-card .wc-stats{display:flex;gap:12px;align-items:center}
+.week-card .wc-stat{text-align:center}
+.week-card .wc-stat .n{font-size:16px;font-family:var(--f);font-weight:700;color:var(--grn)}
+.week-card .wc-stat .l{font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:#888}
+.week-card .wc-badge{display:flex;gap:6px;align-items:center}
+.week-detail{margin-top:10px;display:none}
+.week-detail.show{display:block}
 </style>
 </head>
 <body>
@@ -64,9 +80,14 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
     <span id="status" style="font-size:11px;color:#888"></span>
   </div>
 
-  <div id="output">
-    <div class="em">Click "Generate Weekly Report" to fetch last week's data from TISSL</div>
+  <div id="output"></div>
+
+  <!-- History section -->
+  <div class="history-title">Weekly History</div>
+  <div id="history" class="week-cards">
+    <div class="em">Loading history...</div>
   </div>
+  <div id="weekDetail" class="week-detail"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -80,7 +101,7 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 const API = "http://localhost:5050";
 let reportData = null;
 
-// Load accounts on page load
+// ── Load accounts ──
 (async function loadAccounts() {
   try {
     const res = await fetch(API + '/api/accounts');
@@ -104,6 +125,71 @@ let reportData = null;
   }
 })();
 
+// ── Load history from Firestore ──
+function loadHistory() {
+  db.collection('viniv_reports')
+    .orderBy('createdAt', 'desc')
+    .limit(20)
+    .get()
+    .then(function(snap) {
+      const history = document.getElementById('history');
+      if (snap.empty) {
+        history.innerHTML = '<div class="em">No reports yet. Generate your first one above.</div>';
+        return;
+      }
+      let h = '';
+      snap.forEach(function(doc) {
+        const d = doc.data();
+        const sent = d.emailSent ? '<span class="s-tag tag-sent">✓ sent</span>' : '';
+        h += '<div class="week-card" onclick="showWeekDetail(\'' + doc.id + '\')" id="card-' + doc.id + '">';
+        h += '<div class="wc-left">';
+        h += '<div><div class="wc-date">' + d.weekStart + ' — ' + d.weekEnd + '</div>';
+        h += '<div class="wc-account">' + (d.accountName || 'Petrus') + '</div></div>';
+        h += '</div>';
+        h += '<div class="wc-stats">';
+        h += '<div class="wc-stat"><div class="n">' + d.totalGlass + '</div><div class="l">Glass</div></div>';
+        h += '<div class="wc-stat"><div class="n">' + d.totalPairing + '</div><div class="l">Pairing</div></div>';
+        h += '<div class="wc-stat"><div class="n">' + d.totalAll + '</div><div class="l">Total</div></div>';
+        h += '<div class="wc-badge">' + sent + '</div>';
+        h += '</div></div>';
+      });
+      history.innerHTML = h;
+    });
+}
+
+// Wait for auth then load history
+auth.onAuthStateChanged(function(u) {
+  if (u) loadHistory();
+});
+
+// ── Show week detail ──
+function showWeekDetail(docId) {
+  // Toggle active state
+  document.querySelectorAll('.week-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('card-' + docId);
+  if (card) card.classList.add('active');
+
+  const detail = document.getElementById('weekDetail');
+  detail.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  detail.classList.add('show');
+
+  db.collection('viniv_reports').doc(docId).get().then(function(doc) {
+    if (!doc.exists) { detail.innerHTML = '<div class="em">Not found</div>'; return; }
+    const d = doc.data();
+    let h = '<div class="section"><h3>Detail: ' + d.weekStart + ' — ' + d.weekEnd + '</h3>';
+    h += '<table class="tbl"><thead><tr><th>Date</th><th>Session</th><th>Order Type</th><th>Qty</th><th>Price</th><th>Type</th></tr></thead><tbody>';
+    for (const row of d.entries) {
+      const tagClass = row.type === 'By the Glass' ? 'tag-glass' : 'tag-pair';
+      h += '<tr><td>' + row.date + '</td><td>' + row.session + '</td><td>' + row.orderType + '</td>';
+      h += '<td>' + row.qty + '</td><td>£' + row.price.toFixed(2) + '</td>';
+      h += '<td><span class="s-tag ' + tagClass + '">' + row.type + '</span></td></tr>';
+    }
+    h += '</tbody></table></div>';
+    detail.innerHTML = h;
+  });
+}
+
+// ── Generate Report ──
 async function generateReport() {
   const btn = document.getElementById('btnGenerate');
   const output = document.getElementById('output');
@@ -133,40 +219,56 @@ async function generateReport() {
     btn.disabled = false;
     status.textContent = '✓ Report generated';
 
+    // Save to Firestore
+    const accountName = document.getElementById('accountSelect').selectedOptions[0].textContent;
+    await saveReport(json.data, accountId, accountName);
+    loadHistory();
+
   } catch (err) {
     output.innerHTML = '<div class="error">⚠ Could not connect to server. Make sure viniv-server.py is running.</div>';
     btn.disabled = false;
   }
 }
 
+// ── Save to Firestore ──
+async function saveReport(data, accountId, accountName) {
+  try {
+    await db.collection('viniv_reports').add({
+      weekStart: data.weekStart,
+      weekEnd: data.weekEnd,
+      totalGlass: data.totalGlass,
+      totalPairing: data.totalPairing,
+      totalAll: data.totalAll,
+      entries: data.entries,
+      accountId: accountId,
+      accountName: accountName,
+      emailSent: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.error('Error saving report:', e);
+  }
+}
+
+// ── Render current report ──
 function renderReport(data) {
   let h = '';
-
-  // Summary cards
   h += '<div class="summary-grid">';
   h += '<div class="summary-card"><div class="num">' + data.totalGlass + '</div><div class="lbl">By the Glass</div></div>';
   h += '<div class="summary-card"><div class="num">' + data.totalPairing + '</div><div class="lbl">Pairings</div></div>';
   h += '<div class="summary-card"><div class="num">' + data.totalAll + '</div><div class="lbl">Total</div></div>';
   h += '</div>';
 
-  // Week info
   h += '<div class="section"><h3>Week: ' + data.weekStart + ' — ' + data.weekEnd + '</h3>';
   h += '<table class="tbl"><thead><tr><th>Date</th><th>Session</th><th>Order Type</th><th>Qty</th><th>Price</th><th>Type</th></tr></thead><tbody>';
-
   for (const row of data.entries) {
     const tagClass = row.type === 'By the Glass' ? 'tag-glass' : 'tag-pair';
-    h += '<tr>';
-    h += '<td>' + row.date + '</td>';
-    h += '<td>' + row.session + '</td>';
-    h += '<td>' + row.orderType + '</td>';
-    h += '<td>' + row.qty + '</td>';
-    h += '<td>£' + row.price.toFixed(2) + '</td>';
-    h += '<td><span class="s-tag ' + tagClass + '">' + row.type + '</span></td>';
-    h += '</tr>';
+    h += '<tr><td>' + row.date + '</td><td>' + row.session + '</td><td>' + row.orderType + '</td>';
+    h += '<td>' + row.qty + '</td><td>£' + row.price.toFixed(2) + '</td>';
+    h += '<td><span class="s-tag ' + tagClass + '">' + row.type + '</span></td></tr>';
   }
   h += '</tbody></table></div>';
 
-  // Email preview
   h += '<div class="email-preview">';
   h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b89650;margin-bottom:8px">Email Preview</h3>';
   h += '<textarea id="emailBody">' + buildEmailBody(data) + '</textarea>';
@@ -186,15 +288,15 @@ function buildEmailBody(data) {
   body += '  Pairings: ' + data.totalPairing + ' pairings sold\n';
   body += '  Total: ' + data.totalAll + '\n\n';
   body += 'Breakdown:\n';
-
   for (const r of data.entries) {
     body += '  ' + r.date + '  ' + r.session.padEnd(8) + '  ' + r.qty + '  £' + r.price.toFixed(2) + '  ' + r.type + '\n';
   }
-
+  body += '\nIf it works for you, I can send the weekly report every Saturday after service.\n';
   body += '\nBest,\nFiorella';
   return body;
 }
 
+// ── Send email ──
 async function sendEmail() {
   const body = document.getElementById('emailBody').value;
   const sendStatus = document.getElementById('sendStatus');
@@ -213,6 +315,14 @@ async function sendEmail() {
     if (json.success) {
       sendStatus.textContent = '✓ Sent!';
       toast('Email sent successfully');
+      // Mark as sent in Firestore (update most recent)
+      db.collection('viniv_reports')
+        .where('weekStart', '==', reportData.weekStart)
+        .where('weekEnd', '==', reportData.weekEnd)
+        .limit(1).get().then(function(snap) {
+          snap.forEach(function(doc) { doc.ref.update({ emailSent: true }); });
+          loadHistory();
+        });
     } else {
       sendStatus.textContent = '✗ ' + json.error;
     }
