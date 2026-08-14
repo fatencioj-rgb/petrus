@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wine Notes — Petrus</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 25mm 20mm 20mm 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Calibri', 'Segoe UI', sans-serif;
+            font-size: 11pt;
+            color: #222;
+            line-height: 1.6;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #999;
+        }
+
+        .header h1 {
+            font-size: 16pt;
+            font-weight: 600;
+            color: #222;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: 10px 16px;
+            font-size: 9pt;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            background: #f5f5f5;
+            transition: all 0.2s ease;
+            position: relative;
+            top: 2px;
+        }
+
+        .tab:hover {
+            background: #eee;
+            color: #333;
+        }
+
+        .tab.active {
+            background: #fff;
+            color: #222;
+            border-color: #ddd;
+            font-weight: 600;
+            border-bottom: 2px solid #fff;
+        }
+
+        /* ── Content Panels ── */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .wine-title {
+            text-align: center;
+            font-size: 13pt;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table tr td {
+            padding: 4px 0;
+            vertical-align: top;
+            font-size: 10.5pt;
+            text-align: left;
+        }
+
+        table tr td:first-child {
+            font-weight: 600;
+            width: 30%;
+            color: #444;
+        }
+
+        table tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        table tr:last-child {
+            border-bottom: none;
+        }
+
+        .prose {
+            font-size: 10.5pt;
+            color: #333;
+            line-height: 1.7;
+            text-align: justify;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 7.5pt;
+            color: #999;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .tabs { gap: 2px; }
+            .tab { padding: 8px 10px; font-size: 8pt; }
+        }
+
+        @media print {
+            .tabs { display: none; }
+            .panel { display: block !important; page-break-after: always; }
+            .panel:last-of-type { page-break-after: avoid; }
+            body { padding: 0; width: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Wine Notes</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="showPanel(0)">Oremus Mandolás</div>
+        <div class="tab" onclick="showPanel(1)">Pieropan Calvarino</div>
+        <div class="tab" onclick="showPanel(2)">Paradella Patrimonio</div>
+        <div class="tab" onclick="showPanel(3)">Michele Chiarlo Barbaresco</div>
+        <div class="tab" onclick="showPanel(4)">Justino's Madeira</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- PANEL 1: Oremus Mandolás -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="panel active" id="panel-0">
+        <div class="wine-title">Mandolás, Oremus, Furmint, Tokaj, Hungary 2023</div>
+
+        <div class="section">
+            <h2>General Information</h2>
+            <table>
+                <tr><td>Producer</td><td>Tokaj-Oremus (Tempos Vega Sicilia)</td></tr>
+                <tr><td>Appellation</td><td>Tokaji</td></tr>
+                <tr><td>Region, Country</td><td>Tokaj, Hungary</td></tr>
+                <tr><td>Vintage</td><td>2023</td></tr>
+                <tr><td>Style</td><td>Dry white</td></tr>
+                <tr><td>Grape Variety</td><td>Furmint (100%)</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Producer</h2>
+            <p class="prose">
+                Tokaj-Oremus is part of the Tempos Vega Sicilia group, owned by the Álvarez family of Spain — the same family behind the legendary Vega Sicilia in Ribera del Duero. They acquired the estate shortly after the fall of communism in Hungary, combining respect for the centuries-old tradition of Tokaj with modern winemaking technology. The Oremus vineyard itself was classified as Primae Classis (First Growth) in the original 1772 vineyard classification — the world's first classified wine region, predating Bordeaux by nearly a century.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Viticulture</h2>
+            <p class="prose">
+                The vineyards sit in a continental climate where extreme seasonal variations help develop unrivalled aromatic complexity. Nearly half of the estate's plantings are Furmint, the noble grape of Tokaj. For the Mandolás, only healthy, non-botrytised fruit is selected, allowing the wine to express the pure varietal character of Furmint without the influence of noble rot.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Tasting Notes</h2>
+            <p class="prose">
+                A gastronomic Furmint with subtle aromas of lime, green apple, white pear, citrus peel, and white flowers with a saline, mineral undertone. On the palate, it is pure and minerally with bright acidity and a taut, medium-bodied structure. The finish is limpid and transparent. Drinking well now but with the capacity to age.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Talking Points for Guests</h2>
+            <p class="prose">
+                This wine comes from the same family group that owns Vega Sicilia — one of Spain's most iconic estates — giving it an extraordinary pedigree. The Oremus vineyard was classified as "First Growth" in 1772, making Tokaj the world's first officially classified wine region, decades before Bordeaux's 1855 classification. While Tokaj is famous for sweet Aszú wines, the Mandolás showcases the dry side of Furmint — a grape with extraordinary acidity, mineral tension, and capacity for expressing terroir, often compared to Riesling or Chablis by critics.
+            </p>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- PANEL 2: Pieropan Calvarino -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-1">
+        <div class="wine-title">Soave Classico, "Calvarino", Pieropan, Veneto, Italy 2023</div>
+
+        <div class="section">
+            <h2>General Information</h2>
+            <table>
+                <tr><td>Producer</td><td>Pieropan</td></tr>
+                <tr><td>Appellation</td><td>Soave Classico DOC</td></tr>
+                <tr><td>Region, Country</td><td>Veneto, Italy</td></tr>
+                <tr><td>Vintage</td><td>2023</td></tr>
+                <tr><td>Style</td><td>Dry white</td></tr>
+                <tr><td>Grape Varieties</td><td>Garganega (70%), Trebbiano di Soave (30%)</td></tr>
+                <tr><td>Farming</td><td>Organic</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Producer</h2>
+            <p class="prose">
+                Pieropan was established in 1880 when Leonildo Pieropan purchased the historic Palazzo Pullici in the medieval village of Soave. The estate has remained family-owned through four generations. It was the third-generation winemaker, Leonildo "Nino" Pieropan, who transformed the estate's reputation — in 1932, the family bottled what is believed to be the first wine labelled as "Soave," predating the DOC by 36 years. Today, brothers Dario and Andrea Pieropan carry on their late father's legacy, having opened a new winery and visitor centre in his honour in 2022.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Viticulture & Winemaking</h2>
+            <p class="prose">
+                The Calvarino vineyard sits on volcanic soils within the Soave Classico heartland. Grapes are farmed organically. The wine is fermented and aged in distinctive tulip-shaped concrete tanks — a signature of the estate — which preserve freshness and purity while allowing micro-oxygenation for textural development.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Tasting Notes</h2>
+            <p class="prose">
+                The nose is fresh and mineral, with intense floral notes of acacia, jasmine and elderflower, enriched by fruit aromas of fresh almond, pear, yellow peach, pineapple, lemon, and a characteristic crisp cherry note. It closes with nuances of aromatic herbs — sage, lemon-thyme, and mint. On the palate, it is smoky and mineral with candied lemon, white pepper, and almonds. Medium-bodied with elegant, refreshing acidity and a silky texture flowing into a long, mineral-driven finish.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Talking Points for Guests</h2>
+            <p class="prose">
+                The Calvarino is consistently regarded as one of the finest white wines not just in Soave, but in all of Italy. Pieropan is credited with bottling the very first "Soave" — the family literally named the appellation before it existed. The volcanic soils give this wine a mineral intensity and ageing potential that surprises guests expecting a simple Italian white. With Leonildo "Nino" Pieropan's passing in 2018 and his sons' dedication to continuing his work, this is a wine with a deeply personal family story behind every vintage.
+            </p>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- PANEL 3: Domaine Paradella -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-2">
+        <div class="wine-title">Patrimonio, Domaine Paradella, Vermentino, Corsica, France 2022 — Magnum</div>
+
+        <div class="section">
+            <h2>General Information</h2>
+            <table>
+                <tr><td>Producer</td><td>Domaine Paradella</td></tr>
+                <tr><td>Appellation</td><td>AOC Patrimonio</td></tr>
+                <tr><td>Region, Country</td><td>Corsica, France</td></tr>
+                <tr><td>Vintage</td><td>2022</td></tr>
+                <tr><td>Format</td><td>Magnum (150cl)</td></tr>
+                <tr><td>Style</td><td>Dry white</td></tr>
+                <tr><td>Grape Variety</td><td>Vermentinu (100%)</td></tr>
+                <tr><td>Farming</td><td>Organic</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Producer</h2>
+            <p class="prose">
+                Domaine Paradella is a young, confidential estate founded in 2016 by Lionel Wojcik. Trained in Bordeaux, Wojcik served his apprenticeship under Louis Mitjavile at Château Le Tertre Rotebœuf in Saint-Émilion and Roc de Cambes in Côtes de Bourg — one of the most exacting schools in French winemaking. In 2015 he returned to his native Corsica, taking over 8 hectares of vines in Patrimonio. He uprooted the existing Carignan and replanted exclusively with indigenous varieties — Nielluccio and Vermentinu — bringing Bordelais rigour to an island setting. The estate works organically on clay-limestone and granitic soils swept by sea breezes.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Viticulture & Winemaking</h2>
+            <p class="prose">
+                Patrimonio is considered the most geologically complex wine region on Corsica — a mix of limestone, schist, and granite. The Vermentinu vines grow on clay-limestone soils with a Mediterranean climate tempered by maritime influences. Fermentation uses indigenous yeasts only, reflecting the terroir authentically. The winemaking is low-intervention, preserving purity and freshness.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Tasting Notes</h2>
+            <p class="prose">
+                Pale gold with intense brilliance. The nose presents complex aromas of citrus, white blossom, hawthorn, honey, and subtle notes of vanilla and toasted bread. On the palate, it is fresh, mineral, and suave — ample and racy with beautiful roundness. It unfolds slowly into a long, slightly smoky finish with notes of lime blossom and violet. Described by some as one of the greatest white wines of Corsica.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Talking Points for Guests</h2>
+            <p class="prose">
+                Patrimonio was the first Corsican appellation to receive AOC status, in 1968, reflecting centuries of winemaking heritage. Lionel Wojcik trained at one of Bordeaux's most legendary estates — Tertre Rotebœuf — and brought that level of precision to Corsica, an island still full of undiscovered potential. The wine is Vermentinu, the Corsican name for Vermentino — a grape that here, on limestone swept by sea wind, develops a complexity and mineral depth that surprises anyone expecting a simple southern white. Served in magnum, the wine shows additional freshness and slower evolution.
+            </p>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- PANEL 4: Michele Chiarlo Barbaresco -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-3">
+        <div class="wine-title">Barbaresco "Reyna", Michele Chiarlo, Piedmont, Italy 2022</div>
+
+        <div class="section">
+            <h2>General Information</h2>
+            <table>
+                <tr><td>Producer</td><td>Michele Chiarlo</td></tr>
+                <tr><td>Appellation</td><td>Barbaresco DOCG</td></tr>
+                <tr><td>Region, Country</td><td>Piedmont, Italy</td></tr>
+                <tr><td>Vintage</td><td>2022</td></tr>
+                <tr><td>Style</td><td>Dry red</td></tr>
+                <tr><td>Grape Variety</td><td>Nebbiolo (100%)</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Producer</h2>
+            <p class="prose">
+                Michele Chiarlo established his winery in 1956 in Calamandrana, in the province of Asti, coming from three generations of wine growers who had been crafting estate-grown Barbera and Moscato. He studied oenology at the wine school in Alba alongside contemporaries such as Giacomo Tachis and Renato Ratti. His first Barolo was bottled in 1958. In 1974, he pioneered the use of malolactic fermentation for Barbera, helping create wines with greater stability and accessibility in their youth. Michele Chiarlo passed away in 2023; his sons Alberto and Stefano now manage the estate, which covers approximately 150 hectares across the finest crus of Barolo, Barbaresco, Nizza, and Gavi.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Viticulture & Winemaking</h2>
+            <p class="prose">
+                The Reyna vineyards lie on steep hillsides in the communes of Barbaresco and Neive, facing southeast and southwest. The soil is bluish-grey calcareous clay marl with good presence of microelements and more sand in the Barbaresco vineyard. Fermentation takes place in stainless steel with prolonged maceration on the skins to extract colour, structure, and fine-grained tannins. Ageing follows in oak to polish and integrate the wine's natural power.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Tasting Notes</h2>
+            <p class="prose">
+                Garnet red with brilliant hues. The nose is very floral, focused on roses, with overt red cherries, balsamic notes, tea leaves, orange peel, and wild herbs. The palate unfolds with precision — medium-bodied with crisp acidity, good fruit definition supported by firm, dusty yet ripe tannins. The finish is long and full of flavour, with layers of spice developing as it opens. Still young and will benefit from time. Best from 2026 onwards.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Talking Points for Guests</h2>
+            <p class="prose">
+                Barbaresco is known as "the Queen" of Italian wine, prized for its elegance and finesse compared to the more powerful Barolo. Michele Chiarlo was a true pioneer of Piedmontese winemaking — he studied alongside the architects of modern Italian wine, and his innovations with Barbera changed how the region's wines were perceived internationally. The name "Reyna" itself means "Queen," a nod to Barbaresco's reputation. This is Nebbiolo at its most graceful — aromatic, fine-boned, and aristocratic. Production is extremely limited, as only the finest hillside positions in the communes of Barbaresco and Neive qualify.
+            </p>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- PANEL 5: Justino's Madeira -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-4">
+        <div class="wine-title">Justino's Madeira, Fine Rich Reserve, 5 Years Old</div>
+
+        <div class="section">
+            <h2>General Information</h2>
+            <table>
+                <tr><td>Producer</td><td>Justino's Madeira Wines</td></tr>
+                <tr><td>Region, Country</td><td>Madeira, Portugal</td></tr>
+                <tr><td>Age Statement</td><td>Minimum 5 years in oak cask</td></tr>
+                <tr><td>Style</td><td>Fortified — Rich (medium-sweet)</td></tr>
+                <tr><td>Grape Variety</td><td>Tinta Negra</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Producer</h2>
+            <p class="prose">
+                Justino's is one of the oldest and most established producers on the island of Madeira, founded in 1870 by Justino Henrique Freitas. Now over 150 years old and believed to be the largest shipper of Madeira wine, the company produces a wide range of styles — from young Reserva bottlings to long-aged Frasqueira vintage wines — made from traditional varieties including Sercial, Verdelho, Boal, Malvasia, and the rare Terrantez. Their modern production facilities are located in the Cancela area of Santa Cruz.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Winemaking</h2>
+            <p class="prose">
+                Produced only from grapes grown on the island, this wine is made in strict accordance with traditional Madeira methods. The wine undergoes the characteristic heating process (estufagem) that defines Madeira's unique style, followed by a minimum of five years' maturation in seasoned oak casks, developing depth, complexity, and the oxidative character that gives Madeira its extraordinary longevity.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Tasting Notes</h2>
+            <p class="prose">
+                Brilliant amber in colour with elegant and complex aromas of vanilla, raisins, dried fruit, and caramel. On the palate, the wine is rich and luscious with layered flavours of toffee, dried fig, roasted nuts, and a balancing acidity that keeps the sweetness fresh and lifts the finish. The hallmark Madeira tang provides persistence and vibrancy.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Talking Points for Guests</h2>
+            <p class="prose">
+                Madeira is essentially indestructible — once opened, it can last for months without deteriorating, because the wine has already undergone controlled oxidation and heating during its production. The island's winemaking heritage is tied to maritime history: in the 18th century, fortifying the wine and exposing it to tropical heat on long sea voyages accidentally created its unique style. Justino's has been making these wines since 1870, over 150 years of unbroken tradition. The "Rich" style offers an approachable sweetness balanced by Madeira's signature acidity — making it work beautifully with chocolate desserts, blue cheese, or simply on its own as a digestif.
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">Fiorella Atencio — Petrus</div>
+
+    <script>
+        function showPanel(index) {
+            // Hide all panels
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            // Deactivate all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // Activate selected
+            document.getElementById('panel-' + index).classList.add('active');
+            document.querySelectorAll('.tab')[index].classList.add('active');
+        }
+    </script>
+</body>
+</html>
