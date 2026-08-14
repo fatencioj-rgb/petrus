@@ -7,15 +7,52 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --cream:#faf7f1; --sans:'Inter',sans-serif; --serif:'Cormorant Garamond',serif; }
+:root { --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --gold-light:#d4b87a; --cream:#faf7f1; --sans:'Inter',sans-serif; --serif:'Cormorant Garamond',serif; }
 body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-height:100vh; }
 .top-bar { background:var(--green-dark); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
 .top-bar a { color:var(--gold); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 .top-bar a:hover { color:#fff; }
 .top-bar h2 { font-family:var(--serif); color:#fff; font-size:18px; margin:0; }
-.content { max-width:600px; margin:80px auto; padding:0 20px; text-align:center; }
-.content h1 { font-family:var(--serif); font-size:32px; color:var(--green); margin-bottom:12px; }
-.content p { font-size:14px; color:#888; }
+.page { max-width:860px; margin:0 auto; padding:40px 24px 60px; }
+.page h1 { font-family:var(--serif); font-size:32px; color:var(--green); text-align:center; margin-bottom:6px; }
+.page .sub { text-align:center; font-size:13px; color:#888; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:40px; }
+
+/* Sections */
+.section-accordion { margin:36px 0 20px; }
+.section-accordion summary { font-family:var(--serif); font-size:22px; color:var(--green); border-bottom:1px solid var(--gold); padding-bottom:6px; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; }
+.section-accordion summary::-webkit-details-marker { display:none; }
+.section-accordion summary::after { content:'+'; font-family:var(--sans); font-size:20px; color:var(--gold); font-weight:300; }
+.section-accordion[open] summary::after { content:'-'; }
+.section-accordion .section-body { padding-top:20px; }
+
+/* Wine Cards */
+.wine-card { background:#fff; border:1px solid #e8e3da; border-radius:6px; margin-bottom:12px; overflow:hidden; }
+.wine-card summary { font-family:var(--serif); font-size:17px; color:var(--green); padding:18px 28px; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; }
+.wine-card summary::-webkit-details-marker { display:none; }
+.wine-card summary::after { content:'+'; font-family:var(--sans); font-size:18px; color:var(--gold); font-weight:300; }
+.wine-card[open] summary::after { content:'-'; }
+.wine-card[open] summary { border-bottom:1px solid #f0ebe5; }
+.wine-card .card-body { padding:20px 28px; }
+.wine-card table { width:100%; border-collapse:collapse; margin-bottom:14px; }
+.wine-card table td { padding:4px 0; font-size:13px; vertical-align:top; }
+.wine-card table td:first-child { font-weight:600; width:28%; color:#555; }
+.wine-card .prose { font-size:13px; color:#444; text-align:justify; margin-bottom:10px; }
+.wine-card .prose strong { color:var(--green); }
+.wine-card h4 { font-size:12px; text-transform:uppercase; letter-spacing:0.8px; color:var(--green); margin:16px 0 6px; padding-bottom:3px; border-bottom:1px solid #f0ebe5; }
+.wine-card h4:first-of-type { margin-top:0; }
+
+/* Hidden by default */
+.restricted { display:none; }
+
+.placeholder { text-align:center; padding:60px 20px; }
+.placeholder p { font-size:14px; color:#888; }
+
+.footer { text-align:center; font-size:10px; color:#aaa; letter-spacing:1px; text-transform:uppercase; margin-top:40px; }
+
+@media print {
+  .top-bar { display:none; }
+  .wine-card { break-inside:avoid; page-break-inside:avoid; }
+}
 </style>
 </head>
 <body>
@@ -24,10 +61,156 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
   <h2>Petrus</h2>
   <span></span>
 </div>
-<div class="content">
+<div class="page">
   <h1>Pairings</h1>
-  <p>Coming soon.</p>
+  <p class="sub">Petrus</p>
+
+  <!-- Placeholder for non-Fiorella users -->
+  <div class="placeholder" id="placeholder">
+    <p>Coming soon.</p>
+  </div>
+
+  <!-- Discovery Matching — FIORELLA ONLY -->
+  <div class="restricted" id="discoverySection">
+    <details class="section-accordion" open>
+      <summary>Discovery — Matching</summary>
+      <div class="section-body">
+
+        <details class="wine-card">
+          <summary>Mandolás, Oremus, Furmint, Tokaj, Hungary 2023</summary>
+          <div class="card-body">
+            <table>
+              <tr><td>Producer</td><td>Tokaj-Oremus (Tempos Vega Sicilia)</td></tr>
+              <tr><td>Appellation</td><td>Tokaji</td></tr>
+              <tr><td>Region, Country</td><td>Tokaj, Hungary</td></tr>
+              <tr><td>Vintage</td><td>2023</td></tr>
+              <tr><td>Alcohol</td><td>~13 % vol.</td></tr>
+              <tr><td>Style</td><td>Dry white</td></tr>
+              <tr><td>Grape Varieties</td><td>Furmint (100%)</td></tr>
+            </table>
+            <h4>The Producer</h4>
+            <p class="prose">Oremus belongs to the Álvarez family, the same people behind Vega Sicilia in Ribera del Duero — arguably Spain's most revered wine estate. They acquired Oremus in 1993, just three years after the fall of communism in Hungary, when Tokaj's centuries-old reputation was intact but its vineyards were in a state of post-Soviet neglect. The family invested heavily, modernising the winery while respecting the traditions that made Tokaj famous in the first place.</p>
+            <p class="prose">But the history here goes far deeper than the Álvarez era. The Oremus vineyard was classified as Primae Classis (First Growth) in the world's very first official vineyard classification, established in 1772 — predating Bordeaux's 1855 classification by nearly a century. In 1650, wines from this specific vineyard were presented as a gift to Pope Benedict XIV. The name "Oremus" (Latin for "Let us pray") comes from the original ecclesiastical owners.</p>
+            <p class="prose">While the world knows Tokaj for its legendary sweet Aszú wines, Mandolás represents the dry side of Furmint: a grape of extraordinary acidity, mineral tension and terroir transparency that is increasingly compared to Riesling and Chablis. This is the estate's flagship dry white, the wine that proves Furmint deserves to be considered among Europe's great white grape varieties.</p>
+            <h4>Viticulture</h4>
+            <p class="prose">The vineyards sit in a continental climate where extreme seasonal variation — cold winters, warm summers and long, misty autumns — develops unrivalled aromatic complexity in the grapes. The estate farms around 115 hectares across some of Tokaj's finest classified vineyards. For the Mandolás, only healthy, non-botrytised fruit is selected, allowing the wine to express the pure varietal character of Furmint without the influence of noble rot. The volcanic soils contribute a mineral intensity and smoky character to the wines.</p>
+            <h4>Winemaking</h4>
+            <p class="prose">The grapes are gently pressed and fermented in a combination of stainless steel tanks and Hungarian oak barrels. The wine is aged on its fine lees for several months, building textural depth and complexity while preserving the grape's natural high acidity. The oak influence is subtle — present for structure and micro-oxygenation rather than flavour — allowing the varietal character and terroir to dominate.</p>
+            <h4>Tasting Notes</h4>
+            <p class="prose">A gastronomic Furmint with subtle aromas of lime, green apple, white pear, citrus peel and white flowers, underpinned by a saline, mineral quality. On the palate it is pure and taut, with bright, almost electric acidity and a medium-bodied structure that feels lean and precise. The finish is limpid and transparent, with a chalky mineral persistence that lingers. Drinking well now but with the architecture to age and develop further complexity.</p>
+            <h4>Vintage 2023</h4>
+            <p class="prose">The 2023 growing season in Tokaj was marked by a cooler spring followed by a warm, dry summer that maintained excellent sanitary conditions in the vineyard. The continental climate's signature extreme day-night temperature variation was particularly pronounced during September, preserving high natural acidity in the Furmint while allowing full phenolic ripeness. Harvest was slightly later than in recent warm vintages, resulting in wines with remarkable freshness, crystalline fruit definition and lower alcohol levels than the preceding two years. For dry Furmint specifically, 2023 is being described as a vintage of precision and minerality.</p>
+          </div>
+        </details>
+
+        <details class="wine-card">
+          <summary>Soave Classico "Calvarino", Pieropan, Veneto, Italy 2023</summary>
+          <div class="card-body">
+            <table>
+              <tr><td>Producer</td><td>Pieropan</td></tr>
+              <tr><td>Appellation</td><td>Soave Classico DOC</td></tr>
+              <tr><td>Region, Country</td><td>Veneto, Italy</td></tr>
+              <tr><td>Vintage</td><td>2023</td></tr>
+              <tr><td>Alcohol</td><td>~12.5 % vol.</td></tr>
+              <tr><td>Style</td><td>Dry white</td></tr>
+              <tr><td>Grape Varieties</td><td>Garganega (70%), Trebbiano di Soave (30%)</td></tr>
+            </table>
+            <h4>The Producer</h4>
+            <p class="prose">Pieropan is the family that single-handedly rescued Soave's reputation. In a world where Soave had become synonymous with cheap, industrial white wine, Leonildo Pieropan was the first to bottle a single-vineyard Soave, releasing the inaugural Calvarino in 1971. It was a radical act: proving that this appellation, on volcanic soils with ancient vines, could produce wines of genuine complexity and longevity.</p>
+            <p class="prose">Now in its fourth generation, the estate remains a reference point for what Italian white wine can be. The Calvarino vineyard (whose name means "little Calvary," a reference to the steep, punishing terrain) is the spiritual heart of the domaine. It sits alongside La Rocca as one of two single-vineyard wines that have earned Pieropan distinction far beyond the peninsula. All farming is now certified organic.</p>
+            <h4>Viticulture</h4>
+            <p class="prose">The Calvarino vineyard sits at approximately 250 metres above sea level within the Colombara UGA of the Soave Classico zone. The soils are volcanic basalt with limestone components, a geological profile that imparts distinctive mineral tension and depth. The vineyard is south-facing with steep slopes that Leonildo Pieropan first planted over 60 years ago. The combination of altitude, volcanic soils and old vines creates a wine of a completely different register from generic Soave.</p>
+            <h4>Winemaking</h4>
+            <p class="prose">Grapes are hand-harvested and undergo gentle whole-cluster pressing. The must is fermented and aged in tulip-shaped, glass-lined concrete tanks, which provide a neutral environment that preserves varietal character while allowing slow, gentle micro-oxygenation. The wine rests on its fine lees for approximately 12 months, building complexity and textural depth before bottling. No oak is used.</p>
+            <h4>Tasting Notes</h4>
+            <p class="prose">Pale straw yellow with greenish reflections when young. The nose is beautifully complex, with aromas of white spring wildflower, honey, citrus (lemon zest), wet flint, Alpine herbs and stone fruit (apricot, poached apple). On the palate the wine shows textural heft and a silky approach, wrapping smoothly across the palate with flavours of green apple, almond, blossom and oyster shell. The finish is chalky and persistent, driven by a crystalline mineral freshness.</p>
+            <h4>Vintage 2023</h4>
+            <p class="prose">2023 in the Veneto was erratic and atypical. Cooler temperatures in April and May eventually gave way to heat, but rain persisted throughout much of the growing season, reaching an unparalleled peak in July, particularly in the Classico zone. The month also brought localised hailstorms of varying intensity. However, the cooler temperatures ultimately benefited Garganega and Trebbiano, which need time to develop their complex aromatics. The slightly late harvest, combined with the volcanic soils' excellent drainage, meant that producers on the best sites (like Pieropan's elevated Calvarino) came through the difficult year with concentrated, focused wines while lower-lying vineyards struggled.</p>
+          </div>
+        </details>
+
+        <details class="wine-card">
+          <summary>Patrimonio, Domaine Paradella, Vermentino, Corsica, France 2022 — Magnum</summary>
+          <div class="card-body">
+            <table>
+              <tr><td>Producer</td><td>Domaine Paradella</td></tr>
+              <tr><td>Appellation</td><td>AOC Patrimonio</td></tr>
+              <tr><td>Region, Country</td><td>Corsica, France</td></tr>
+              <tr><td>Vintage</td><td>2022</td></tr>
+              <tr><td>Format</td><td>Magnum (150cl)</td></tr>
+              <tr><td>Alcohol</td><td>~13 % vol.</td></tr>
+              <tr><td>Style</td><td>Dry white</td></tr>
+              <tr><td>Grape Varieties</td><td>Vermentino (100%)</td></tr>
+            </table>
+            <h4>The Producer</h4>
+            <p class="prose">Domaine Paradella is a young estate that produces wines with levels of elegance and sophistication that fly in the face of any notions of rusticity in Corsican wines. Lionel Wojcik founded the domaine in 2016, but his pedigree is anything but young: trained in Bordeaux, he served his apprenticeship under Louis Mitjavile at Château Le Tertre Rotebœuf in Saint-Émilion, one of the Right Bank's most legendary estates, famous for velvety, deeply concentrated wines that transcend their modest appellation. That Bordelais rigour is now transplanted to the Mediterranean.</p>
+            <p class="prose">In 2015, Wojcik returned to his native Corsica and took over 8 hectares of vines in Patrimonio. He uprooted the existing Carignan and replanted exclusively with indigenous varieties — Nielluccio and Vermentinu — committing entirely to the island's identity. The estate works organically on clay-limestone soils swept by sea breezes, using indigenous yeasts and minimal intervention in the cellar. Patrimonio is Corsica's oldest and most prestigious wine appellation, established in 1968 as the island's first AOC.</p>
+            <h4>Viticulture</h4>
+            <p class="prose">Patrimonio is arguably the most geologically complex wine region on Corsica: a mix of limestone, schist and granite — three of the greatest bedrocks for wine growing — with clay, silt, sand and gravel on the surface. Paradella's Vermentinu vines grow on clay-limestone, the soil type that gives Patrimonio whites their distinctive structure and mineral complexity. The Mediterranean climate is tempered by maritime influence and proximity to the Étang de Biguglia, a coastal lagoon that creates a microclimate preserving natural acidity. Warm days ripen the fruit generously while sea breezes and cool nights maintain freshness.</p>
+            <h4>Winemaking</h4>
+            <p class="prose">Hand-harvested grapes are gently pressed. Fermentation is spontaneous, using only indigenous yeasts, reflecting the specific microbial fingerprint of the vineyard. The winemaking is deliberately low-intervention, prioritising terroir expression and the grape's natural aromatic profile. The Magnum format provides a slower, more graceful evolution during ageing, resulting in greater complexity and freshness at the point of drinking.</p>
+            <h4>Tasting Notes</h4>
+            <p class="prose">Pale gold with intense brilliance. The nose presents complex aromas of white blossom, hawthorn, honey, citrus fruit and subtle notes of vanilla and toasted bread. On the palate it is fresh, mineral and suave — ample and racy with beautiful roundness and concentration. It unfolds slowly into a long, slightly smoky finish with notes of lime blossom and violet. A saline mineral backbone reflects the limestone terroir. This is not simple southern white wine; it is one of Corsica's most compelling expressions of Vermentino.</p>
+            <h4>Vintage 2022</h4>
+            <p class="prose">The 2022 vintage in Corsica was exceptionally dry, with harvests in Haute-Corse (northern Corsica, where Patrimonio is located) beginning at the start of August, one to three weeks earlier than usual. The dryness brought concentration to the wines, and the clay-limestone soils of Patrimonio, which retain moisture better than the granite of other Corsican appellations, helped buffer the vines against the worst effects of drought. The resulting whites show good concentration and structure from the small, thick-skinned berries, with the extended warmth of the vintage lending generosity to the mid-palate.</p>
+          </div>
+        </details>
+
+        <details class="wine-card">
+          <summary>Barbaresco "Reyna", Michele Chiarlo, Piedmont, Italy 2022</summary>
+          <div class="card-body">
+            <table>
+              <tr><td>Producer</td><td>Michele Chiarlo</td></tr>
+              <tr><td>Appellation</td><td>Barbaresco DOCG</td></tr>
+              <tr><td>Region, Country</td><td>Piedmont, Italy</td></tr>
+              <tr><td>Vintage</td><td>2022</td></tr>
+              <tr><td>Alcohol</td><td>~14 % vol.</td></tr>
+              <tr><td>Style</td><td>Dry red</td></tr>
+              <tr><td>Grape Varieties</td><td>Nebbiolo (100%)</td></tr>
+            </table>
+            <h4>The Producer</h4>
+            <p class="prose">Michele Chiarlo was one of the architects of modern Piedmont. Born into a winegrowing family in Calamandrana, he studied oenology at the wine school in Alba alongside Giacomo Tachis (future creator of Sassicaia and Tignanello) and Renato Ratti (who would revolutionise Barolo). He established his winery in 1956 and bottled his first Barolo in 1958. In 1974, he pioneered the use of malolactic fermentation for Barbera, a technical advance that transformed the grape from a harsh, acidic workhorse into something elegant and age-worthy.</p>
+            <p class="prose">Michele passed away in 2023, but his sons Alberto and Stefano continue his vision across approximately 150 hectares in the finest crus of Barolo, Barbaresco, Nizza and Gavi. They are one of only a handful of producers with significant holdings in both Barolo and Barbaresco, allowing them to showcase the difference between the "King" and the "Queen" of Italian wine.</p>
+            <p class="prose">The name "Reyna" means "Queen," a deliberate reference to Barbaresco's traditional title. Where Barolo is power, structure and austerity, Barbaresco is grace, perfume and elegance. This wine is their expression of that feminine ideal: aristocratic Nebbiolo from two of the DOCG's finest communes.</p>
+            <h4>Viticulture</h4>
+            <p class="prose">The vineyards of Reyna lie on steep hillsides in the communes of Barbaresco and Neive, facing southeast and southwest. The soils are bluish-grey calcareous clay marl (Tortonian marl), rich in microelements that lend complexity and mineral depth, with more sand in the Barbaresco plots adding aromatic finesse. Only in these choicest positions within the three permitted communes (Barbaresco, Treiso and Neive) can Nebbiolo be planted for Barbaresco production. Yields are naturally low on these hillside sites.</p>
+            <h4>Winemaking</h4>
+            <p class="prose">Grapes are hand-harvested and undergo a prolonged maceration on skins in temperature-controlled stainless steel tanks. The extraction is relatively gentle, seeking fine-grained tannins and aromatic complexity rather than brute power. Following fermentation, the wine is aged in a combination of large Slavonian oak botti and smaller French oak barrels, allowing the Nebbiolo's natural elegance to develop while building structural complexity. Total ageing meets the DOCG minimum of 26 months, with additional time in bottle before release.</p>
+            <h4>Tasting Notes</h4>
+            <p class="prose">Garnet red with brilliant orange reflections at the rim. The nose is classically floral — rose petals dominate, joined by red cherry, tea leaves, balsamic notes, orange peel and wild herbs. On the palate it is medium-bodied with crisp acidity and excellent fruit definition, supported by firm, dusty yet ripe tannins that are aristocratic rather than aggressive. The finish is long and full of flavour, with spice and dried herb complexity developing as the wine breathes. Still young and will reward patience — best from 2026 onwards.</p>
+            <h4>Vintage 2022</h4>
+            <p class="prose">Piedmont's 2022 was one of the warmest and driest vintages on record, echoing the broader European pattern of that year. Rain was scarce from spring through late summer, creating significant hydric stress in many vineyards. However, Barbaresco's Tortonian marl soils — heavier and more water-retentive than Barolo's sandier terrain — provided a crucial buffer. The heat pushed Nebbiolo to full phenolic ripeness earlier than usual, with many producers harvesting in early-to-mid October rather than the traditional late October. The resulting wines are deeply coloured and concentrated, with ripe tannins and generous fruit, yet the best (from cooler exposures and older vines) retain the freshness and elegance that distinguishes Barbaresco from its more powerful neighbour. Critics have described 2022 Barbarescos as "approachable and generous in youth" — wines that will drink well relatively early while still having the structure for medium-term development.</p>
+          </div>
+        </details>
+
+        <details class="wine-card">
+          <summary>Justino's, Fine Rich Reserve, Madeira, Portugal 5Y</summary>
+          <div class="card-body">
+            <table>
+              <tr><td>Producer</td><td>Justino's Madeira Wines</td></tr>
+              <tr><td>Appellation</td><td>DOC Madeirense</td></tr>
+              <tr><td>Region, Country</td><td>Madeira, Portugal</td></tr>
+              <tr><td>Vintage</td><td>NV (5 Year Reserve)</td></tr>
+              <tr><td>Alcohol</td><td>~19 % vol.</td></tr>
+              <tr><td>Style</td><td>Madeira (medium-rich)</td></tr>
+              <tr><td>Grape Varieties</td><td>Tinta Negra <em>(variety not confirmed)</em></td></tr>
+            </table>
+            <h4>The Producer</h4>
+            <p class="prose">Justino's is one of Madeira's oldest and largest producers, founded in 1870. In a region where many of the most famous houses are tiny and rarefied, Justino's fills an important role: making serious, well-crafted Madeira at accessible levels. Their 5 Year Reserve is an introduction to the Madeira style, designed to show what makes this island's wines unique without requiring the commitment (or price) of a 20-year-old single variety.</p>
+            <p class="prose">The "Rich" designation indicates a medium-sweet style, the most approachable entry point for those new to Madeira. But even at this level, you can taste the hallmarks of the style: the warmth from the fortification, the caramelised character from the ageing process, and crucially, the acidity. That acidity is what makes Madeira Madeira; it prevents the sweetness from ever feeling heavy and gives even a 5-year-old wine a freshness that is surprising for its style.</p>
+            <h4>Winemaking & Ageing</h4>
+            <p class="prose">After fermentation on the volcanic island, the wine is fortified with grape spirit. Ageing uses the canteiro method (natural warming in heated lofts) or estufagem (heated tanks) for a minimum of 5 years. The heat accelerates the development of the characteristic oxidised, caramelised flavours. This process also makes Madeira essentially indestructible: once opened, it can last for months without deteriorating, because the wine has already undergone controlled oxidation and heating during its production.</p>
+            <h4>Tasting Notes</h4>
+            <p class="prose">Amber colour. Aromas of dried fruit, caramel, toffee and toasted nuts. Medium-sweet on the palate with warm, rounded flavours of raisin, burnt sugar and subtle spice. Good acidity provides balance and freshness, lifting the sweetness and preventing any sense of heaviness. Clean, warming finish. Works beautifully with chocolate desserts, blue cheese, or simply on its own as a digestif.</p>
+          </div>
+        </details>
+
+      </div>
+    </details>
+  </div>
 </div>
+
+<div class="footer">&copy; 2026 — Petrus</div>
 
 <!-- Firebase + Auth -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -36,7 +219,17 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 <script src="auth.js"></script>
 <script>
 auth.onAuthStateChanged((user) => {
-  if (!user) { window.location.href = 'index.html'; }
+  if (!user) {
+    window.location.href = 'index.html';
+    return;
+  }
+  logAccess(user, 'page_view', 'wine-pairings.html');
+
+  // Only Fiorella can see Discovery - Matching
+  if (user.email === 'fiorella@petrus.local') {
+    document.getElementById('discoverySection').style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+  }
 });
 </script>
 </body>
