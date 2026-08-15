@@ -640,9 +640,9 @@ function downloadPdf(size) {
   element.style.minHeight = 'auto';
 
   if (size === 'statement') {
-    element.style.padding = '0.15in 0.25in';
-    element.style.fontSize = '58%';
-    element.style.height = '8.5in';
+    element.style.padding = '0.1in 0.2in';
+    element.style.fontSize = '50%';
+    element.style.height = '8in';
     element.style.width = '5.5in';
     element.style.display = 'flex';
     element.style.flexDirection = 'column';
@@ -674,8 +674,8 @@ function downloadPdf(size) {
   const origTitle = title ? title.style.cssText : '';
 
   if (size === 'statement') {
-    if (logo) { logo.style.width = '90px'; logo.style.marginBottom = '10px'; }
-    if (title) { title.style.fontSize = '14px'; title.style.letterSpacing = '2px'; }
+    if (logo) { logo.style.width = '120px'; logo.style.marginBottom = '10px'; }
+    if (title) { title.style.fontSize = '12px'; title.style.letterSpacing = '2px'; }
     if (spacer) spacer.style.marginBottom = '14px';
     if (footer) footer.style.marginTop = '18px';
     seps.forEach(s => { s.style.margin = '6px 0'; });
