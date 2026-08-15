@@ -629,53 +629,29 @@ function downloadPdf(size) {
   const element = document.getElementById('menuPreview');
   const filename = getFilename(size) + '.pdf';
 
-  // Create a clone for PDF with adjusted sizing to fit one page
-  const clone = element.cloneNode(true);
-  clone.style.border = 'none';
-  clone.style.borderRadius = '0';
-  clone.style.boxShadow = 'none';
-  clone.style.background = '#fff';
-  clone.style.textAlign = 'center';
-  clone.style.display = 'flex';
-  clone.style.flexDirection = 'column';
-  clone.style.alignItems = 'center';
-  clone.style.justifyContent = 'center';
-  clone.style.minHeight = '0';
+  // Save original styles
+  const origStyle = element.style.cssText;
+  const origClass = element.className;
 
-  if (size === 'statement') {
-    clone.style.width = '4.3in';
-    clone.style.padding = '0.4in 0.3in';
-    clone.style.fontSize = '85%';
-  } else {
-    clone.style.width = '170mm';
-    clone.style.padding = '20mm 20mm';
-    clone.style.fontSize = '90%';
-  }
-
-  // Reduce spacing in clone
-  clone.querySelectorAll('.course-separator').forEach(el => { el.style.margin = '10px 0'; });
-  clone.querySelectorAll('.preview-footer').forEach(el => { el.style.marginTop = '20px'; });
-  const spacer = clone.querySelector('.no-date-spacer');
-  if (spacer) spacer.style.marginBottom = '20px';
-  const logo = clone.querySelector('.preview-logo');
-  if (logo) logo.style.width = size === 'statement' ? '70px' : '80px';
-
-  // Append temporarily to body (hidden)
-  clone.style.position = 'absolute';
-  clone.style.left = '-9999px';
-  document.body.appendChild(clone);
+  // Temporarily adjust for PDF capture
+  element.style.border = 'none';
+  element.style.borderRadius = '0';
+  element.style.boxShadow = 'none';
+  element.style.background = '#fff';
+  element.style.minHeight = 'auto';
+  element.style.padding = size === 'statement' ? '0.4in 0.5in' : '20mm 25mm';
 
   const opt = {
     margin: 0,
     filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
     jsPDF: { unit: size === 'statement' ? 'in' : 'mm', format: size === 'statement' ? [5.5, 8.5] : 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['avoid-all'] }
   };
 
-  html2pdf().set(opt).from(clone).save().then(function() {
-    document.body.removeChild(clone);
+  html2pdf().set(opt).from(element).save().then(function() {
+    element.style.cssText = origStyle;
   });
   showStatus('Downloading PDF...');
 }
