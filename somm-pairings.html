@@ -691,10 +691,11 @@ function renderEditor() {
   container.innerHTML = '';
 
   const isALC = currentMenu.type === 'alc';
+  const isKT = currentMenu.type === 'kt';
   const isIndulgence = currentMenu.variant === 'indulgence';
-  const dlProd = isALC ? ' list="dl-producers"' : '';
-  const dlWine = isALC ? ' list="dl-wines"' : '';
-  const dlRegion = isALC ? ' list="dl-regions"' : '';
+  const dlProd = (isALC || isKT) ? ' list="dl-producers"' : '';
+  const dlWine = (isALC || isKT) ? ' list="dl-wines"' : '';
+  const dlRegion = (isALC || isKT) ? ' list="dl-regions"' : '';
 
   // ALC diet is set from dropdown, no need for buttons in editor
   if (isALC) {
@@ -704,7 +705,7 @@ function renderEditor() {
   (currentMenu.courses || []).forEach((c, i) => {
     // Skip Sorbet from editor (never has pairing)
     const isSorbet = (c.dish || '').toLowerCase() === 'sorbet';
-    if (isSorbet && !isALC) {
+    if (isSorbet && !isALC && !isKT) {
       container.innerHTML += `<div class="course-editor" style="opacity:0.5"><div class="course-dish-label">${esc(c.dish)}</div><div class="course-desc-label">${esc(c.desc)}</div><div style="font-size:10px;color:#aaa;font-style:italic">No pairing</div></div>`;
       return;
     }
@@ -723,11 +724,27 @@ function renderEditor() {
     }
     const addWine2Btn = (isIndulgence && !showWine2) ? `<span style="cursor:pointer;color:#ccc;font-size:14px;margin-right:8px" onclick="addWine2(${i})" title="Add second wine">+</span>` : '';
 
-    // ALC: use dropdowns for dish and wine selection
+    // ALC or KT: use dropdowns for dish and wine selection
     let dishHtml, wineHtml;
-    if (isALC) {
-      // Dish dropdown grouped by type
-      const dishLib = DISH_LIBRARY[alcDiet] || DISH_LIBRARY.regular;
+    if (isALC || isKT) {
+      // Dish dropdown grouped by type — for KT show ALL diets combined
+      let dishLib;
+      if (isKT) {
+        // Merge all diets into one grouped library
+        dishLib = {};
+        Object.values(DISH_LIBRARY).forEach(dietObj => {
+          Object.keys(dietObj).forEach(cat => {
+            if (!dishLib[cat]) dishLib[cat] = [];
+            dietObj[cat].forEach(d => {
+              if (!dishLib[cat].some(x => x.dish === d.dish && x.desc === d.desc)) {
+                dishLib[cat].push(d);
+              }
+            });
+          });
+        });
+      } else {
+        dishLib = DISH_LIBRARY[alcDiet] || DISH_LIBRARY.regular;
+      }
       let dishOpts = '<option value="">— Select Dish —</option>';
       Object.keys(dishLib).forEach(cat => {
         dishOpts += `<optgroup label="${cat}">`;
@@ -788,7 +805,7 @@ function renderEditor() {
     }
   });
 
-  if (isALC) { container.insertAdjacentHTML('beforeend', getDatalistsHTML()); }
+  if (isALC || isKT) { container.insertAdjacentHTML('beforeend', getDatalistsHTML()); }
 
   // Sommelier selector
   const sommEl = document.getElementById('sommOptions');
