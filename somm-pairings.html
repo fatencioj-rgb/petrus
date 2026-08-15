@@ -151,9 +151,9 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
         <div class="date-selector" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e0d5c5">
           <h4 style="font-family:var(--sans);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Date (optional)</h4>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="date" id="pairingDate" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-family:var(--sans);font-size:12px;outline:none" onchange="setDate(this.value)">
             <button id="dateToggle" class="somm-opt" onclick="toggleDate()" style="font-size:10px">Show Date</button>
-            <button class="somm-opt" onclick="clearDate()" style="font-size:10px">Clear</button>
+            <input type="date" id="pairingDate" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-family:var(--sans);font-size:12px;outline:none;display:none" onchange="setDate(this.value)">
+            <button id="dateClear" class="somm-opt" onclick="clearDate()" style="font-size:10px;display:none">Clear</button>
           </div>
         </div>
         <h3>Edit Pairing</h3>
@@ -484,8 +484,15 @@ function renderEditor() {
 
   // Date input
   const dateInput = document.getElementById('pairingDate');
-  if (dateInput) dateInput.value = currentMenu.pairingDate || '';
+  const dateClear = document.getElementById('dateClear');
   const dateToggle = document.getElementById('dateToggle');
+  if (dateInput) {
+    dateInput.value = currentMenu.pairingDate || '';
+    dateInput.style.display = currentMenu.showDate ? 'block' : 'none';
+  }
+  if (dateClear) {
+    dateClear.style.display = currentMenu.showDate ? 'block' : 'none';
+  }
   if (dateToggle) {
     dateToggle.textContent = currentMenu.showDate ? 'Hide Date' : 'Show Date';
     if (currentMenu.showDate) {
