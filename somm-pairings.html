@@ -1061,10 +1061,7 @@ function downloadPdf(size) {
 
 // ─── EMAIL (download PDF + open mailto) ─────────────────────────
 function emailPdf(size) {
-  // First download the PDF
-  downloadPdf(size);
-
-  // Then open mailto with subject pre-filled
+  // Build mailto URL first
   const menuLabel = MENU_CONFIG[currentMenu.type].label;
   const pairingLabel = PAIRING_LABELS[currentMenu.variant];
   const somm = SOMMELIERS.find(s => s.name === currentMenu.sommelier) || SOMMELIERS[0];
@@ -1072,12 +1069,14 @@ function emailPdf(size) {
   if (currentMenu.showDate && currentMenu.pairingDate) {
     subject += ` - ${formatDateFancy(currentMenu.pairingDate)}`;
   }
-  const body = `Dear Guest,%0D%0A%0D%0APlease find attached your wine pairing menu.%0D%0A%0D%0AKind regards,%0D%0A${somm.name}%0D%0A${somm.role}%0D%0APetrus`;
+  const body = `Dear Guest,\n\nPlease find attached your wine pairing menu.\n\nKind regards,\n${somm.name}\n${somm.role}\nPetrus`;
+  const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-  // Delay to let download start first
-  setTimeout(function() {
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
-  }, 1500);
+  // Open mailto immediately (before async PDF)
+  window.open(mailtoUrl, '_blank');
+
+  // Then download the PDF
+  downloadPdf(size);
 }
 
 // ─── HELPERS ────────────────────────────────────────────────────
