@@ -126,8 +126,8 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
   </div>
   <div class="actions">
     <button class="btn btn-outline" id="btnLoad" disabled onclick="loadMenu()">Load Menu</button>
-    <button class="btn btn-gold" id="btnPrint" disabled onclick="printMenu()">🖨 Print</button>
-    <button class="btn btn-gold" id="btnPdf" disabled onclick="downloadPdf()">📥 PDF</button>
+    <button class="btn btn-gold" id="btnPrint" disabled onclick="printMenu()">Print</button>
+    <button class="btn btn-gold" id="btnPdf" disabled onclick="downloadPdf()">Download PDF</button>
     <button class="btn btn-gold" id="btnSave" style="display:none" onclick="saveMenu()">Save Changes</button>
   </div>
   <div class="split-view" id="splitView" style="display:none;">
@@ -235,7 +235,7 @@ const TEMPLATES = {
     { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Domaine Zind-Humbrecht', wine:'Pinot Gris Grand Cru "Rangen de Thann"', region:'Alsace, France', vintage:'2005' },
     { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'Domaine Paul Pillot', wine:'Chevalier-Montrachet Grand Cru', region:'Burgundy, France', vintage:'2019' },
     { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'Gaja', wine:'"Gaia & Rey", Langhe', region:'Piedmont, Italy', vintage:'2016' },
-    { dish:'100 Days Aged Blue Grey', desc:'Violet artichoke, pomme soufflé, girolles', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018' },
+    { dish:'100 Days Aged Blue Grey', desc:'Violet artichoke, pomme soufflé, girolles', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018', producer2:"Château Pétrus", wine2:'', region2:'Pomerol, Bordeaux, France', vintage2:'2003' },
     { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
     { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Château d'Yquem", wine:'1er Cru Classé Supérieur', region:'Bordeaux, France', vintage:'1999' }
   ],
@@ -275,7 +275,7 @@ const TEMPLATES = {
     { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Domaine Zind-Humbrecht', wine:'Pinot Gris Grand Cru "Rangen de Thann"', region:'Alsace, France', vintage:'2005' },
     { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de Montille', wine:'Puligny-Montrachet, "Les Folatières"', region:'Burgundy, France', vintage:'2022' },
     { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Gaja', wine:'"Gaia & Rey", Langhe', region:'Piedmont, Italy', vintage:'2016' },
-    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018', producer2:"Château Pétrus", wine2:'', region2:'Pomerol, Bordeaux, France', vintage2:'2008' },
     { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
     { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:"Château d'Yquem", wine:'1er Cru Classé Supérieur', region:'Bordeaux, France', vintage:'2008' }
   ],
@@ -352,6 +352,14 @@ function renderPreview() {
       if (c.vintage) parts.push(c.vintage);
       h += `<div class="course-wine">${esc(parts.join(', '))}</div>`;
     }
+    if (c.wine2 || c.producer2) {
+      let parts2 = [];
+      if (c.producer2) parts2.push(c.producer2);
+      if (c.wine2) parts2.push(c.wine2);
+      if (c.region2) parts2.push(c.region2);
+      if (c.vintage2) parts2.push(c.vintage2);
+      h += `<div class="course-wine">${esc(parts2.join(', '))}</div>`;
+    }
     h += '</div>';
   });
 
@@ -411,11 +419,26 @@ function renderEditor() {
   container.innerHTML = '';
 
   const isALC = currentMenu.type === 'alc';
+  const isIndulgence = currentMenu.variant === 'indulgence';
   const dlProd = isALC ? ' list="dl-producers"' : '';
   const dlWine = isALC ? ' list="dl-wines"' : '';
   const dlRegion = isALC ? ' list="dl-regions"' : '';
 
   (currentMenu.courses || []).forEach((c, i) => {
+    // Show second wine fields for indulgence on the meat course (index 3 typically)
+    const showWine2 = isIndulgence && (c.producer2 || c.wine2 || c.region2 || c.vintage2 || i === 3);
+    let wine2Html = '';
+    if (showWine2) {
+      wine2Html = `<div class="wine-fields" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--gold)">
+        <div style="grid-column:1/-1"><label style="color:var(--gold);font-weight:600">Wine 2 (versus)</label></div>
+        <div><label>Producer</label><input type="text" value="${esc(c.producer2||'')}" oninput="upd2(${i},'producer2',this.value)"${dlProd}></div>
+        <div><label>Wine Name</label><input type="text" value="${esc(c.wine2||'')}" oninput="upd2(${i},'wine2',this.value)"${dlWine}></div>
+        <div><label>Region / Country</label><input type="text" value="${esc(c.region2||'')}" oninput="upd2(${i},'region2',this.value)"${dlRegion}></div>
+        <div><label>Vintage</label><input type="text" value="${esc(c.vintage2||'')}" oninput="upd2(${i},'vintage2',this.value)"></div>
+      </div>`;
+    }
+    const addWine2Btn = (isIndulgence && !showWine2) ? `<button class="course-save-btn" style="background:transparent;color:var(--gold);border:1px dashed var(--gold);margin-right:6px" onclick="addWine2(${i})">+ Wine 2</button>` : '';
+
     container.innerHTML += `<div class="course-editor">
       <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
       <div class="course-dish-label">${esc(c.dish) || '(empty dish)'}</div>
@@ -426,7 +449,8 @@ function renderEditor() {
         <div><label>Region / Country</label><input type="text" value="${esc(c.region)}" oninput="upd(${i},'region',this.value)"${dlRegion}></div>
         <div><label>Vintage</label><input type="text" value="${esc(c.vintage)}" oninput="upd(${i},'vintage',this.value)"></div>
       </div>
-      <button class="course-save-btn" onclick="saveMenu()">Save</button>
+      ${wine2Html}
+      <div style="margin-top:8px">${addWine2Btn}<button class="course-save-btn" onclick="saveMenu()">Save</button></div>
     </div>`;
   });
 
@@ -495,6 +519,8 @@ function clearDate() {
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function upd(i, f, v) { currentMenu.courses[i][f] = v; renderPreview(); }
+function upd2(i, f, v) { currentMenu.courses[i][f] = v; renderPreview(); }
+function addWine2(i) { currentMenu.courses[i].producer2=''; currentMenu.courses[i].wine2=''; currentMenu.courses[i].region2=''; currentMenu.courses[i].vintage2=''; renderEditor(); }
 function addCourseEditor() { currentMenu.courses.push({dish:'',desc:'',producer:'',wine:'',region:'',vintage:''}); renderEditor(); }
 function removeCourse(i) { currentMenu.courses.splice(i,1); renderEditor(); renderPreview(); }
 
