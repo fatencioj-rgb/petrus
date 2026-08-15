@@ -122,13 +122,18 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
       <option value="kt">Kitchen Table</option>
     </select>
     <select id="menuVariant"><option value="">— Pairing —</option></select>
-    <select id="menuSize"><option value="">— Print Size —</option></select>
   </div>
   <div class="actions">
     <button class="btn btn-outline" id="btnLoad" disabled onclick="loadMenu()">Load Menu</button>
-    <button class="btn btn-gold" id="btnPrint" disabled onclick="printMenu()">Print</button>
-    <button class="btn btn-gold" id="btnPdf" disabled onclick="downloadPdf()">Download PDF</button>
+    <button class="btn btn-gold" id="btnPrint" disabled onclick="showSizeChoice('print')">Print</button>
+    <button class="btn btn-gold" id="btnPdf" disabled onclick="showSizeChoice('pdf')">Download PDF</button>
     <button class="btn btn-gold" id="btnSave" style="display:none" onclick="saveMenu()">Save Changes</button>
+  </div>
+  <div class="size-choice" id="sizeChoice" style="display:none;margin-bottom:20px">
+    <span style="font-size:11px;color:#888;margin-right:10px" id="sizeLabel">Select size:</span>
+    <button class="btn btn-outline" style="padding:6px 14px;font-size:11px" onclick="execWithSize('statement')">Statement (5.5×8.5 in)</button>
+    <button class="btn btn-outline" style="padding:6px 14px;font-size:11px;margin-left:6px" onclick="execWithSize('a4')">A4 (21×29.7 cm)</button>
+    <button style="background:none;border:none;color:#999;font-size:14px;margin-left:8px;cursor:pointer" onclick="hideSizeChoice()">×</button>
   </div>
   <div class="split-view" id="splitView" style="display:none;">
     <div class="split-left">
@@ -182,9 +187,9 @@ const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.
 
 let currentMenu = null;
 let U = null;
+let pendingAction = null; // 'print' or 'pdf'
 const selType = document.getElementById('menuType');
 const selVariant = document.getElementById('menuVariant');
-const selSize = document.getElementById('menuSize');
 const btnLoad = document.getElementById('btnLoad');
 const btnPrint = document.getElementById('btnPrint');
 const btnSave = document.getElementById('btnSave');
@@ -200,17 +205,14 @@ auth.onAuthStateChanged(function(user) {
 selType.addEventListener('change', () => {
   const type = selType.value;
   selVariant.innerHTML = '<option value="">— Pairing —</option>';
-  selSize.innerHTML = '<option value="">— Print Size —</option>';
   btnLoad.disabled = true; btnPrint.disabled = true;
   if (!type) return;
   const cfg = MENU_CONFIG[type];
   cfg.pairings.forEach(p => { selVariant.innerHTML += `<option value="${p}">${PAIRING_LABELS[p]}</option>`; });
-  Object.keys(SIZE_LABELS).forEach(s => { selSize.innerHTML += `<option value="${s}">${SIZE_LABELS[s]}</option>`; });
   checkReady();
 });
 selVariant.addEventListener('change', checkReady);
-selSize.addEventListener('change', checkReady);
-function checkReady() { btnLoad.disabled = !(selType.value && selVariant.value && selSize.value); }
+function checkReady() { btnLoad.disabled = !(selType.value && selVariant.value); }
 </script>
 <script>
 // ─── TEMPLATES (pre-loaded data) ────────────────────────────────
@@ -291,7 +293,7 @@ const TEMPLATES = {
 <script>
 // ─── LOAD ───────────────────────────────────────────────────────
 async function loadMenu() {
-  const type = selType.value, variant = selVariant.value, size = selSize.value;
+  const type = selType.value, variant = selVariant.value;
   const docId = `${type}_${variant}`;
   btnLoad.disabled = true; btnLoad.textContent = 'Loading...';
 
@@ -299,11 +301,11 @@ async function loadMenu() {
   try { const doc = await db.collection('somm_pairings').doc(docId).get(); if (doc.exists) data = doc.data(); } catch(e) { console.log('Firestore unavailable, using template'); }
 
   if (data) {
-    currentMenu = { id: docId, type, variant, size, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '', pairingDate: data.pairingDate || '', showDate: data.showDate || false };
+    currentMenu = { id: docId, type, variant, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '', pairingDate: data.pairingDate || '', showDate: data.showDate || false };
   } else {
     const tpl = TEMPLATES[docId];
     currentMenu = {
-      id: docId, type, variant, size,
+      id: docId, type, variant,
       courses: tpl ? JSON.parse(JSON.stringify(tpl)) : [{ dish:'', desc:'', producer:'', wine:'', region:'', vintage:'' }],
       lastEditBy: '', lastEditDate: '', sommelier: '', pairingDate: '', showDate: false
     };
@@ -561,9 +563,38 @@ async function saveMenu() {
   btnSave.disabled = false; btnSave.textContent = 'Save Changes';
 }
 
+// ─── PRINT & PDF SIZE CHOICE ────────────────────────────────────
+function showSizeChoice(action) {
+  pendingAction = action;
+  const label = document.getElementById('sizeLabel');
+  label.textContent = action === 'print' ? 'Print size:' : 'PDF size:';
+  document.getElementById('sizeChoice').style.display = 'flex';
+}
+
+function hideSizeChoice() {
+  document.getElementById('sizeChoice').style.display = 'none';
+  pendingAction = null;
+}
+
+function execWithSize(size) {
+  hideSizeChoice();
+  if (pendingAction === 'print') printMenu(size);
+  else if (pendingAction === 'pdf') downloadPdf(size);
+}
+
+function getFilename(size) {
+  const menuLabel = MENU_CONFIG[currentMenu.type].label.replace(/\s+/g, '_');
+  const pairingLabel = PAIRING_LABELS[currentMenu.variant].replace(/\s+/g, '_');
+  const sizeLabel = size === 'statement' ? 'Statement' : 'A4';
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yy = String(now.getFullYear()).slice(2);
+  return `${menuLabel}_${pairingLabel}_${sizeLabel}_${dd}${mm}${yy}`;
+}
+
 // ─── PRINT ──────────────────────────────────────────────────────
-function printMenu() {
-  const size = selSize.value || 'statement';
+function printMenu(size) {
   let ps = document.getElementById('printSizeStyle');
   if (!ps) { ps = document.createElement('style'); ps.id = 'printSizeStyle'; document.head.appendChild(ps); }
   ps.textContent = size === 'statement' ? '@page{size:5.5in 8.5in;margin:0.6in 0.5in}' : '@page{size:A4;margin:20mm 25mm}';
@@ -571,14 +602,11 @@ function printMenu() {
 }
 
 // ─── PDF DOWNLOAD ───────────────────────────────────────────────
-function downloadPdf() {
+function downloadPdf(size) {
   const element = document.getElementById('menuPreview');
-  const size = selSize.value || 'a4';
-  const menuLabel = MENU_CONFIG[currentMenu.type].label.toLowerCase().replace(/\s+/g,'_');
-  const pairingId = currentMenu.variant;
-  const filename = `${menuLabel}_${pairingId}.pdf`;
+  const filename = getFilename(size) + '.pdf';
 
-  // Temporarily remove border/radius and adjust padding for PDF
+  // Temporarily remove border/radius and adjust for PDF
   const origStyle = element.style.cssText;
   element.style.border = 'none';
   element.style.borderRadius = '0';
@@ -599,7 +627,6 @@ function downloadPdf() {
   };
 
   html2pdf().set(opt).from(element).save().then(function() {
-    // Restore original style
     element.style.cssText = origStyle;
   });
   showStatus('Downloading PDF...');
