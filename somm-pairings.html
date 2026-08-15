@@ -35,16 +35,16 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 /* Preview */
 .split-view { display: flex; gap: 24px; align-items: flex-start; }
 .split-left { flex: 1; min-width: 0; position: sticky; top: 20px; }
-.split-right { flex: 1; min-width: 0; max-height: 85vh; overflow-y: auto; }
+.split-right { flex: 1; min-width: 0; }
 .menu-preview { background: #fff; border: 1px solid #e8e0d4; border-radius: 8px; padding: 48px 32px; min-height: 500px; text-align: center; }
-.preview-logo { display: block; width: 60px; height: auto; margin: 0 auto 16px; }
-.menu-title { font-family: var(--serif); font-size: 22px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #1a1a1a; margin-bottom: 8px; }
+.preview-logo { display: block; width: 90px; height: auto; margin: 0 auto 20px; }
+.menu-title { font-family: var(--serif); font-size: 18px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #1a1a1a; margin-bottom: 6px; }
 .menu-subtitle { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 40px; }
 .course-separator { font-size: 14px; color: #999; margin: 16px 0; user-select: none; }
 .course-dish { font-family: var(--serif); font-size: 17px; font-weight: 600; color: #1a1a1a; line-height: 1.3; }
 .course-desc { font-family: var(--serif); font-size: 15px; font-weight: 300; font-style: italic; color: #333; margin-top: 2px; }
 .course-wine { font-family: var(--serif); font-size: 13px; font-style: italic; color: var(--gold); margin-top: 6px; }
-.preview-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; }
+.preview-footer { margin-top: 32px; }
 .preview-footer .name { font-family: var(--serif); font-size: 14px; font-weight: 600; color: #1a1a1a; }
 .preview-footer .role { font-family: var(--sans); font-size: 9px; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
 /* Editor */
@@ -60,6 +60,16 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 .add-course-btn { width: 100%; padding: 10px; border: 2px dashed var(--gold); background: transparent; border-radius: 6px; color: var(--gold); font-size: 13px; cursor: pointer; margin-top: 8px; }
 .add-course-btn:hover { background: rgba(184,150,80,0.08); }
 .remove-course { float: right; background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; }
+.course-dish-label { font-family: var(--serif); font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+.course-desc-label { font-family: var(--serif); font-size: 12px; font-style: italic; color: #555; margin-bottom: 8px; }
+.course-save-btn { margin-top: 6px; padding: 4px 12px; background: var(--gold); color: #fff; border: none; border-radius: 4px; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; }
+.course-save-btn:hover { background: #a07e3a; }
+.somm-selector { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e0d5c5; }
+.somm-selector h4 { font-family: var(--sans); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.somm-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.somm-opt { padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; cursor: pointer; background: #fff; transition: all 0.15s; }
+.somm-opt:hover { border-color: var(--gold); }
+.somm-opt.active { background: var(--green); color: #fff; border-color: var(--green); }
 .meta-info { font-size: 11px; color: #888; font-style: italic; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e0d5c5; }
 .status-msg { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: var(--cream); padding: 12px 20px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
 .status-msg.show { opacity: 1; }
@@ -72,7 +82,7 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
   .split-view { display: block !important; }
   .split-left { position: static; }
   .menu-preview { border: none !important; border-radius: 0 !important; padding: 0 !important; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .preview-logo { width: 50px; margin-bottom: 12px; }
+  .preview-logo { width: 70px; margin-bottom: 14px; }
   .menu-title { font-size: 18px; margin-bottom: 4px; }
   .menu-subtitle { font-size: 9px; margin-bottom: 28px; }
   .course-dish { font-size: 15px; }
@@ -128,6 +138,10 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
         <div class="editor-section"><h4>Courses</h4><div id="courseEditors"></div>
           <button class="add-course-btn" onclick="addCourseEditor()">+ Add Course</button>
         </div>
+        <div class="somm-selector">
+          <h4>Sommelier</h4>
+          <div class="somm-options" id="sommOptions"></div>
+        </div>
         <div class="meta-info" id="metaInfo"></div>
       </div>
     </div>
@@ -152,7 +166,7 @@ const MENU_CONFIG = {
   alc:       { label:'À LA CARTE', pairings:['matching','connoisseur','indulgence','3wines'] },
   kt:        { label:'KITCHEN TABLE', pairings:['matching','connoisseur','indulgence','kt-matching'] }
 };
-const PAIRING_LABELS = {'matching':'Matching','connoisseur':'Connoisseur','indulgence':'Indulgence','3wines':'3 Wines','kt-matching':'KT Matching'};
+const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'KT Matching Pairing'};
 const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.7 cm)'};
 
 let currentMenu = null;
@@ -274,13 +288,13 @@ async function loadMenu() {
   try { const doc = await db.collection('somm_pairings').doc(docId).get(); if (doc.exists) data = doc.data(); } catch(e) { console.log('Firestore unavailable, using template'); }
 
   if (data) {
-    currentMenu = { id: docId, type, variant, size, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '' };
+    currentMenu = { id: docId, type, variant, size, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '' };
   } else {
     const tpl = TEMPLATES[docId];
     currentMenu = {
       id: docId, type, variant, size,
       courses: tpl ? JSON.parse(JSON.stringify(tpl)) : [{ dish:'', desc:'', producer:'', wine:'', region:'', vintage:'' }],
-      lastEditBy: '', lastEditDate: ''
+      lastEditBy: '', lastEditDate: '', sommelier: ''
     };
   }
   renderPreview();
@@ -291,12 +305,20 @@ async function loadMenu() {
 }
 
 // ─── RENDER PREVIEW ─────────────────────────────────────────────
+const SOMMELIERS = [
+  { name: 'Fiorella Atencio', role: 'Sommelier' },
+  { name: 'Christian Murtas', role: 'Senior Sommelier' },
+  { name: 'Milena de Waele', role: 'Head Sommelier' }
+];
+
 function renderPreview() {
   if (!currentMenu) return;
   const p = document.getElementById('menuPreview');
   const menuLabel = MENU_CONFIG[currentMenu.type].label;
   const pairingLabel = PAIRING_LABELS[currentMenu.variant];
-  const author = getAuthorName();
+
+  // Get selected sommelier
+  const somm = SOMMELIERS.find(s => s.name === currentMenu.sommelier) || SOMMELIERS[0];
 
   let h = `<img src="Petrus logo cmyk_01.jpg" alt="Petrus" class="preview-logo">`;
   h += `<div class="menu-title">${menuLabel}</div>`;
@@ -318,7 +340,7 @@ function renderPreview() {
     h += '</div>';
   });
 
-  h += `<div class="preview-footer"><div class="name">${esc(author)}</div><div class="role">Sommelier</div></div>`;
+  h += `<div class="preview-footer"><div class="name">${esc(somm.name)}</div><div class="role">${somm.role}</div></div>`;
   p.innerHTML = h;
 }
 </script>
@@ -374,7 +396,6 @@ function renderEditor() {
   container.innerHTML = '';
 
   const isALC = currentMenu.type === 'alc';
-  const dlDish = isALC ? ' list="dl-dishes"' : '';
   const dlProd = isALC ? ' list="dl-producers"' : '';
   const dlWine = isALC ? ' list="dl-wines"' : '';
   const dlRegion = isALC ? ' list="dl-regions"' : '';
@@ -382,18 +403,27 @@ function renderEditor() {
   (currentMenu.courses || []).forEach((c, i) => {
     container.innerHTML += `<div class="course-editor">
       <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
-      <label>Dish</label><input type="text" value="${esc(c.dish)}" oninput="upd(${i},'dish',this.value)"${dlDish}>
-      <label>Description</label><input type="text" value="${esc(c.desc)}" oninput="upd(${i},'desc',this.value)">
+      <div class="course-dish-label">${esc(c.dish) || '(empty dish)'}</div>
+      <div class="course-desc-label">${esc(c.desc) || ''}</div>
       <div class="wine-fields">
         <div><label>Producer</label><input type="text" value="${esc(c.producer)}" oninput="upd(${i},'producer',this.value)"${dlProd}></div>
         <div><label>Wine Name</label><input type="text" value="${esc(c.wine)}" oninput="upd(${i},'wine',this.value)"${dlWine}></div>
         <div><label>Region / Country</label><input type="text" value="${esc(c.region)}" oninput="upd(${i},'region',this.value)"${dlRegion}></div>
         <div><label>Vintage</label><input type="text" value="${esc(c.vintage)}" oninput="upd(${i},'vintage',this.value)"></div>
       </div>
+      <button class="course-save-btn" onclick="saveMenu()">Save</button>
     </div>`;
   });
 
   if (isALC) { container.insertAdjacentHTML('beforeend', getDatalistsHTML()); }
+
+  // Sommelier selector
+  const sommEl = document.getElementById('sommOptions');
+  sommEl.innerHTML = '';
+  SOMMELIERS.forEach(s => {
+    const active = currentMenu.sommelier === s.name ? ' active' : '';
+    sommEl.innerHTML += `<div class="somm-opt${active}" onclick="selectSomm('${s.name}')">${s.name}<br><span style="font-size:9px;color:${active?'#ddd':'#888'}">${s.role}</span></div>`;
+  });
 
   const metaEl = document.getElementById('metaInfo');
   if (currentMenu.lastEditBy) {
@@ -401,6 +431,12 @@ function renderEditor() {
   } else {
     metaEl.textContent = '';
   }
+}
+
+function selectSomm(name) {
+  currentMenu.sommelier = name;
+  renderPreview();
+  renderEditor();
 }
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -420,6 +456,7 @@ async function saveMenu() {
       menu: currentMenu.type,
       wine: currentMenu.variant,
       courses: currentMenu.courses,
+      sommelier: currentMenu.sommelier || '',
       lastEditBy: author,
       lastEditDate: dateStr,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
