@@ -40,7 +40,7 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 .split-left { flex: 1; min-width: 0; position: sticky; top: 20px; }
 .split-right { flex: 1; min-width: 0; }
 .menu-preview { background: #fff; border: 1px solid #e8e0d4; border-radius: 8px; padding: 48px 32px; min-height: 500px; text-align: center; }
-.preview-logo { display: block; width: 90px; height: auto; margin: 0 auto 20px; }
+.preview-logo { display: block; width: 120px; height: auto; margin: 0 auto 20px; }
 .menu-title { font-family: var(--serif); font-size: 18px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #1a1a1a; margin-bottom: 6px; }
 .menu-subtitle { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
 .menu-date { font-family: var(--serif); font-size: 12px; font-weight: 300; font-style: italic; color: #555; margin-bottom: 32px; }
@@ -86,7 +86,7 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
   .split-view { display: block !important; }
   .split-left { position: static; }
   .menu-preview { border: none !important; border-radius: 0 !important; padding: 0 !important; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .preview-logo { width: 70px; margin-bottom: 14px; }
+  .preview-logo { width: 90px; margin-bottom: 14px; }
   .menu-title { font-size: 18px; margin-bottom: 4px; }
   .menu-subtitle { font-size: 9px; margin-bottom: 28px; }
   .course-dish { font-size: 15px; }
@@ -658,7 +658,7 @@ function downloadPdf(size) {
   const spacer = clone.querySelector('.no-date-spacer');
   if (spacer) spacer.style.marginBottom = '20px';
   const logo = clone.querySelector('.preview-logo');
-  if (logo) logo.style.width = size === 'statement' ? '50px' : '60px';
+  if (logo) logo.style.width = size === 'statement' ? '70px' : '80px';
 
   // Append temporarily to body (hidden)
   clone.style.position = 'absolute';
