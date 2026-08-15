@@ -195,9 +195,9 @@ const MENU_CONFIG = {
   discovery: { label:'DISCOVERY MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:['regular','pescatarian','vegetarian','noseafood'] },
   lunch:     { label:'LUNCH MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:[] },
   alc:       { label:'À LA CARTE', pairings:['3wines'], diets:['regular','pescatarian','vegetarian'] },
-  kt:        { label:'KITCHEN TABLE', pairings:['matching','connoisseur','indulgence','kt-matching'], diets:[] }
+  kt:        { label:'KITCHEN TABLE', pairings:['kt-matching'], diets:['regular','pescatarian','vegetarian','noseafood'] }
 };
-const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'KT Matching Pairing'};
+const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'KT Matching Wines'};
 const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.7 cm)'};
 
 let currentMenu = null;
@@ -414,6 +414,39 @@ const TEMPLATES = {
     { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
     { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
     { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  // ─── KITCHEN TABLE (same as Prestige but Plaisir sucré instead of Rum Baba) ──
+  'kt_kt-matching': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'kt_pescatarian_kt-matching': [
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Devon Monkfish', desc:'Celeriac, dulse', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'kt_vegetarian_kt-matching': [
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Artichoke', desc:'Pomme soufflé, allium', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'kt_noseafood_kt-matching': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Organic Spelt', desc:'Fines herbs, shiitake consommé', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
   ]
 };
 </script>
