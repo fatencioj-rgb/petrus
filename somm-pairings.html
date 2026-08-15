@@ -674,13 +674,13 @@ function downloadPdf(size) {
   const origTitle = title ? title.style.cssText : '';
 
   if (size === 'statement') {
-    if (logo) { logo.style.width = '65px'; logo.style.marginBottom = '10px'; }
+    if (logo) { logo.style.width = '90px'; logo.style.marginBottom = '10px'; }
     if (title) { title.style.fontSize = '14px'; title.style.letterSpacing = '2px'; }
     if (spacer) spacer.style.marginBottom = '14px';
     if (footer) footer.style.marginTop = '18px';
     seps.forEach(s => { s.style.margin = '6px 0'; });
   } else {
-    if (logo) { logo.style.width = '110px'; logo.style.marginBottom = '18px'; }
+    if (logo) { logo.style.width = '140px'; logo.style.marginBottom = '18px'; }
     if (spacer) spacer.style.marginBottom = '40px';
     if (footer) footer.style.marginTop = '44px';
     seps.forEach(s => { s.style.margin = '16px 0'; });
