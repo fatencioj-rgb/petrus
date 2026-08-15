@@ -30,6 +30,9 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 .btn-outline { background: transparent; border: 1px solid var(--green); color: var(--green); }
 .btn-outline:hover { background: var(--green); color: #fff; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.size-choice { position: absolute; top: 100%; left: 0; margin-top: 4px; display: flex; flex-direction: column; gap: 4px; z-index: 100; }
+.size-btn { padding: 8px 20px; width: 120px; border: 1px solid var(--green); border-radius: 4px; background: #fff; color: var(--green); font-family: var(--sans); font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; text-align: center; }
+.size-btn:hover { background: var(--green); color: #fff; }
 </style>
 <style>
 /* Preview */
@@ -125,15 +128,21 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
   </div>
   <div class="actions">
     <button class="btn btn-outline" id="btnLoad" disabled onclick="loadMenu()">Load Menu</button>
-    <button class="btn btn-gold" id="btnPrint" disabled onclick="showSizeChoice('print')">Print</button>
-    <button class="btn btn-gold" id="btnPdf" disabled onclick="showSizeChoice('pdf')">Download PDF</button>
+    <div style="position:relative;display:inline-block">
+      <button class="btn btn-gold" id="btnPrint" disabled onclick="showSizeChoice('print')">Print</button>
+      <div class="size-choice" id="sizeChoicePrint" style="display:none">
+        <button class="size-btn" onclick="execWithSize('statement')">Statement</button>
+        <button class="size-btn" onclick="execWithSize('a4')">A4</button>
+      </div>
+    </div>
+    <div style="position:relative;display:inline-block">
+      <button class="btn btn-gold" id="btnPdf" disabled onclick="showSizeChoice('pdf')">Download</button>
+      <div class="size-choice" id="sizeChoicePdf" style="display:none">
+        <button class="size-btn" onclick="execWithSize('statement')">Statement</button>
+        <button class="size-btn" onclick="execWithSize('a4')">A4</button>
+      </div>
+    </div>
     <button class="btn btn-gold" id="btnSave" style="display:none" onclick="saveMenu()">Save Changes</button>
-  </div>
-  <div class="size-choice" id="sizeChoice" style="display:none;margin-bottom:20px">
-    <span style="font-size:11px;color:#888;margin-right:10px" id="sizeLabel">Select size:</span>
-    <button class="btn btn-outline" style="padding:6px 14px;font-size:11px" onclick="execWithSize('statement')">Statement (5.5×8.5 in)</button>
-    <button class="btn btn-outline" style="padding:6px 14px;font-size:11px;margin-left:6px" onclick="execWithSize('a4')">A4 (21×29.7 cm)</button>
-    <button style="background:none;border:none;color:#999;font-size:14px;margin-left:8px;cursor:pointer" onclick="hideSizeChoice()">×</button>
   </div>
   <div class="split-view" id="splitView" style="display:none;">
     <div class="split-left">
@@ -565,22 +574,36 @@ async function saveMenu() {
 
 // ─── PRINT & PDF SIZE CHOICE ────────────────────────────────────
 function showSizeChoice(action) {
+  // Hide both first
+  document.getElementById('sizeChoicePdf').style.display = 'none';
+  document.getElementById('sizeChoicePrint').style.display = 'none';
   pendingAction = action;
-  const label = document.getElementById('sizeLabel');
-  label.textContent = action === 'print' ? 'Print size:' : 'PDF size:';
-  document.getElementById('sizeChoice').style.display = 'flex';
+  if (action === 'pdf') {
+    document.getElementById('sizeChoicePdf').style.display = 'flex';
+  } else {
+    document.getElementById('sizeChoicePrint').style.display = 'flex';
+  }
 }
 
 function hideSizeChoice() {
-  document.getElementById('sizeChoice').style.display = 'none';
+  document.getElementById('sizeChoicePdf').style.display = 'none';
+  document.getElementById('sizeChoicePrint').style.display = 'none';
   pendingAction = null;
 }
 
 function execWithSize(size) {
+  const action = pendingAction;
   hideSizeChoice();
-  if (pendingAction === 'print') printMenu(size);
-  else if (pendingAction === 'pdf') downloadPdf(size);
+  if (action === 'print') printMenu(size);
+  else if (action === 'pdf') downloadPdf(size);
 }
+
+// Close dropdowns on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.size-choice') && !e.target.closest('#btnPrint') && !e.target.closest('#btnPdf')) {
+    hideSizeChoice();
+  }
+});
 
 function getFilename(size) {
   const menuLabel = MENU_CONFIG[currentMenu.type].label.replace(/\s+/g, '_');
