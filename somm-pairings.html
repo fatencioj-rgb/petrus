@@ -428,7 +428,7 @@ function renderEditor() {
 
   (currentMenu.courses || []).forEach((c, i) => {
     // Show second wine fields for indulgence on the meat course (index 3 typically)
-    const showWine2 = isIndulgence && (c.producer2 || c.wine2 || c.region2 || c.vintage2 || i === 3);
+    const showWine2 = isIndulgence && ('producer2' in c || i === 3);
     let wine2Html = '';
     if (showWine2) {
       wine2Html = `<div class="wine-fields" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--gold)">
@@ -439,7 +439,7 @@ function renderEditor() {
         <div><label>Vintage</label><input type="text" value="${esc(c.vintage2||'')}" oninput="upd2(${i},'vintage2',this.value)"></div>
       </div>`;
     }
-    const addWine2Btn = (isIndulgence && !showWine2) ? `<button class="course-save-btn" style="background:transparent;color:var(--green);border:1px dashed var(--green);margin-right:6px" onclick="addWine2(${i})">+ Wine 2</button>` : '';
+    const addWine2Btn = (isIndulgence && !showWine2) ? `<span style="cursor:pointer;color:#ccc;font-size:14px;margin-right:8px" onclick="addWine2(${i})" title="Add second wine">+</span>` : '';
 
     container.innerHTML += `<div class="course-editor">
       <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
@@ -578,15 +578,30 @@ function downloadPdf() {
   const pairingId = currentMenu.variant;
   const filename = `${menuLabel}_${pairingId}.pdf`;
 
+  // Temporarily remove border/radius and adjust padding for PDF
+  const origStyle = element.style.cssText;
+  element.style.border = 'none';
+  element.style.borderRadius = '0';
+  element.style.boxShadow = 'none';
+  element.style.minHeight = size === 'statement' ? '8.5in' : '297mm';
+  element.style.display = 'flex';
+  element.style.flexDirection = 'column';
+  element.style.alignItems = 'center';
+  element.style.justifyContent = 'center';
+  element.style.padding = size === 'statement' ? '0.5in 0.6in' : '25mm 30mm';
+
   const opt = {
-    margin: size === 'statement' ? [0.5, 0.4, 0.5, 0.4] : [20, 20, 20, 20],
+    margin: 0,
     filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
     jsPDF: { unit: size === 'statement' ? 'in' : 'mm', format: size === 'statement' ? [5.5, 8.5] : 'a4', orientation: 'portrait' }
   };
 
-  html2pdf().set(opt).from(element).save();
+  html2pdf().set(opt).from(element).save().then(function() {
+    // Restore original style
+    element.style.cssText = origStyle;
+  });
   showStatus('Downloading PDF...');
 }
 
