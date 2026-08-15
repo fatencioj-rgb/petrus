@@ -380,6 +380,62 @@ function renderPreview() {
 </script>
 <script>
 // ─── WINE & DISH LIBRARY (for ALC autocomplete) ─────────────────
+const DISH_LIBRARY = {
+  'Starter': [
+    { dish: 'Smoked Eel', desc: 'Oscietra caviar, celeriac, apple' },
+    { dish: 'Sladesdown Chicken', desc: 'Sucrine, ragout, parfait' },
+    { dish: 'Sladesdown Duck', desc: 'Terrine, parfait, cherry' }
+  ],
+  'Fish': [
+    { dish: 'Isle of Skye Scallop', desc: 'Coastal herbs, lemon, olive oil sabayon' },
+    { dish: 'Lobster Raviolo', desc: 'Finger lime, fennel, bisque' },
+    { dish: 'Confit Turbot', desc: 'Courgette, Niçoise olive, bouillabaisse' },
+    { dish: 'Devon Monkfish', desc: 'Celeriac, Iberico chorizo, dulse' },
+    { dish: 'Rack of Dover Sole', desc: 'Brassica, prawns, Vin Jaune' }
+  ],
+  'Main Course': [
+    { dish: '100 Days Aged Blue Grey', desc: 'Violet artichoke, pomme soufflé, girolles' },
+    { dish: 'Herdwick Rack of Lamb', desc: 'Young peas, mint, Roves des Garrigues' },
+    { dish: 'Aynhoe Park Deer', desc: 'Beetroot, blueberry, Roquefort' },
+    { dish: 'Chicken Breast', desc: 'Petits pois à la française, consommé' }
+  ],
+  'Pre-Dessert': [
+    { dish: 'Sorbet', desc: 'Rose, champagne' },
+    { dish: 'Sorbet', desc: 'Basil, strawberry' },
+    { dish: 'Sorbet', desc: 'Calvados, apple' }
+  ],
+  'Dessert': [
+    { dish: 'Plaisir sucré', desc: 'Chocolate crémeux, hazelnut, milk' },
+    { dish: 'Rum Baba', desc: 'Fraise des bois, yoghurt, verbena' },
+    { dish: 'Black Forest Parfait', desc: 'Morello cherry, white chocolate' },
+    { dish: 'Pear Tart', desc: 'Frangipane, mascarpone, cardamom' }
+  ]
+};
+
+function buildWineLibrary() {
+  const wines = [];
+  const wineKeys = new Set();
+  Object.values(TEMPLATES).forEach(courses => {
+    courses.forEach(c => {
+      if (c.producer || c.wine) {
+        const label = [c.producer, c.wine, c.region, c.vintage].filter(Boolean).join(', ');
+        if (!wineKeys.has(label)) {
+          wineKeys.add(label);
+          wines.push({ label, producer: c.producer||'', wine: c.wine||'', region: c.region||'', vintage: c.vintage||'' });
+        }
+      }
+      if (c.producer2 || c.wine2) {
+        const label2 = [c.producer2, c.wine2, c.region2, c.vintage2].filter(Boolean).join(', ');
+        if (!wineKeys.has(label2)) {
+          wineKeys.add(label2);
+          wines.push({ label: label2, producer: c.producer2||'', wine: c.wine2||'', region: c.region2||'', vintage: c.vintage2||'' });
+        }
+      }
+    });
+  });
+  return wines;
+}
+
 function buildLibrary() {
   const dishes = new Set();
   const wines = [];
@@ -401,10 +457,7 @@ function buildLibrary() {
 
 function getDatalistsHTML() {
   const lib = buildLibrary();
-  let h = '<datalist id="dl-dishes">';
-  lib.dishes.forEach(d => { h += `<option value="${esc(d)}">`; });
-  h += '</datalist>';
-  h += '<datalist id="dl-producers">';
+  let h = '<datalist id="dl-producers">';
   const producers = [...new Set(lib.wines.map(w => w.producer).filter(Boolean))];
   producers.forEach(p => { h += `<option value="${esc(p)}">`; });
   h += '</datalist>';
@@ -436,6 +489,13 @@ function renderEditor() {
   const dlRegion = isALC ? ' list="dl-regions"' : '';
 
   (currentMenu.courses || []).forEach((c, i) => {
+    // Skip Sorbet from editor (never has pairing)
+    const isSorbet = (c.dish || '').toLowerCase() === 'sorbet';
+    if (isSorbet && !isALC) {
+      container.innerHTML += `<div class="course-editor" style="opacity:0.5"><div class="course-dish-label">${esc(c.dish)}</div><div class="course-desc-label">${esc(c.desc)}</div><div style="font-size:10px;color:#aaa;font-style:italic">No pairing</div></div>`;
+      return;
+    }
+
     // Show second wine fields for indulgence on the meat course (index 3 typically)
     const showWine2 = isIndulgence && ('producer2' in c || i === 3);
     let wine2Html = '';
@@ -450,19 +510,68 @@ function renderEditor() {
     }
     const addWine2Btn = (isIndulgence && !showWine2) ? `<span style="cursor:pointer;color:#ccc;font-size:14px;margin-right:8px" onclick="addWine2(${i})" title="Add second wine">+</span>` : '';
 
-    container.innerHTML += `<div class="course-editor">
-      <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
-      <div class="course-dish-label">${esc(c.dish) || '(empty dish)'}</div>
-      <div class="course-desc-label">${esc(c.desc) || ''}</div>
-      <div class="wine-fields">
-        <div><label>Producer</label><input type="text" value="${esc(c.producer)}" oninput="upd(${i},'producer',this.value)"${dlProd}></div>
-        <div><label>Wine Name</label><input type="text" value="${esc(c.wine)}" oninput="upd(${i},'wine',this.value)"${dlWine}></div>
-        <div><label>Region / Country</label><input type="text" value="${esc(c.region)}" oninput="upd(${i},'region',this.value)"${dlRegion}></div>
-        <div><label>Vintage</label><input type="text" value="${esc(c.vintage)}" oninput="upd(${i},'vintage',this.value)"></div>
-      </div>
-      ${wine2Html}
-      <div style="margin-top:8px">${addWine2Btn}<button class="course-save-btn" onclick="saveMenu()">Save</button></div>
-    </div>`;
+    // ALC: use dropdowns for dish and wine selection
+    let dishHtml, wineHtml;
+    if (isALC) {
+      // Dish dropdown grouped by type
+      let dishOpts = '<option value="">— Select Dish —</option>';
+      Object.keys(DISH_LIBRARY).forEach(cat => {
+        dishOpts += `<optgroup label="${cat}">`;
+        DISH_LIBRARY[cat].forEach(d => {
+          const val = d.dish + '|||' + d.desc;
+          const sel = (c.dish === d.dish && c.desc === d.desc) ? ' selected' : '';
+          dishOpts += `<option value="${esc(val)}"${sel}>${d.dish} — ${d.desc}</option>`;
+        });
+        dishOpts += '</optgroup>';
+      });
+      dishOpts += '<option value="__other__">— Other (manual) —</option>';
+      dishHtml = `<label>Dish</label><select style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:4px;font-family:var(--sans);font-size:12px;margin-bottom:6px" onchange="selectDish(${i},this.value)">${dishOpts}</select>`;
+      if (c.dish && !isDishInLibrary(c.dish, c.desc)) {
+        dishHtml += `<input type="text" value="${esc(c.dish)}" placeholder="Dish name" oninput="upd(${i},'dish',this.value)" style="margin-bottom:4px">`;
+        dishHtml += `<input type="text" value="${esc(c.desc)}" placeholder="Description" oninput="upd(${i},'desc',this.value)">`;
+      }
+
+      // Wine dropdown
+      const wineLib = buildWineLibrary();
+      const currentWineLabel = [c.producer, c.wine, c.region, c.vintage].filter(Boolean).join(', ');
+      let wineOpts = '<option value="">— Select Wine —</option>';
+      wineLib.forEach(w => {
+        const sel = (w.label === currentWineLabel) ? ' selected' : '';
+        wineOpts += `<option value="${esc(w.label)}"${sel}>${w.label}</option>`;
+      });
+      wineOpts += '<option value="__other__">— Other (manual) —</option>';
+      wineHtml = `<label>Wine</label><select style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:4px;font-family:var(--sans);font-size:12px;margin-bottom:6px" onchange="selectWine(${i},this.value)">${wineOpts}</select>`;
+      if (!isWineInLibrary(currentWineLabel) && (c.producer || c.wine)) {
+        wineHtml += `<div class="wine-fields">
+          <div><label>Producer</label><input type="text" value="${esc(c.producer)}" oninput="upd(${i},'producer',this.value)"></div>
+          <div><label>Wine Name</label><input type="text" value="${esc(c.wine)}" oninput="upd(${i},'wine',this.value)"></div>
+          <div><label>Region / Country</label><input type="text" value="${esc(c.region)}" oninput="upd(${i},'region',this.value)"></div>
+          <div><label>Vintage</label><input type="text" value="${esc(c.vintage)}" oninput="upd(${i},'vintage',this.value)"></div>
+        </div>`;
+      }
+
+      container.innerHTML += `<div class="course-editor">
+        <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
+        ${dishHtml}
+        ${wineHtml}
+        ${wine2Html}
+        <div style="margin-top:8px">${addWine2Btn}<button class="course-save-btn" onclick="saveMenu()">Save</button></div>
+      </div>`;
+    } else {
+      container.innerHTML += `<div class="course-editor">
+        <button class="remove-course" onclick="removeCourse(${i})">&times;</button>
+        <div class="course-dish-label">${esc(c.dish) || '(empty dish)'}</div>
+        <div class="course-desc-label">${esc(c.desc) || ''}</div>
+        <div class="wine-fields">
+          <div><label>Producer</label><input type="text" value="${esc(c.producer)}" oninput="upd(${i},'producer',this.value)"${dlProd}></div>
+          <div><label>Wine Name</label><input type="text" value="${esc(c.wine)}" oninput="upd(${i},'wine',this.value)"${dlWine}></div>
+          <div><label>Region / Country</label><input type="text" value="${esc(c.region)}" oninput="upd(${i},'region',this.value)"${dlRegion}></div>
+          <div><label>Vintage</label><input type="text" value="${esc(c.vintage)}" oninput="upd(${i},'vintage',this.value)"></div>
+        </div>
+        ${wine2Html}
+        <div style="margin-top:8px">${addWine2Btn}<button class="course-save-btn" onclick="saveMenu()">Save</button></div>
+      </div>`;
+    }
   });
 
   if (isALC) { container.insertAdjacentHTML('beforeend', getDatalistsHTML()); }
@@ -548,6 +657,53 @@ function upd2(i, f, v) { currentMenu.courses[i][f] = v; renderPreview(); }
 function addWine2(i) { currentMenu.courses[i].producer2=''; currentMenu.courses[i].wine2=''; currentMenu.courses[i].region2=''; currentMenu.courses[i].vintage2=''; renderEditor(); }
 function addCourseEditor() { currentMenu.courses.push({dish:'',desc:'',producer:'',wine:'',region:'',vintage:''}); renderEditor(); }
 function removeCourse(i) { currentMenu.courses.splice(i,1); renderEditor(); renderPreview(); }
+
+// ALC helpers
+function isDishInLibrary(dish, desc) {
+  for (const cat of Object.values(DISH_LIBRARY)) {
+    for (const d of cat) { if (d.dish === dish && d.desc === desc) return true; }
+  }
+  return false;
+}
+
+function isWineInLibrary(label) {
+  if (!label) return true;
+  const wineLib = buildWineLibrary();
+  return wineLib.some(w => w.label === label);
+}
+
+function selectDish(i, val) {
+  if (val === '__other__') {
+    currentMenu.courses[i].dish = '';
+    currentMenu.courses[i].desc = '';
+  } else if (val) {
+    const parts = val.split('|||');
+    currentMenu.courses[i].dish = parts[0] || '';
+    currentMenu.courses[i].desc = parts[1] || '';
+  }
+  renderPreview();
+  renderEditor();
+}
+
+function selectWine(i, val) {
+  if (val === '__other__') {
+    currentMenu.courses[i].producer = '';
+    currentMenu.courses[i].wine = '';
+    currentMenu.courses[i].region = '';
+    currentMenu.courses[i].vintage = '';
+  } else if (val) {
+    const wineLib = buildWineLibrary();
+    const found = wineLib.find(w => w.label === val);
+    if (found) {
+      currentMenu.courses[i].producer = found.producer;
+      currentMenu.courses[i].wine = found.wine;
+      currentMenu.courses[i].region = found.region;
+      currentMenu.courses[i].vintage = found.vintage;
+    }
+  }
+  renderPreview();
+  renderEditor();
+}
 
 // ─── SAVE TO FIRESTORE ──────────────────────────────────────────
 async function saveMenu() {
