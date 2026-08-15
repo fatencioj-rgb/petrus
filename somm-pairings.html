@@ -141,6 +141,13 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
         <button class="size-btn" onclick="execWithSize('a4')">A4</button>
       </div>
     </div>
+    <div style="position:relative;display:inline-block">
+      <button class="btn btn-gold" id="btnEmail" disabled onclick="showSizeChoice('email')">Email</button>
+      <div class="size-choice" id="sizeChoiceEmail" style="display:none">
+        <button class="size-btn" onclick="execWithSize('statement')">Statement</button>
+        <button class="size-btn" onclick="execWithSize('a4')">A4</button>
+      </div>
+    </div>
     <button class="btn btn-gold" id="btnSave" style="display:none" onclick="saveMenu()">Save Changes</button>
   </div>
   <div class="split-view" id="splitView" style="display:none;">
@@ -442,6 +449,7 @@ async function loadMenu() {
   renderEditor();
   btnPrint.disabled = false;
   document.getElementById('btnPdf').disabled = false;
+  document.getElementById('btnEmail').disabled = false;
   btnLoad.disabled = false; btnLoad.textContent = 'Load Menu';
   showStatus('Pairing loaded');
 }
@@ -913,20 +921,24 @@ async function saveMenu() {
 
 // ─── PRINT & PDF SIZE CHOICE ────────────────────────────────────
 function showSizeChoice(action) {
-  // Hide both first
+  // Hide all first
   document.getElementById('sizeChoicePdf').style.display = 'none';
   document.getElementById('sizeChoicePrint').style.display = 'none';
+  document.getElementById('sizeChoiceEmail').style.display = 'none';
   pendingAction = action;
   if (action === 'pdf') {
     document.getElementById('sizeChoicePdf').style.display = 'flex';
-  } else {
+  } else if (action === 'print') {
     document.getElementById('sizeChoicePrint').style.display = 'flex';
+  } else if (action === 'email') {
+    document.getElementById('sizeChoiceEmail').style.display = 'flex';
   }
 }
 
 function hideSizeChoice() {
   document.getElementById('sizeChoicePdf').style.display = 'none';
   document.getElementById('sizeChoicePrint').style.display = 'none';
+  document.getElementById('sizeChoiceEmail').style.display = 'none';
   pendingAction = null;
 }
 
@@ -935,11 +947,12 @@ function execWithSize(size) {
   hideSizeChoice();
   if (action === 'print') printMenu(size);
   else if (action === 'pdf') downloadPdf(size);
+  else if (action === 'email') emailPdf(size);
 }
 
 // Close dropdowns on outside click
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.size-choice') && !e.target.closest('#btnPrint') && !e.target.closest('#btnPdf')) {
+  if (!e.target.closest('.size-choice') && !e.target.closest('#btnPrint') && !e.target.closest('#btnPdf') && !e.target.closest('#btnEmail')) {
     hideSizeChoice();
   }
 });
@@ -1044,6 +1057,27 @@ function downloadPdf(size) {
     seps.forEach((s, i) => { s.style.cssText = origSeps[i] || ''; });
   });
   showStatus('Downloading PDF...');
+}
+
+// ─── EMAIL (download PDF + open mailto) ─────────────────────────
+function emailPdf(size) {
+  // First download the PDF
+  downloadPdf(size);
+
+  // Then open mailto with subject pre-filled
+  const menuLabel = MENU_CONFIG[currentMenu.type].label;
+  const pairingLabel = PAIRING_LABELS[currentMenu.variant];
+  const somm = SOMMELIERS.find(s => s.name === currentMenu.sommelier) || SOMMELIERS[0];
+  let subject = `${menuLabel} - ${pairingLabel}`;
+  if (currentMenu.showDate && currentMenu.pairingDate) {
+    subject += ` - ${formatDateFancy(currentMenu.pairingDate)}`;
+  }
+  const body = `Dear Guest,%0D%0A%0D%0APlease find attached your wine pairing menu.%0D%0A%0D%0AKind regards,%0D%0A${somm.name}%0D%0A${somm.role}%0D%0APetrus`;
+
+  // Delay to let download start first
+  setTimeout(function() {
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
+  }, 1500);
 }
 
 // ─── HELPERS ────────────────────────────────────────────────────
