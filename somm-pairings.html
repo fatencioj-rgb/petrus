@@ -115,7 +115,7 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 <div class="content">
   <h1>Wine Pairings</h1>
   <p class="subtitle">Select a menu and pairing to view, edit, or print for service.</p>
-  <div class="selectors">
+  <div class="selectors" style="align-items:center">
     <select id="menuType">
       <option value="">— Select Menu —</option>
       <option value="prestige">Prestige</option>
@@ -125,8 +125,6 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
       <option value="kt">Kitchen Table</option>
     </select>
     <select id="menuVariant"><option value="">— Pairing —</option></select>
-  </div>
-  <div class="actions">
     <button class="btn btn-outline" id="btnLoad" disabled onclick="loadMenu()">Load Menu</button>
     <div style="position:relative;display:inline-block">
       <button class="btn btn-gold" id="btnPrint" disabled onclick="showSizeChoice('print')">Print</button>
@@ -150,6 +148,14 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
     </div>
     <div class="split-right">
       <div class="editor-panel" id="editorPanel">
+        <div class="date-selector" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e0d5c5">
+          <h4 style="font-family:var(--sans);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Date (optional)</h4>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="date" id="pairingDate" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-family:var(--sans);font-size:12px;outline:none" onchange="setDate(this.value)">
+            <button id="dateToggle" class="somm-opt" onclick="toggleDate()" style="font-size:10px">Show Date</button>
+            <button class="somm-opt" onclick="clearDate()" style="font-size:10px">Clear</button>
+          </div>
+        </div>
         <h3>Edit Pairing</h3>
         <div class="editor-section"><h4>Courses</h4><div id="courseEditors"></div>
           <button class="add-course-btn" onclick="addCourseEditor()">+ Add Course</button>
@@ -157,14 +163,6 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
         <div class="somm-selector">
           <h4>Sommelier</h4>
           <div class="somm-options" id="sommOptions"></div>
-        </div>
-        <div class="date-selector" style="margin-top:16px;padding-top:12px;border-top:1px solid #e0d5c5">
-          <h4 style="font-family:var(--sans);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Date (optional)</h4>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="date" id="pairingDate" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-family:var(--sans);font-size:12px;outline:none" onchange="setDate(this.value)">
-            <button id="dateToggle" class="somm-opt" onclick="toggleDate()" style="font-size:10px">Show Date</button>
-            <button class="somm-opt" onclick="clearDate()" style="font-size:10px">Clear</button>
-          </div>
         </div>
         <div class="meta-info" id="metaInfo"></div>
       </div>
@@ -513,10 +511,9 @@ function formatDateFancy(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T12:00:00');
   const day = d.getDate();
-  const suffix = (day===1||day===21||day===31)?'st':(day===2||day===22)?'nd':(day===3||day===23)?'rd':'th';
   const month = d.toLocaleDateString('en-GB', { month: 'long' });
   const year = d.getFullYear();
-  return `${day}${suffix} ${month} ${year}`;
+  return `${day} ${month} ${year}`;
 }
 
 function setDate(val) {
