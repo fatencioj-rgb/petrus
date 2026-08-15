@@ -125,6 +125,7 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
       <option value="kt">Kitchen Table</option>
     </select>
     <select id="menuVariant"><option value="">— Pairing —</option></select>
+    <select id="menuDiet" style="display:none"><option value="regular">Regular</option></select>
     <button class="btn btn-outline" id="btnLoad" disabled onclick="loadMenu()">Load Menu</button>
     <div style="position:relative;display:inline-block">
       <button class="btn btn-gold" id="btnPrint" disabled onclick="showSizeChoice('print')">Print</button>
@@ -183,11 +184,11 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 <script>
 // ─── Config ─────────────────────────────────────────────────────
 const MENU_CONFIG = {
-  prestige:  { label:'PRESTIGE MENU', pairings:['matching','connoisseur','indulgence','3wines'] },
-  discovery: { label:'DISCOVERY MENU', pairings:['matching','connoisseur','indulgence','3wines'] },
-  lunch:     { label:'LUNCH MENU', pairings:['matching','connoisseur','indulgence','3wines'] },
-  alc:       { label:'À LA CARTE', pairings:['matching','connoisseur','indulgence','3wines'] },
-  kt:        { label:'KITCHEN TABLE', pairings:['matching','connoisseur','indulgence','kt-matching'] }
+  prestige:  { label:'PRESTIGE MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:['regular','pescatarian','vegetarian','noseafood'] },
+  discovery: { label:'DISCOVERY MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:['regular','pescatarian','vegetarian','noseafood'] },
+  lunch:     { label:'LUNCH MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:[] },
+  alc:       { label:'À LA CARTE', pairings:['matching','connoisseur','indulgence','3wines'], diets:['regular','pescatarian','vegetarian'] },
+  kt:        { label:'KITCHEN TABLE', pairings:['matching','connoisseur','indulgence','kt-matching'], diets:[] }
 };
 const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'KT Matching Pairing'};
 const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.7 cm)'};
@@ -197,6 +198,7 @@ let U = null;
 let pendingAction = null; // 'print' or 'pdf'
 const selType = document.getElementById('menuType');
 const selVariant = document.getElementById('menuVariant');
+const selDiet = document.getElementById('menuDiet');
 const btnLoad = document.getElementById('btnLoad');
 const btnPrint = document.getElementById('btnPrint');
 const btnSave = document.getElementById('btnSave');
@@ -212,13 +214,22 @@ auth.onAuthStateChanged(function(user) {
 selType.addEventListener('change', () => {
   const type = selType.value;
   selVariant.innerHTML = '<option value="">— Pairing —</option>';
+  selDiet.style.display = 'none';
   btnLoad.disabled = true; btnPrint.disabled = true;
   if (!type) return;
   const cfg = MENU_CONFIG[type];
   cfg.pairings.forEach(p => { selVariant.innerHTML += `<option value="${p}">${PAIRING_LABELS[p]}</option>`; });
+  // Show diet selector if menu has diets
+  if (cfg.diets && cfg.diets.length > 0) {
+    selDiet.innerHTML = '';
+    const DIET_LABELS = {'regular':'Regular','pescatarian':'Pescatarian','vegetarian':'Vegetarian','noseafood':'No Seafood'};
+    cfg.diets.forEach(d => { selDiet.innerHTML += `<option value="${d}">${DIET_LABELS[d]}</option>`; });
+    selDiet.style.display = 'inline-block';
+  }
   checkReady();
 });
 selVariant.addEventListener('change', checkReady);
+selDiet.addEventListener('change', checkReady);
 function checkReady() { btnLoad.disabled = !(selType.value && selVariant.value); }
 </script>
 <script>
@@ -294,6 +305,108 @@ const TEMPLATES = {
     { dish:'Chicken Breast', desc:'Petits pois à la française, consommé', producer:'Cal Batlet', wine:'Gratallops, Escanya-Vella white', region:'Priorat, Spain', vintage:'2023' },
     { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
     { dish:'Black Forest Parfait', desc:'Morello cherry, white chocolate', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance doux", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  // ─── DISCOVERY PESCATARIAN ─────────────────────────────────────
+  'discovery_pescatarian_matching': [
+    { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'Pieropan', wine:'Soave Classico "Calvarino"', region:'Veneto, Italy', vintage:'2024' },
+    { dish:'Devon Monkfish', desc:'Celeriac, dulse', producer:'Olifantsberg', wine:'"Lark" Chenin Blanc', region:'South Africa', vintage:'2024' },
+    { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'discovery_pescatarian_3wines': [
+    { dish:'Smoked Eel', desc:'Oscietra caviar, celeriac, apple', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Lobster Raviolo', desc:'Finger lime, fennel, bisque', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Devon Monkfish', desc:'Celeriac, dulse', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Confit Turbot', desc:'Courgette, Niçoise olive, bouillabaisse', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  // ─── DISCOVERY VEGETARIAN ──────────────────────────────────────
+  'discovery_vegetarian_matching': [
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Artichoke', desc:'Pomme soufflé, allium', producer:'Pieropan', wine:'Soave Classico "Calvarino"', region:'Veneto, Italy', vintage:'2024' },
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Olifantsberg', wine:'"Lark" Chenin Blanc', region:'South Africa', vintage:'2024' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'discovery_vegetarian_3wines': [
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Artichoke', desc:'Pomme soufflé, allium', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  // ─── DISCOVERY NO SEAFOOD ─────────────────────────────────────
+  'discovery_noseafood_matching': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Organic Spelt', desc:'Fines herbs, shiitake consommé', producer:'Pieropan', wine:'Soave Classico "Calvarino"', region:'Veneto, Italy', vintage:'2024' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Olifantsberg', wine:'"Lark" Chenin Blanc', region:'South Africa', vintage:'2024' },
+    { dish:'100 Days Aged Blue Grey', desc:'Artichoke, pomme soufflé, girolles', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  'discovery_noseafood_3wines': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Oremus', wine:'"Mandolás" Furmint', region:'Tokaj, Hungary', vintage:'2023' },
+    { dish:'Organic Spelt', desc:'Fines herbs, shiitake consommé', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'100 Days Aged Blue Grey', desc:'Artichoke, pomme soufflé, girolles', producer:'El Grano', wine:'Carménère', region:'Valley Central, Chile', vintage:'2021' },
+    { dish:'Sorbet', desc:'Rose, champagne', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  // ─── PRESTIGE PESCATARIAN ──────────────────────────────────────
+  'prestige_pescatarian_matching': [
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Devon Monkfish', desc:'Celeriac, dulse', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  'prestige_pescatarian_3wines': [
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Devon Monkfish', desc:'Celeriac, dulse', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  // ─── PRESTIGE VEGETARIAN ───────────────────────────────────────
+  'prestige_vegetarian_matching': [
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Artichoke', desc:'Pomme soufflé, allium', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  'prestige_vegetarian_3wines': [
+    { dish:'Sucrine', desc:'Mange tout, girolle, herbs', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Artichoke', desc:'Pomme soufflé, allium', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Organic Spelt', desc:'Girolles, mushroom consommé', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  // ─── PRESTIGE NO SEAFOOD ───────────────────────────────────────
+  'prestige_noseafood_matching': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'Domaine de la Soufrandière', wine:'Pouilly-Vinzelles', region:'Mâconnais, Burgundy, France', vintage:'2022' },
+    { dish:'Organic Spelt', desc:'Fines herbs, shiitake consommé', producer:'Azores Wine Company', wine:'"Tarelo", Arinto & Verdelho, Pico', region:'Açores, Portugal', vintage:'2019' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
+  ],
+  'prestige_noseafood_3wines': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Schloss Gobelsburg', wine:'Grüner Veltliner Ried Lamm, Erste Lage', region:'Kamptal, Austria', vintage:'2021' },
+    { dish:'Heirloom Courgette', desc:'Cucumber, tomato, herbs', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Organic Spelt', desc:'Fines herbs, shiitake consommé', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Rum Baba', desc:'Fraise des bois, yoghurt, verbena', producer:'Nicolas Réau', wine:"Coteaux de l'Aubance", region:'Loire Valley, France', vintage:'2024' }
   ]
 };
 </script>
@@ -301,22 +414,30 @@ const TEMPLATES = {
 // ─── LOAD ───────────────────────────────────────────────────────
 async function loadMenu() {
   const type = selType.value, variant = selVariant.value;
+  const diet = selDiet.value || 'regular';
   const docId = `${type}_${variant}`;
+  // For Firestore, include diet in doc ID if not regular
+  const firestoreId = diet === 'regular' ? docId : `${type}_${diet}_${variant}`;
   btnLoad.disabled = true; btnLoad.textContent = 'Loading...';
 
   let data = null;
-  try { const doc = await db.collection('somm_pairings').doc(docId).get(); if (doc.exists) data = doc.data(); } catch(e) { console.log('Firestore unavailable, using template'); }
+  try { const doc = await db.collection('somm_pairings').doc(firestoreId).get(); if (doc.exists) data = doc.data(); } catch(e) { console.log('Firestore unavailable, using template'); }
 
   if (data) {
-    currentMenu = { id: docId, type, variant, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '', pairingDate: data.pairingDate || '', showDate: data.showDate || false };
+    currentMenu = { id: firestoreId, type, variant, diet, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '', pairingDate: data.pairingDate || '', showDate: data.showDate || false };
   } else {
-    const tpl = TEMPLATES[docId];
+    // Try diet-specific template first, then fall back to regular
+    const tplKey = diet === 'regular' ? docId : `${type}_${diet}_${variant}`;
+    const tpl = TEMPLATES[tplKey] || TEMPLATES[docId];
     currentMenu = {
-      id: docId, type, variant,
+      id: firestoreId, type, variant, diet,
       courses: tpl ? JSON.parse(JSON.stringify(tpl)) : [{ dish:'', desc:'', producer:'', wine:'', region:'', vintage:'' }],
       lastEditBy: '', lastEditDate: '', sommelier: '', pairingDate: '', showDate: false
     };
   }
+  // Set alcDiet for ALC
+  if (type === 'alc') alcDiet = diet;
+
   renderPreview();
   renderEditor();
   btnPrint.disabled = false;
@@ -534,16 +655,9 @@ function renderEditor() {
   const dlWine = isALC ? ' list="dl-wines"' : '';
   const dlRegion = isALC ? ' list="dl-regions"' : '';
 
-  // ALC diet selector
+  // ALC diet is set from dropdown, no need for buttons in editor
   if (isALC) {
-    const diets = [{id:'regular',label:'Regular'},{id:'pescatarian',label:'Pescatarian'},{id:'vegetarian',label:'Vegetarian'}];
-    let dietHtml = '<div style="display:flex;gap:6px;margin-bottom:14px">';
-    diets.forEach(d => {
-      const active = alcDiet === d.id ? ' active' : '';
-      dietHtml += `<div class="somm-opt${active}" onclick="setAlcDiet('${d.id}')" style="font-size:10px">${d.label}</div>`;
-    });
-    dietHtml += '</div>';
-    container.innerHTML += dietHtml;
+    // diet already set via alcDiet from loadMenu
   }
 
   (currentMenu.courses || []).forEach((c, i) => {
