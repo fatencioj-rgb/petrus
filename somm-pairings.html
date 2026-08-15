@@ -381,36 +381,82 @@ function renderPreview() {
 <script>
 // ─── WINE & DISH LIBRARY (for ALC autocomplete) ─────────────────
 const DISH_LIBRARY = {
-  'Starter': [
-    { dish: 'Smoked Eel', desc: 'Oscietra caviar, celeriac, apple' },
-    { dish: 'Sladesdown Chicken', desc: 'Sucrine, ragout, parfait' },
-    { dish: 'Sladesdown Duck', desc: 'Terrine, parfait, cherry' }
-  ],
-  'Fish': [
-    { dish: 'Isle of Skye Scallop', desc: 'Coastal herbs, lemon, olive oil sabayon' },
-    { dish: 'Lobster Raviolo', desc: 'Finger lime, fennel, bisque' },
-    { dish: 'Confit Turbot', desc: 'Courgette, Niçoise olive, bouillabaisse' },
-    { dish: 'Devon Monkfish', desc: 'Celeriac, Iberico chorizo, dulse' },
-    { dish: 'Rack of Dover Sole', desc: 'Brassica, prawns, Vin Jaune' }
-  ],
-  'Main Course': [
-    { dish: '100 Days Aged Blue Grey', desc: 'Violet artichoke, pomme soufflé, girolles' },
-    { dish: 'Herdwick Rack of Lamb', desc: 'Young peas, mint, Roves des Garrigues' },
-    { dish: 'Aynhoe Park Deer', desc: 'Beetroot, blueberry, Roquefort' },
-    { dish: 'Chicken Breast', desc: 'Petits pois à la française, consommé' }
-  ],
-  'Pre-Dessert': [
-    { dish: 'Sorbet', desc: 'Rose, champagne' },
-    { dish: 'Sorbet', desc: 'Basil, strawberry' },
-    { dish: 'Sorbet', desc: 'Calvados, apple' }
-  ],
-  'Dessert': [
-    { dish: 'Plaisir sucré', desc: 'Chocolate crémeux, hazelnut, milk' },
-    { dish: 'Rum Baba', desc: 'Fraise des bois, yoghurt, verbena' },
-    { dish: 'Black Forest Parfait', desc: 'Morello cherry, white chocolate' },
-    { dish: 'Pear Tart', desc: 'Frangipane, mascarpone, cardamom' }
-  ]
+  regular: {
+    'Starter': [
+      { dish: 'Smoked Eel', desc: 'Oscietra caviar, celeriac, apple' },
+      { dish: 'Sladesdown Chicken', desc: 'Sucrine, ragout, parfait' },
+      { dish: 'Sladesdown Duck', desc: 'Terrine, parfait, cherry' }
+    ],
+    'Fish': [
+      { dish: 'Isle of Skye Scallop', desc: 'Coastal herbs, lemon, olive oil sabayon' },
+      { dish: 'Lobster Raviolo', desc: 'Finger lime, fennel, bisque' },
+      { dish: 'Confit Turbot', desc: 'Courgette, Niçoise olive, bouillabaisse' },
+      { dish: 'Devon Monkfish', desc: 'Celeriac, Iberico chorizo, dulse' },
+      { dish: 'Rack of Dover Sole', desc: 'Brassica, prawns, Vin Jaune' }
+    ],
+    'Main Course': [
+      { dish: '100 Days Aged Blue Grey', desc: 'Violet artichoke, pomme soufflé, girolles' },
+      { dish: 'Herdwick Rack of Lamb', desc: 'Young peas, mint, Roves des Garrigues' },
+      { dish: 'Aynhoe Park Deer', desc: 'Beetroot, blueberry, Roquefort' },
+      { dish: 'Chicken Breast', desc: 'Petits pois à la française, consommé' }
+    ],
+    'Pre-Dessert': [
+      { dish: 'Sorbet', desc: 'Rose, champagne' },
+      { dish: 'Sorbet', desc: 'Basil, strawberry' },
+      { dish: 'Sorbet', desc: 'Calvados, apple' }
+    ],
+    'Dessert': [
+      { dish: 'Plaisir sucré', desc: 'Chocolate crémeux, hazelnut, milk' },
+      { dish: 'Rum Baba', desc: 'Fraise des bois, yoghurt, verbena' },
+      { dish: 'Black Forest Parfait', desc: 'Morello cherry, white chocolate' },
+      { dish: 'Pear Tart', desc: 'Frangipane, mascarpone, cardamom' },
+      { dish: 'Dark chocolate soufflé', desc: 'Kirsch, black cherry' }
+    ]
+  },
+  pescatarian: {
+    'Starter': [
+      { dish: 'Smoked Eel', desc: 'Oscietra caviar, celeriac, apple' },
+      { dish: 'Lobster Raviolo', desc: 'Finger lime, fennel, bisque' },
+      { dish: 'Isle of Skye Scallop', desc: 'Coastal herbs, lemon, olive oil sabayon' },
+      { dish: 'Sucrine', desc: 'Mange tout, girolle, herbs' }
+    ],
+    'Main Course': [
+      { dish: 'Devon Monkfish', desc: 'Celeriac, dulse' },
+      { dish: 'Confit Turbot', desc: 'Courgette, Niçoise olive, bouillabaisse' },
+      { dish: 'Organic Spelt', desc: 'Girolles, mushroom consommé' }
+    ],
+    'Pre-Dessert': [
+      { dish: 'Sorbet', desc: 'Rose, champagne' },
+      { dish: 'Sorbet', desc: 'Basil, strawberry' }
+    ],
+    'Dessert': [
+      { dish: 'Plaisir sucré', desc: 'Chocolate crémeux, hazelnut, milk' },
+      { dish: 'Rum Baba', desc: 'Fraise des bois, yoghurt, verbena' },
+      { dish: 'Dark chocolate soufflé', desc: 'Kirsch, black cherry' }
+    ]
+  },
+  vegetarian: {
+    'Starter': [
+      { dish: 'Heirloom Courgette', desc: 'Cucumber, tomato, herbs' },
+      { dish: 'Artichoke', desc: 'Pomme soufflé, allium' },
+      { dish: 'Sucrine', desc: 'Mange tout, girolle, herbs' }
+    ],
+    'Main Course': [
+      { dish: 'Organic Spelt', desc: 'Girolles, mushroom consommé' },
+      { dish: 'Heirloom Courgette', desc: 'Cucumber, tomato, herbs' }
+    ],
+    'Pre-Dessert': [
+      { dish: 'Sorbet', desc: 'Basil, strawberry' }
+    ],
+    'Dessert': [
+      { dish: 'Plaisir sucré', desc: 'Chocolate crémeux, hazelnut, milk' },
+      { dish: 'Rum Baba', desc: 'Fraise des bois, yoghurt, verbena' },
+      { dish: 'Dark chocolate soufflé', desc: 'Kirsch, black cherry' }
+    ]
+  }
 };
+
+let alcDiet = 'regular';
 
 function buildWineLibrary() {
   const wines = [];
@@ -488,6 +534,18 @@ function renderEditor() {
   const dlWine = isALC ? ' list="dl-wines"' : '';
   const dlRegion = isALC ? ' list="dl-regions"' : '';
 
+  // ALC diet selector
+  if (isALC) {
+    const diets = [{id:'regular',label:'Regular'},{id:'pescatarian',label:'Pescatarian'},{id:'vegetarian',label:'Vegetarian'}];
+    let dietHtml = '<div style="display:flex;gap:6px;margin-bottom:14px">';
+    diets.forEach(d => {
+      const active = alcDiet === d.id ? ' active' : '';
+      dietHtml += `<div class="somm-opt${active}" onclick="setAlcDiet('${d.id}')" style="font-size:10px">${d.label}</div>`;
+    });
+    dietHtml += '</div>';
+    container.innerHTML += dietHtml;
+  }
+
   (currentMenu.courses || []).forEach((c, i) => {
     // Skip Sorbet from editor (never has pairing)
     const isSorbet = (c.dish || '').toLowerCase() === 'sorbet';
@@ -514,10 +572,11 @@ function renderEditor() {
     let dishHtml, wineHtml;
     if (isALC) {
       // Dish dropdown grouped by type
+      const dishLib = DISH_LIBRARY[alcDiet] || DISH_LIBRARY.regular;
       let dishOpts = '<option value="">— Select Dish —</option>';
-      Object.keys(DISH_LIBRARY).forEach(cat => {
+      Object.keys(dishLib).forEach(cat => {
         dishOpts += `<optgroup label="${cat}">`;
-        DISH_LIBRARY[cat].forEach(d => {
+        dishLib[cat].forEach(d => {
           const val = d.dish + '|||' + d.desc;
           const sel = (c.dish === d.dish && c.desc === d.desc) ? ' selected' : '';
           dishOpts += `<option value="${esc(val)}"${sel}>${d.dish} — ${d.desc}</option>`;
@@ -660,10 +719,16 @@ function removeCourse(i) { currentMenu.courses.splice(i,1); renderEditor(); rend
 
 // ALC helpers
 function isDishInLibrary(dish, desc) {
-  for (const cat of Object.values(DISH_LIBRARY)) {
+  const dishLib = DISH_LIBRARY[alcDiet] || DISH_LIBRARY.regular;
+  for (const cat of Object.values(dishLib)) {
     for (const d of cat) { if (d.dish === dish && d.desc === desc) return true; }
   }
   return false;
+}
+
+function setAlcDiet(diet) {
+  alcDiet = diet;
+  renderEditor();
 }
 
 function isWineInLibrary(label) {
