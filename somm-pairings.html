@@ -631,7 +631,6 @@ function downloadPdf(size) {
 
   // Save original styles
   const origStyle = element.style.cssText;
-  const origClass = element.className;
 
   // Temporarily adjust for PDF capture
   element.style.border = 'none';
@@ -639,7 +638,38 @@ function downloadPdf(size) {
   element.style.boxShadow = 'none';
   element.style.background = '#fff';
   element.style.minHeight = 'auto';
-  element.style.padding = size === 'statement' ? '0.4in 0.5in' : '20mm 25mm';
+
+  if (size === 'statement') {
+    element.style.padding = '0.25in 0.35in';
+    element.style.fontSize = '72%';
+  } else {
+    element.style.padding = '18mm 22mm';
+  }
+
+  // Adjust internal spacing for PDF
+  const logo = element.querySelector('.preview-logo');
+  const subtitle = element.querySelector('.menu-subtitle');
+  const spacer = element.querySelector('.no-date-spacer');
+  const footer = element.querySelector('.preview-footer');
+  const seps = element.querySelectorAll('.course-separator');
+
+  const origLogo = logo ? logo.style.cssText : '';
+  const origSub = subtitle ? subtitle.style.cssText : '';
+  const origSpacer = spacer ? spacer.style.cssText : '';
+  const origFooter = footer ? footer.style.cssText : '';
+  const origSeps = []; seps.forEach(s => origSeps.push(s.style.cssText));
+
+  if (size === 'statement') {
+    if (logo) { logo.style.width = '55px'; logo.style.marginBottom = '8px'; }
+    if (spacer) spacer.style.marginBottom = '14px';
+    if (footer) footer.style.marginTop = '16px';
+    seps.forEach(s => { s.style.margin = '6px 0'; });
+  } else {
+    if (logo) { logo.style.width = '100px'; logo.style.marginBottom = '18px'; }
+    if (spacer) spacer.style.marginBottom = '40px';
+    if (footer) footer.style.marginTop = '44px';
+    seps.forEach(s => { s.style.margin = '16px 0'; });
+  }
 
   const opt = {
     margin: 0,
@@ -652,6 +682,11 @@ function downloadPdf(size) {
 
   html2pdf().set(opt).from(element).save().then(function() {
     element.style.cssText = origStyle;
+    if (logo) logo.style.cssText = origLogo;
+    if (subtitle) subtitle.style.cssText = origSub;
+    if (spacer) spacer.style.cssText = origSpacer;
+    if (footer) footer.style.cssText = origFooter;
+    seps.forEach((s, i) => { s.style.cssText = origSeps[i] || ''; });
   });
   showStatus('Downloading PDF...');
 }
