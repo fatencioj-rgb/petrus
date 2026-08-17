@@ -281,7 +281,7 @@ function renderReport(data) {
 }
 
 function buildEmailBody(data) {
-  let body = 'Hi Giuseppe,\n\n';
+  let body = 'Dear Giuseppe,\n\n';
   body += 'Please find below the Viniv weekly sales report for ' + data.weekStart + ' - ' + data.weekEnd + '.\n\n';
   body += 'The Restaurant Collection - Weekly Summary:\n\n';
   body += '  By the Glass: ' + data.totalGlass + ' glasses sold\n';
@@ -291,8 +291,8 @@ function buildEmailBody(data) {
   for (const r of data.entries) {
     body += '  ' + r.date + '  ' + r.session.padEnd(8) + '  ' + r.qty + '  £' + r.price.toFixed(2) + '  ' + r.type + '\n';
   }
-  body += '\nIf it works for you, I can send the weekly report every Saturday after service.\n';
-  body += '\nBest,\nFiorella';
+  body += '\nBest regards,\nFiorella\n';
+  body += '\n—\nReport compiled by Fiorella Atencio | Petrus Sommelier Team';
   return body;
 }
 
