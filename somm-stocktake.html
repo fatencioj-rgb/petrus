@@ -56,6 +56,10 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 /* Lock button */
 .loc-header-name{margin-bottom:6px}
 .loc-header-lock{margin-bottom:4px}
+
+/* Discontinued */
+.disc-check{width:16px;height:16px;accent-color:#c0392b;cursor:pointer}
+.disc-row td{opacity:0.4;text-decoration:line-through}
 .lock-btn{display:inline-block;cursor:pointer;font-size:8px;padding:3px 7px;border-radius:4px;border:1px solid var(--green);color:var(--green);background:transparent;font-family:var(--sans);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;transition:all 0.2s;white-space:nowrap}
 .lock-btn:hover{background:var(--green);color:#fff}
 .lock-btn.is-locked{background:var(--green-dark);color:#fff;border-color:var(--green-dark)}
@@ -224,6 +228,7 @@ var locationData = [];
 var lockedCols = {};  // {locationName: {locked: true, by: 'Fiorella'} }
 var docExists = false; // Whether a saved document exists in Firestore
 var docInfo = {};      // {createdBy, date, updatedBy}
+var discontinuedData = []; // Boolean per row — true = product discontinued
 
 // Columns to hide visually (still exported in CSV)
 var HIDDEN_HEADERS = ['pid','[e]stock type','[e]bin number','[e]pos','tertiary category','[e]close fc','[e]close sc'];
@@ -375,12 +380,14 @@ function parseFullCSV(text){
 function initLocationData(){
   var locs = getLocations();
   locationData = [];
+  discontinuedData = [];
   for(var i=0; i<rows.length; i++){
     var loc = {};
     for(var l=0; l<locs.length; l++){
       loc[locs[l]] = '';
     }
     locationData.push(loc);
+    discontinuedData.push(false);
   }
 }
 
@@ -439,7 +446,8 @@ function renderTable(){
     html += '<th><div class="loc-header-name">' + escHtml(locs[l]) + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
   }
   html += '<th class="total-header">Total</th>';
-  var totalCols = visibleCount + locs.length + 1;
+  html += '<th>X</th>';
+  var totalCols = visibleCount + locs.length + 2;
   html += '</tr></thead><tbody>';
 
   var lastCat = '';
@@ -461,7 +469,7 @@ function renderTable(){
       }
     }
 
-    html += '<tr>';
+    html += '<tr' + (discontinuedData[i] ? ' class="disc-row"' : '') + '>';
     for(var c=0; c<headers.length; c++){
       if(isHidden(c)) continue;
       var val = (row[c]||'').trim();
@@ -475,14 +483,17 @@ function renderTable(){
     for(var l=0; l<locs.length; l++){
       var locVal = locationData[i] ? (locationData[i][locs[l]] || '') : '';
       var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
-      var disabledAttr = isLocked ? ' disabled' : '';
-      var lockedClass = isLocked ? ' locked' : '';
+      var disabledAttr = isLocked || discontinuedData[i] ? ' disabled' : '';
+      var lockedClass = isLocked || discontinuedData[i] ? ' locked' : '';
       html += '<td><input class="qty-input' + lockedClass + '" type="number" min="0" step="0.5" value="' + escHtml(String(locVal)) + '" data-row="' + i + '" data-loc="' + locs[l] + '" onchange="setLocValue(this)"' + disabledAttr + '></td>';
     }
     // Total
     var total = calcTotal(i);
     var totalDisplay = total > 0 ? total : '';
     html += '<td class="total-cell">' + totalDisplay + '</td>';
+    // Discontinued checkbox
+    var discChecked = discontinuedData[i] ? ' checked' : '';
+    html += '<td style="text-align:center"><input type="checkbox" class="disc-check"' + discChecked + ' data-row="' + i + '" onchange="toggleDiscontinued(this)"></td>';
     html += '</tr>';
   }
 
@@ -504,6 +515,12 @@ function setLocValue(el){
   var tr = el.closest('tr');
   var totalCell = tr.querySelector('.total-cell');
   if(totalCell) totalCell.textContent = total > 0 ? total : '';
+}
+
+function toggleDiscontinued(el){
+  var r = parseInt(el.getAttribute('data-row'));
+  discontinuedData[r] = el.checked;
+  renderTable();
 }
 
 function toggleLock(locName){
@@ -579,6 +596,7 @@ function saveStocktake(){
     headers: headers,
     rowStrings: rowStrings,
     locationData: locationData,
+    discontinuedData: discontinuedData,
     lockedCols: lockedCols,
     createdBy: author,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -603,6 +621,7 @@ function updateStocktake(){
   var payload = {
     rowStrings: rowStrings,
     locationData: locationData,
+    discontinuedData: discontinuedData,
     lockedCols: lockedCols,
     date: getSelectedDate(),
     updatedBy: author,
@@ -654,6 +673,12 @@ function loadStocktake(){
         locationData = data.locationData;
       } else {
         initLocationData();
+      }
+      // Load discontinued data
+      if(data.discontinuedData && data.discontinuedData.length === rows.length){
+        discontinuedData = data.discontinuedData;
+      } else {
+        discontinuedData = rows.map(function(){ return false; });
       }
       // Load lock states
       lockedCols = data.lockedCols || {};
@@ -712,15 +737,15 @@ function buildTotalTable(){
   html += 'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#5c1a1a;color:#fff;padding:8px;font-size:10px;text-transform:uppercase;text-align:left}';
   html += 'td{padding:6px 8px;font-size:11px;border-bottom:1px solid #ddd}.total{font-weight:700;text-align:center}';
   html += '.cat-row td{background:#f5e8e8;font-weight:700;color:#5c1a1a;font-size:11px;padding:8px}</style></head><body>';
-  html += '<h2>Petrus Stocktake — ' + currentTab.toUpperCase() + '</h2>';
-  html += '<p style="font-size:11px;color:#888">' + getSelectedMonth() + ' — ' + getSelectedDate() + '</p>';
+  html += '<h2>Petrus Stocktake \u2014 ' + currentTab.toUpperCase() + '</h2>';
+  html += '<p style="font-size:11px;color:#888">' + getSelectedMonth() + ' \u2014 ' + getSelectedDate() + '</p>';
   html += '<table><thead><tr><th>Brand & Description</th><th>Pack Size</th><th>Total</th></tr></thead><tbody>';
 
   var lastCat = '';
   for(var i=0; i<rows.length; i++){
+    if(discontinuedData[i]) continue;
     var row = rows[i];
     var total = calcTotal(i);
-    if(total === 0 && !searchTerm) continue; // Only show items with counts
 
     if(cat_idx > -1){
       var thisCat = (row[cat_idx]||'').trim();
@@ -731,11 +756,11 @@ function buildTotalTable(){
     }
     var name = name_idx > -1 ? (row[name_idx]||'').trim() : '';
     var pack = '';
-    // Find pack size column (index 6 typically)
     for(var c=0; c<headers.length; c++){
       if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
     }
-    html += '<tr><td>' + escHtml(name) + '</td><td>' + escHtml(pack) + '</td><td class="total">' + (total > 0 ? total : '') + '</td></tr>';
+    var totalStr = total > 0 ? String(total) : '-';
+    html += '<tr><td>' + escHtml(name) + '</td><td>' + escHtml(pack) + '</td><td class="total">' + totalStr + '</td></tr>';
   }
   html += '</tbody></table></body></html>';
   return html;
@@ -762,13 +787,13 @@ function downloadPDF(){
   doc.setTextColor(100);
   doc.text(getSelectedMonth() + ' — ' + getSelectedDate(), 14, 27);
 
-  // Build table data (only items with total > 0)
+  // Build table data — exclude discontinued, show "-" for empty
   var tableRows = [];
   var lastCat = '';
   for(var i=0; i<rows.length; i++){
+    if(discontinuedData[i]) continue;
     var row = rows[i];
     var total = calcTotal(i);
-    if(total === 0) continue;
 
     if(cat_idx > -1){
       var thisCat = (row[cat_idx]||'').trim();
@@ -782,7 +807,8 @@ function downloadPDF(){
     for(var c=0; c<headers.length; c++){
       if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
     }
-    tableRows.push([name, pack, String(total)]);
+    var totalStr = total > 0 ? String(total) : '-';
+    tableRows.push([name, pack, totalStr]);
   }
 
   doc.autoTable({
