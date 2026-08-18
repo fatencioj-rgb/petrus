@@ -198,6 +198,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="auth.js"></script>
 <script>
 // ── Configuration per section ──
@@ -748,12 +750,53 @@ function printTotal(){
 }
 
 function downloadPDF(){
-  var content = buildTotalTable();
-  var win = window.open('','_blank');
-  win.document.write(content);
-  win.document.close();
-  win.onload = function(){ win.print(); };
-  showStatus('Use "Save as PDF" in the print dialog');
+  if(rows.length === 0){ showStatus('Nothing to export'); return; }
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF();
+
+  // Title
+  doc.setFontSize(16);
+  doc.setTextColor(92, 26, 26);
+  doc.text('Petrus Stocktake — ' + currentTab.toUpperCase(), 14, 20);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(getSelectedMonth() + ' — ' + getSelectedDate(), 14, 27);
+
+  // Build table data (only items with total > 0)
+  var tableRows = [];
+  var lastCat = '';
+  for(var i=0; i<rows.length; i++){
+    var row = rows[i];
+    var total = calcTotal(i);
+    if(total === 0) continue;
+
+    if(cat_idx > -1){
+      var thisCat = (row[cat_idx]||'').trim();
+      if(thisCat && thisCat !== lastCat){
+        tableRows.push([{content: thisCat, colSpan: 3, styles: {fillColor: [245,232,232], textColor: [92,26,26], fontStyle: 'bold'}}]);
+        lastCat = thisCat;
+      }
+    }
+    var name = name_idx > -1 ? (row[name_idx]||'').trim() : '';
+    var pack = '';
+    for(var c=0; c<headers.length; c++){
+      if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
+    }
+    tableRows.push([name, pack, String(total)]);
+  }
+
+  doc.autoTable({
+    startY: 32,
+    head: [['Brand & Description', 'Pack Size', 'Total']],
+    body: tableRows,
+    headStyles: {fillColor: [92, 26, 26], textColor: [255,255,255], fontSize: 8},
+    bodyStyles: {fontSize: 8},
+    columnStyles: {2: {halign: 'center', fontStyle: 'bold'}},
+    margin: {left: 14, right: 14}
+  });
+
+  doc.save('Petrus-Stocktake-' + currentTab + '-' + getSelectedMonth() + '.pdf');
+  showStatus('PDF downloaded');
 }
 
 function deleteStocktake(){
