@@ -780,6 +780,26 @@ function printTotal(){
   win.onload = function(){ win.print(); };
 }
 
+// Sanitize text for jsPDF (replace accented chars with ASCII equivalents)
+function sanitizeForPDF(str){
+  if(!str) return '';
+  return str
+    .replace(/[\u00E0\u00E1\u00E2\u00E3\u00E4\u00E5]/g, 'a')
+    .replace(/[\u00C0\u00C1\u00C2\u00C3\u00C4\u00C5]/g, 'A')
+    .replace(/[\u00E8\u00E9\u00EA\u00EB]/g, 'e')
+    .replace(/[\u00C8\u00C9\u00CA\u00CB]/g, 'E')
+    .replace(/[\u00EC\u00ED\u00EE\u00EF]/g, 'i')
+    .replace(/[\u00CC\u00CD\u00CE\u00CF]/g, 'I')
+    .replace(/[\u00F2\u00F3\u00F4\u00F5\u00F6]/g, 'o')
+    .replace(/[\u00D2\u00D3\u00D4\u00D5\u00D6]/g, 'O')
+    .replace(/[\u00F9\u00FA\u00FB\u00FC]/g, 'u')
+    .replace(/[\u00D9\u00DA\u00DB\u00DC]/g, 'U')
+    .replace(/\u00F1/g, 'n').replace(/\u00D1/g, 'N')
+    .replace(/\u00E7/g, 'c').replace(/\u00C7/g, 'C')
+    .replace(/\u00DF/g, 'ss')
+    .replace(/[^\x20-\x7E]/g, '');
+}
+
 function downloadPDF(){
   if(rows.length === 0){ showStatus('Nothing to export'); return; }
   var { jsPDF } = window.jspdf;
@@ -788,10 +808,10 @@ function downloadPDF(){
   // Title
   doc.setFontSize(16);
   doc.setTextColor(92, 26, 26);
-  doc.text('Petrus Stocktake — ' + currentTab.toUpperCase(), 14, 20);
+  doc.text('Petrus Stocktake - ' + currentTab.toUpperCase(), 14, 20);
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(getSelectedMonth() + ' — ' + getSelectedDate(), 14, 27);
+  doc.text(getSelectedMonth() + ' - ' + getSelectedDate(), 14, 27);
 
   // Build table data — exclude discontinued, show "-" for empty
   var tableRows = [];
@@ -804,11 +824,11 @@ function downloadPDF(){
     if(cat_idx > -1){
       var thisCat = (row[cat_idx]||'').trim();
       if(thisCat && thisCat !== lastCat){
-        tableRows.push([{content: thisCat, colSpan: 3, styles: {fillColor: [245,232,232], textColor: [92,26,26], fontStyle: 'bold'}}]);
+        tableRows.push([{content: sanitizeForPDF(thisCat), colSpan: 3, styles: {fillColor: [245,232,232], textColor: [92,26,26], fontStyle: 'bold'}}]);
         lastCat = thisCat;
       }
     }
-    var name = name_idx > -1 ? (row[name_idx]||'').trim() : '';
+    var name = name_idx > -1 ? sanitizeForPDF((row[name_idx]||'').trim()) : '';
     var pack = '';
     for(var c=0; c<headers.length; c++){
       if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
