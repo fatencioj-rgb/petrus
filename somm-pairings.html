@@ -195,9 +195,9 @@ const MENU_CONFIG = {
   discovery: { label:'DISCOVERY MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:['regular','pescatarian','vegetarian','noseafood'] },
   lunch:     { label:'LUNCH MENU', pairings:['matching','connoisseur','indulgence','3wines'], diets:[] },
   alc:       { label:'À LA CARTE', pairings:['3wines'], diets:['regular','pescatarian','vegetarian'] },
-  kt:        { label:'KITCHEN TABLE', pairings:['kt-matching'], diets:['regular','pescatarian','vegetarian','noseafood'] }
+  kt:        { label:'KITCHEN TABLE', pairings:['kt-matching','kt-connoisseur','kt-indulgence','kt-bespoke'], diets:['regular','pescatarian','vegetarian','noseafood'] }
 };
-const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'KT Matching Wines'};
+const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'Matching Wines','kt-connoisseur':'Connoisseur Wines','kt-indulgence':'Indulgence Wines','kt-bespoke':'Bespoke'};
 const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.7 cm)'};
 
 let currentMenu = null;
@@ -447,6 +447,24 @@ const TEMPLATES = {
     { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'By Farr', wine:'"Sangreal", Pinot Noir', region:'Geelong, Victoria, Australia', vintage:'2022' },
     { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
     { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Justino's", wine:'Fine Rich Reserve, 5 Years Old', region:'Madeira, Portugal', vintage:'NV' }
+  ],
+  // ─── KITCHEN TABLE CONNOISSEUR ─────────────────────────────────
+  'kt_kt-connoisseur': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Weingut Wittmann', wine:'Westhofener, Ersten Lagen, Riesling Trocken', region:'Rheinhessen, Germany', vintage:'2024' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Coudoulet de Beaucastel', wine:'Château de Beaucastel', region:'Rhône Valley, France', vintage:'2022' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Kongsgaard', wine:'Chardonnay', region:'Napa Valley, USA', vintage:'2023' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Ferrando', wine:'Carema, Etichetta Nera', region:'Piedmont, Italy', vintage:'2018' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:'Hugel', wine:'Sélection de Grains Nobles, Gewürztraminer', region:'Alsace, France', vintage:'1999' }
+  ],
+  // ─── KITCHEN TABLE INDULGENCE ──────────────────────────────────
+  'kt_kt-indulgence': [
+    { dish:'Sladesdown Chicken', desc:'Sucrine, ragout, parfait', producer:'Domaine Zind-Humbrecht', wine:'Pinot Gris Grand Cru "Rangen de Thann"', region:'Alsace, France', vintage:'2005' },
+    { dish:'Isle of Skye Scallop', desc:'Coastal herbs, lemon, olive oil sabayon', producer:'Domaine de Montille', wine:'Puligny-Montrachet, "Les Folatières"', region:'Burgundy, France', vintage:'2022' },
+    { dish:'Devon Monkfish', desc:'Celeriac, Iberico chorizo, dulse', producer:'Gaja', wine:'"Gaia & Rey", Langhe', region:'Piedmont, Italy', vintage:'2016' },
+    { dish:'Herdwick Rack of Lamb', desc:'Young peas, mint, Roves des Garrigues', producer:'Sine Qua Non', wine:'"Eleven Confessions"', region:'Sta. Rita Hills, California, USA', vintage:'2018', producer2:"Château Pétrus", wine2:'', region2:'Pomerol, Bordeaux, France', vintage2:'2008' },
+    { dish:'Sorbet', desc:'Basil, strawberry', producer:'', wine:'', region:'', vintage:'' },
+    { dish:'Plaisir sucré', desc:'Chocolate crémeux, hazelnut, milk', producer:"Château d'Yquem", wine:'1er Cru Classé Supérieur', region:'Bordeaux, France', vintage:'2008' }
   ]
 };
 </script>
@@ -692,10 +710,12 @@ function renderEditor() {
 
   const isALC = currentMenu.type === 'alc';
   const isKT = currentMenu.type === 'kt';
-  const isIndulgence = currentMenu.variant === 'indulgence';
-  const dlProd = (isALC || isKT) ? ' list="dl-producers"' : '';
-  const dlWine = (isALC || isKT) ? ' list="dl-wines"' : '';
-  const dlRegion = (isALC || isKT) ? ' list="dl-regions"' : '';
+  const isBespoke = currentMenu.variant === 'kt-bespoke';
+  const useDropdowns = isALC || isBespoke;
+  const isIndulgence = currentMenu.variant === 'indulgence' || currentMenu.variant === 'kt-indulgence';
+  const dlProd = useDropdowns ? ' list="dl-producers"' : '';
+  const dlWine = useDropdowns ? ' list="dl-wines"' : '';
+  const dlRegion = useDropdowns ? ' list="dl-regions"' : '';
 
   // ALC diet is set from dropdown, no need for buttons in editor
   if (isALC) {
@@ -705,7 +725,7 @@ function renderEditor() {
   (currentMenu.courses || []).forEach((c, i) => {
     // Skip Sorbet from editor (never has pairing)
     const isSorbet = (c.dish || '').toLowerCase() === 'sorbet';
-    if (isSorbet && !isALC && !isKT) {
+    if (isSorbet && !useDropdowns) {
       container.innerHTML += `<div class="course-editor" style="opacity:0.5"><div class="course-dish-label">${esc(c.dish)}</div><div class="course-desc-label">${esc(c.desc)}</div><div style="font-size:10px;color:#aaa;font-style:italic">No pairing</div></div>`;
       return;
     }
@@ -724,12 +744,12 @@ function renderEditor() {
     }
     const addWine2Btn = (isIndulgence && !showWine2) ? `<span style="cursor:pointer;color:#ccc;font-size:14px;margin-right:8px" onclick="addWine2(${i})" title="Add second wine">+</span>` : '';
 
-    // ALC or KT: use dropdowns for dish and wine selection
+    // ALC or KT Bespoke: use dropdowns for dish and wine selection
     let dishHtml, wineHtml;
-    if (isALC || isKT) {
-      // Dish dropdown grouped by type — for KT show ALL diets combined
+    if (useDropdowns) {
+      // Dish dropdown grouped by type — for Bespoke show ALL diets combined
       let dishLib;
-      if (isKT) {
+      if (isBespoke) {
         // Merge all diets into one grouped library
         dishLib = {};
         Object.values(DISH_LIBRARY).forEach(dietObj => {
@@ -805,7 +825,7 @@ function renderEditor() {
     }
   });
 
-  if (isALC || isKT) { container.insertAdjacentHTML('beforeend', getDatalistsHTML()); }
+  if (useDropdowns) { container.insertAdjacentHTML('beforeend', getDatalistsHTML()); }
 
   // Sommelier selector
   const sommEl = document.getElementById('sommOptions');
