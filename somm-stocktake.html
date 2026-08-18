@@ -266,7 +266,7 @@ auth.onAuthStateChanged(function(user){
 function initControls(){
   var sel = document.getElementById('monthSelect');
   var now = new Date();
-  for(var i=0; i<6; i++){
+  for(var i=0; i<2; i++){
     var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     var val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
     var label = d.toLocaleDateString('en-GB',{month:'long', year:'numeric'});
