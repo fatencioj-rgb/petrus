@@ -252,15 +252,24 @@ function isHidden(colIdx){
   return hiddenCols.indexOf(colIdx) > -1;
 }
 
-// ── Auth ──
+// ── Auth & Roles ──
+var READONLY_USERS = ['milena@petrus.local'];
+var isReadOnly = false;
+
 auth.onAuthStateChanged(function(user){
   if(!user){window.location.href='index.html';return;}
   currentUser = user;
+  isReadOnly = READONLY_USERS.indexOf(user.email) > -1;
   logAccess(user,'page_view','somm-stocktake.html');
   // Set active tab UI on load
   document.getElementById('tabWine').classList.toggle('active', currentTab === 'wine');
   document.getElementById('tabBar').classList.toggle('active', currentTab === 'bar');
   initControls();
+  if(isReadOnly){
+    // Hide editing controls for read-only users
+    document.querySelector('.controls').style.display = 'none';
+    document.getElementById('searchBar').style.display = 'none';
+  }
   loadStocktake();
 });
 
@@ -413,10 +422,49 @@ function filterTable(){
 function renderTable(){
   var area = document.getElementById('tableArea');
   if(rows.length === 0){
-    area.innerHTML = '<div class="empty-state"><h3>No items yet</h3><p>Upload your Procure Wizard CSV to get started.</p></div>';
+    var emptyMsg = isReadOnly ? 'No stocktake data available yet.' : 'Upload your Procure Wizard CSV to get started.';
+    area.innerHTML = '<div class="empty-state"><h3>No items yet</h3><p>' + emptyMsg + '</p></div>';
     document.getElementById('actionsArea').style.display = 'none';
     document.getElementById('infoBar').style.display = 'none';
     document.getElementById('searchBar').style.display = 'none';
+    return;
+  }
+
+  // Read-only view for Milena: show only summary table with totals
+  if(isReadOnly){
+    document.getElementById('infoBar').style.display = 'flex';
+    document.getElementById('infoCount').textContent = rows.length + ' products';
+    document.getElementById('infoMeta').textContent = currentTab.toUpperCase();
+    document.getElementById('searchBar').style.display = 'none';
+
+    var html = '<div class="stock-table-wrap"><table class="stock-table"><thead><tr>';
+    html += '<th>Brand & Description</th><th>Pack Size</th><th class="total-header">Total</th>';
+    html += '</tr></thead><tbody>';
+    var lastCat = '';
+    for(var i=0; i<rows.length; i++){
+      if(discontinuedData[i]) continue;
+      var row = rows[i];
+      var total = calcTotal(i);
+      if(cat_idx > -1){
+        var thisCat = (row[cat_idx]||'').trim();
+        if(thisCat && thisCat !== lastCat){
+          html += '<tr class="cat-row"><td colspan="3">' + escHtml(thisCat) + '</td></tr>';
+          lastCat = thisCat;
+        }
+      }
+      var name = name_idx > -1 ? (row[name_idx]||'').trim() : '';
+      var pack = '';
+      for(var c=0; c<headers.length; c++){
+        if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
+      }
+      var totalStr = total > 0 ? String(total) : '-';
+      html += '<tr><td class="name-cell">' + escHtml(name) + '</td><td class="num-cell">' + escHtml(pack) + '</td><td class="total-cell">' + totalStr + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+    area.innerHTML = html;
+    // Show only PDF button for read-only
+    document.getElementById('actionsArea').style.display = 'flex';
+    document.getElementById('actionsArea').innerHTML = '<button class="action-btn btn-save" onclick="downloadPDF()">PDF</button>';
     return;
   }
 
