@@ -437,6 +437,8 @@ function renderTable(){
     html += '<th>' + escHtml(headers[h].trim()) + '</th>';
     visibleCount++;
   }
+  // Discontinued column after product info
+  html += '<th>X</th>';
   // Location headers with lock buttons
   for(var l=0; l<locs.length; l++){
     var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
@@ -446,7 +448,6 @@ function renderTable(){
     html += '<th><div class="loc-header-name">' + escHtml(locs[l]) + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
   }
   html += '<th class="total-header">Total</th>';
-  html += '<th>X</th>';
   var totalCols = visibleCount + locs.length + 2;
   html += '</tr></thead><tbody>';
 
@@ -479,6 +480,9 @@ function renderTable(){
         html += '<td class="num-cell">' + escHtml(val) + '</td>';
       }
     }
+    // Discontinued checkbox
+    var discChecked = discontinuedData[i] ? ' checked' : '';
+    html += '<td style="text-align:center"><input type="checkbox" class="disc-check"' + discChecked + ' data-row="' + i + '" onchange="toggleDiscontinued(this)"></td>';
     // Location inputs
     for(var l=0; l<locs.length; l++){
       var locVal = locationData[i] ? (locationData[i][locs[l]] || '') : '';
@@ -491,9 +495,6 @@ function renderTable(){
     var total = calcTotal(i);
     var totalDisplay = total > 0 ? total : '';
     html += '<td class="total-cell">' + totalDisplay + '</td>';
-    // Discontinued checkbox
-    var discChecked = discontinuedData[i] ? ' checked' : '';
-    html += '<td style="text-align:center"><input type="checkbox" class="disc-check"' + discChecked + ' data-row="' + i + '" onchange="toggleDiscontinued(this)"></td>';
     html += '</tr>';
   }
 
