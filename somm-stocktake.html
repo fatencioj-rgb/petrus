@@ -187,7 +187,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
     <button class="action-btn btn-save" onclick="saveStocktake()">Save</button>
     <button class="action-btn btn-update" onclick="updateStocktake()">Update</button>
     <button class="action-btn btn-export" onclick="exportCSV()">Export CSV</button>
-    <button class="action-btn btn-print" onclick="window.print()">Print / PDF</button>
+    <button class="action-btn btn-print" onclick="printTotal()">Print</button>
+    <button class="action-btn btn-print" onclick="downloadPDF()">PDF</button>
     <button class="action-btn btn-delete" onclick="deleteStocktake()">Delete</button>
   </div>
 </div>
@@ -201,8 +202,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 <script>
 // ── Configuration per section ──
 var SECTION_LOCATIONS = {
-  wine: ['Cellar','Downstairs','Premium Fridge','Bar Fridge','Wine Fridge'],
-  bar: ['Shelf under till','Shelfs Bar','Softs Fridge','Wine Fridge','Cellar']
+  wine: ['Downstairs Cellar','Main Cellar','Bar Wine Fridge','Premium Wine Fridge'],
+  bar: ['Downstairs Cellar','Bar Shelves','Bar Under Till','Wine Fridge','Softs Fridge']
 };
 
 // ── State ──
@@ -700,6 +701,59 @@ function updateActionButtons(){
       updateBtn.style.display = 'none';
     }
   }
+}
+
+// ── Print / PDF (total only — no location detail) ──
+function buildTotalTable(){
+  var html = '<html><head><meta charset="UTF-8">';
+  html += '<style>body{font-family:Inter,sans-serif;padding:20px}h2{font-family:"Cormorant Garamond",serif;color:#5c1a1a;margin-bottom:4px}';
+  html += 'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#5c1a1a;color:#fff;padding:8px;font-size:10px;text-transform:uppercase;text-align:left}';
+  html += 'td{padding:6px 8px;font-size:11px;border-bottom:1px solid #ddd}.total{font-weight:700;text-align:center}';
+  html += '.cat-row td{background:#f5e8e8;font-weight:700;color:#5c1a1a;font-size:11px;padding:8px}</style></head><body>';
+  html += '<h2>Petrus Stocktake — ' + currentTab.toUpperCase() + '</h2>';
+  html += '<p style="font-size:11px;color:#888">' + getSelectedMonth() + ' — ' + getSelectedDate() + '</p>';
+  html += '<table><thead><tr><th>Brand & Description</th><th>Pack Size</th><th>Total</th></tr></thead><tbody>';
+
+  var lastCat = '';
+  for(var i=0; i<rows.length; i++){
+    var row = rows[i];
+    var total = calcTotal(i);
+    if(total === 0 && !searchTerm) continue; // Only show items with counts
+
+    if(cat_idx > -1){
+      var thisCat = (row[cat_idx]||'').trim();
+      if(thisCat && thisCat !== lastCat){
+        html += '<tr class="cat-row"><td colspan="3">' + escHtml(thisCat) + '</td></tr>';
+        lastCat = thisCat;
+      }
+    }
+    var name = name_idx > -1 ? (row[name_idx]||'').trim() : '';
+    var pack = '';
+    // Find pack size column (index 6 typically)
+    for(var c=0; c<headers.length; c++){
+      if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
+    }
+    html += '<tr><td>' + escHtml(name) + '</td><td>' + escHtml(pack) + '</td><td class="total">' + (total > 0 ? total : '') + '</td></tr>';
+  }
+  html += '</tbody></table></body></html>';
+  return html;
+}
+
+function printTotal(){
+  var content = buildTotalTable();
+  var win = window.open('','_blank');
+  win.document.write(content);
+  win.document.close();
+  win.onload = function(){ win.print(); };
+}
+
+function downloadPDF(){
+  var content = buildTotalTable();
+  var win = window.open('','_blank');
+  win.document.write(content);
+  win.document.close();
+  win.onload = function(){ win.print(); };
+  showStatus('Use "Save as PDF" in the print dialog');
 }
 
 function deleteStocktake(){
