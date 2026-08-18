@@ -193,6 +193,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
     <button class="action-btn btn-export" onclick="exportCSV()">Export CSV</button>
     <button class="action-btn btn-print" onclick="printTotal()">Print</button>
     <button class="action-btn btn-print" onclick="downloadPDF()">PDF</button>
+    <button class="action-btn btn-print" onclick="downloadDiscontinuedPDF()">PDF Discontinued</button>
     <button class="action-btn btn-delete" onclick="deleteStocktake()">Delete</button>
   </div>
 </div>
@@ -849,6 +850,45 @@ function downloadPDF(){
 
   doc.save('Petrus-Stocktake-' + currentTab + '-' + getSelectedMonth() + '.pdf');
   showStatus('PDF downloaded');
+}
+
+function downloadDiscontinuedPDF(){
+  if(rows.length === 0){ showStatus('Nothing to export'); return; }
+  var discItems = [];
+  for(var i=0; i<rows.length; i++){
+    if(!discontinuedData[i]) continue;
+    var row = rows[i];
+    var name = name_idx > -1 ? sanitizeForPDF((row[name_idx]||'').trim()) : '';
+    var cat = cat_idx > -1 ? sanitizeForPDF((row[cat_idx]||'').trim()) : '';
+    var pack = '';
+    for(var c=0; c<headers.length; c++){
+      if(headers[c].trim().toLowerCase() === 'pack size'){ pack = (row[c]||'').trim(); break; }
+    }
+    discItems.push([name, cat, pack]);
+  }
+  if(discItems.length === 0){ showStatus('No discontinued items marked'); return; }
+
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.setTextColor(92, 26, 26);
+  doc.text('Discontinued Items - ' + currentTab.toUpperCase(), 14, 20);
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(getSelectedMonth() + ' - ' + discItems.length + ' items to remove', 14, 27);
+
+  doc.autoTable({
+    startY: 32,
+    head: [['Brand & Description', 'Category', 'Pack Size']],
+    body: discItems,
+    headStyles: {fillColor: [192, 57, 43], textColor: [255,255,255], fontSize: 8},
+    bodyStyles: {fontSize: 8},
+    margin: {left: 14, right: 14}
+  });
+
+  doc.save('Petrus-Discontinued-' + currentTab + '-' + getSelectedMonth() + '.pdf');
+  showStatus('Discontinued PDF downloaded');
 }
 
 function deleteStocktake(){
