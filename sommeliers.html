@@ -91,6 +91,11 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       <span style="cursor:pointer;padding:4px 10px;background:var(--green);color:#fff;border-radius:4px;font-size:9px" onclick="addQuickTask()">+</span>
     </div>
   </div>
+  <!-- 86s Box -->
+  <div class="today-feed" id="eightySixBox" style="margin-bottom:30px">
+    <div class="feed-title" style="font-size:16px">86's</div>
+    <div id="eightySixContent"><div class="feed-empty">Loading...</div></div>
+  </div>
   <div class="profiles">
     <a href="somm-stock.html" class="profile-card">
       <h3>Stock</h3>
@@ -157,6 +162,7 @@ auth.onAuthStateChanged((user) => {
     _isAdmin=user.email&&user.email.startsWith('fiorella');
     loadFeed();
     loadCarousel();
+    load86s();
   }
 });
 
@@ -468,6 +474,32 @@ function loadHolidayBtn(){
   }).catch(function(e){console.error(e);});
 }
 loadHolidayBtn();
+
+function load86s(){
+  db.collection('somm_stock').get().then(function(snap){
+    var items=[];
+    snap.forEach(function(doc){
+      var d=doc.data();
+      if(d.tag==='86'&&!d.restocked)items.push(d);
+    });
+    var el=document.getElementById('eightySixContent');
+    if(items.length===0){el.innerHTML='<div class="feed-empty">No 86s currently</div>';return;}
+    var h='';
+    for(var i=0;i<items.length;i++){
+      var it=items[i];
+      var fullName=it.name;
+      if(it.producer)fullName+=' '+it.producer;
+      if(it.vintage)fullName+=' '+it.vintage;
+      h+='<div class="feed-item">';
+      h+='<span class="f-tag t86">86</span>';
+      h+='<span class="f-text"><span class="f-highlight">'+fullName+'</span>';
+      if(it.location)h+=' <span style="font-size:8px;padding:1px 6px;border-radius:4px;background:#f0f0f0;color:#888">'+it.location+'</span>';
+      h+=' <span style="font-size:9px;color:#888">'+it.section+' · '+it.date+'</span>';
+      h+='</span></div>';
+    }
+    el.innerHTML=h;
+  });
+}
 </script>
 </body>
 </html>
