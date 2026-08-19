@@ -122,7 +122,7 @@ function renderPending(){
     h+='<td><span class="s-tag '+tagCls+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
     h+='<td>'+(it.qty?(it.qty+' '+(it.unit||'')):'—')+'</td>';
     h+='<td>'+(it.author||'')+'</td>';
-    h+='<td><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:9px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;width:100px"><button class="restock-btn" onclick="restockItem(\''+id+'\')">✓ Back in stock</button></td>';
+    h+='<td><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:9px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;width:100px"><button class="restock-btn" onclick="restockItem(\''+id+'\')">✓ Back in stock</button> <button class="restock-btn" onclick="discontinueItem(\''+id+'\')" style="color:#721c24;border-color:#f8d7da">✗ No longer available</button></td>';
     h+='<td><button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button></td>';
     h+='</tr>';
   }
@@ -247,6 +247,24 @@ function addItem(){
     item.notes=(document.getElementById('stk_note')||{}).value||'';
   }
   if(!item.name){msg('Name required');return;}
+  // Validation: Wine 86 must have "Where" selected
+  if(TAB==='wine'&&selTag==='86'){
+    var loc=(document.getElementById('stk_location')||{}).value;
+    if(!loc){msg('Select where (BTG, BTB, etc.)');return;}
+  }
+  // Validation: Wine low-stock with "Remove=Yes" must have assign
+  if(TAB==='wine'&&selTag==='low-stock'&&lowRemove){
+    var lowAssignVal=(document.getElementById('stk_low_assign')||{}).value;
+    if(!lowAssignVal){msg('Select who to assign the removal to');return;}
+  }
+  // Validation: Wine 86 with "Remove from list" checked must have assign
+  if(TAB==='wine'&&selTag==='86'){
+    var removeChk2=document.getElementById('stk_remove_list');
+    if(removeChk2&&removeChk2.checked){
+      var assignVal2=(document.getElementById('stk_assign')||{}).value;
+      if(!assignVal2){msg('Select who to assign the removal to');return;}
+    }
+  }
   if(selTag==='low-stock'){
     item.qty=(document.getElementById('stk_qty')||{}).value||'';
     item.unit=(document.getElementById('stk_unit')||{}).value||'';
@@ -288,6 +306,15 @@ function restockItem(id){
     restockedDate:restockDate,
     restockedBy:U.displayName||U.email.split('@')[0].replace(/\./g,' ')
   }).then(function(){loadStock();msg('Back in stock ✓');});
+}
+
+function discontinueItem(id){
+  db.collection('somm_stock').doc(id).update({
+    restocked:true,
+    discontinued:true,
+    restockedDate:new Date().toISOString().slice(0,10),
+    restockedBy:U.displayName||U.email.split('@')[0].replace(/\./g,' ')
+  }).then(function(){loadStock();msg('Marked as no longer available');});
 }
 
 function removeItem(id){
