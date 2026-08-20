@@ -80,7 +80,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
     </div>
     <div id="feedContent"><div class="feed-empty">Loading...</div></div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f0ebe5">
-      <input type="text" id="quickTask" placeholder="Add a task..." style="flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);outline:none" onkeydown="if(event.key==='Enter')addQuickTask()">
+      <textarea id="quickTask" placeholder="Add a task..." style="flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);outline:none;resize:none;min-height:28px;max-height:80px;line-height:1.4" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
       <select id="quickAssign" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);min-width:90px">
         <option value="">Assign...</option>
         <option value="Fiorella">Fiorella</option>
