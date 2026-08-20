@@ -70,6 +70,13 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .btn-add{padding:6px 18px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 .btn-add:hover{background:var(--grn2)}
 .em{text-align:center;padding:14px;color:#ccc;font-size:11px}
+/* Autocomplete */
+.ac-wrap{position:relative;flex:1;min-width:0}
+.ac-wrap input{width:100%}
+.ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ddd;border-top:none;border-radius:0 0 4px 4px;max-height:150px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.ac-list.show{display:block}
+.ac-item{padding:5px 8px;font-size:10px;cursor:pointer}
+.ac-item:hover{background:var(--pink);color:var(--grn)}
 .sm{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
 .sm.show{opacity:1}
 </style>
@@ -98,6 +105,15 @@ var TAB='wine';
 var TABS=['wine','bar','supplies','kitchen'];
 var KITCHEN_ITEMS=['Ruby Port Cockburn','Madeira Blandys','Bacardi Rum 8y','Prosecco','Kirsh'];
 var selTag='';
+var productCatalog={wines:[],beverages:[]};
+
+// Load product catalog for autocomplete
+db.collection('product_catalog').doc('wines').get().then(function(doc){
+  if(doc.exists)productCatalog.wines=doc.data().names||[];
+}).catch(function(){});
+db.collection('product_catalog').doc('beverages').get().then(function(doc){
+  if(doc.exists)productCatalog.beverages=doc.data().names||[];
+}).catch(function(){});
 
 auth.onAuthStateChanged(function(u){
   if(!u){window.location.href='index.html';return;}
@@ -284,11 +300,11 @@ function renderAdd(){
   h+='<div class="fields">';
   h+='<input type="date" id="stk_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)" style="width:110px;flex:0 0 110px">';
   if(TAB==='wine'){
-    h+='<input type="text" id="stk_name" placeholder="Product">';
+    h+='<div class="ac-wrap"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'wines\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
     h+='<input type="text" id="stk_vintage" placeholder="Vintage" style="flex:0 0 65px">';
   }else if(TAB==='bar'){
     h+='<input type="text" id="stk_cat" placeholder="Category">';
-    h+='<input type="text" id="stk_name" placeholder="Product">';
+    h+='<div class="ac-wrap"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'beverages\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
   }else if(TAB==='supplies'){
     h+='<input type="text" id="stk_name" placeholder="Product">';
   }else if(TAB==='kitchen'){
@@ -478,6 +494,29 @@ function removeItem(id){
 
 function msg(t){var el=document.getElementById('sm');el.textContent=t;el.className='sm show';setTimeout(function(){el.className='sm';},1800);}
 function checkDay(el){var d=new Date(el.value+'T12:00:00').getDay();if(d===0||d===1){msg('Closed on Sun/Mon');el.value=new Date().toISOString().slice(0,10);}}
-</script>
+
+function acSearch(input,catalog){
+  var val=input.value.toLowerCase().trim();
+  var listEl=document.getElementById('ac_'+input.id);
+  if(!listEl)return;
+  if(val.length<2){listEl.classList.remove('show');return;}
+  var source=catalog==='wines'?productCatalog.wines:productCatalog.beverages;
+  var matches=source.filter(function(n){return n.toLowerCase().indexOf(val)>-1;}).slice(0,10);
+  if(matches.length===0){listEl.classList.remove('show');return;}
+  var h='';
+  matches.forEach(function(m){
+    h+='<div class="ac-item" onmousedown="acPick(\''+input.id+'\',this)">'+m+'</div>';
+  });
+  listEl.innerHTML=h;
+  listEl.classList.add('show');
+  input.addEventListener('blur',function(){setTimeout(function(){listEl.classList.remove('show');},150);},{once:true});
+}
+
+function acPick(inputId,el){
+  var input=document.getElementById(inputId);
+  if(input)input.value=el.textContent;
+  var listEl=document.getElementById('ac_'+inputId);
+  if(listEl)listEl.classList.remove('show');
+}</script>
 </body>
 </html>

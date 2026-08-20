@@ -107,6 +107,20 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
   </div>
 </div>
 <div class="actions">
+  <h3>Product Database</h3>
+  <div class="action-row">
+    <label>Wines CSV</label>
+    <input type="file" id="winesCsv" accept=".csv" style="font-size:11px">
+    <button class="btn btn-export" onclick="uploadCatalog('wines')">Upload Wines</button>
+  </div>
+  <div class="action-row">
+    <label>Beverages CSV</label>
+    <input type="file" id="bevCsv" accept=".csv" style="font-size:11px">
+    <button class="btn btn-export" onclick="uploadCatalog('beverages')">Upload Beverages</button>
+  </div>
+  <div id="catalogInfo" style="font-size:10px;color:#888;padding:8px 0"></div>
+</div>
+<div class="actions">
   <h3>Holiday Setup</h3>
   <div id="activeHolAdmin"></div>
   <div class="action-row">
@@ -194,6 +208,7 @@ auth.onAuthStateChanged(function(u){
   loadActivity();
   loadMessages();
   loadHolidayAdmin();
+  loadCatalogInfo();
   // Set default dates
   var today=new Date().toISOString().slice(0,10);
   var twoMonths=new Date();twoMonths.setMonth(twoMonths.getMonth()-2);
@@ -365,6 +380,78 @@ function addMessage(){
 
 function deleteMessage(id){
   db.collection('somm_messages').doc(id).delete().then(function(){loadMessages();msg('Removed');});
+}
+
+// === PRODUCT CATALOG ===
+function uploadCatalog(type){
+  var fileInput=document.getElementById(type==='wines'?'winesCsv':'bevCsv');
+  var file=fileInput.files[0];
+  if(!file){msg('Select a file');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var lines=ev.target.result.split(/\r?\n/);
+    // Find the name/brand/description column
+    var headers=(lines[1]||lines[0]||'').split(',').map(function(h){return h.trim().toLowerCase().replace(/"/g,'');});
+    var nameIdx=-1;
+    for(var i=0;i<headers.length;i++){
+      if(headers[i].indexOf('brand')>-1||headers[i].indexOf('description')>-1||headers[i].indexOf('name')>-1){nameIdx=i;break;}
+    }
+    if(nameIdx===-1){
+      // Fallback: try first column after header
+      nameIdx=0;
+    }
+    var names=[];
+    var startLine=headers[0].indexOf('[')>-1||headers[0].indexOf('close')>-1?2:1;
+    for(var i=startLine;i<lines.length;i++){
+      var line=lines[i].trim();
+      if(!line)continue;
+      var cells=parseCSVLineCatalog(line);
+      var name=(cells[nameIdx]||'').trim().replace(/"/g,'');
+      if(name&&name.length>1)names.push(name);
+    }
+    // Remove duplicates
+    names=names.filter(function(v,i,a){return a.indexOf(v)===i;});
+    names.sort();
+    // Save to Firestore
+    db.collection('product_catalog').doc(type).set({
+      names:names,
+      count:names.length,
+      uploadedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      uploadedBy:'Fiorella'
+    }).then(function(){
+      msg(names.length+' '+type+' products uploaded');
+      loadCatalogInfo();
+    });
+  };
+  reader.readAsText(file,'windows-1252');
+  fileInput.value='';
+}
+
+function parseCSVLineCatalog(line){
+  var result=[],current='',inQuotes=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"')inQuotes=!inQuotes;
+    else if(c===','&&!inQuotes){result.push(current);current='';}
+    else current+=c;
+  }
+  result.push(current);
+  return result;
+}
+
+function loadCatalogInfo(){
+  var el=document.getElementById('catalogInfo');
+  Promise.all([
+    db.collection('product_catalog').doc('wines').get(),
+    db.collection('product_catalog').doc('beverages').get()
+  ]).then(function(results){
+    var info=[];
+    if(results[0].exists)info.push('Wines: '+results[0].data().count+' products');
+    else info.push('Wines: not uploaded');
+    if(results[1].exists)info.push('Beverages: '+results[1].data().count+' products');
+    else info.push('Beverages: not uploaded');
+    el.innerHTML=info.join(' &nbsp;|&nbsp; ');
+  });
 }
 
 // === HOLIDAY ===
