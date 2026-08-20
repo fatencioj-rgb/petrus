@@ -194,8 +194,13 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
     <button class="action-btn btn-update" onclick="updateStocktake()">Update</button>
     <button class="action-btn btn-export" onclick="exportCSV()">Export CSV</button>
     <button class="action-btn btn-print" onclick="printTotal()">Print</button>
-    <button class="action-btn btn-print" onclick="downloadPDF()">PDF</button>
-    <button class="action-btn btn-print" onclick="downloadDiscontinuedPDF()">PDF Discontinued</button>
+    <select class="action-btn btn-print" onchange="handlePdfSelect(this)" style="cursor:pointer">
+      <option value="">PDF ▾</option>
+      <option value="all">All Info (by location)</option>
+      <option value="final">Final Count</option>
+      <option value="disc">Discontinued</option>
+      <option value="zeros">0's (not counted)</option>
+    </select>
     <button class="action-btn btn-delete" onclick="deleteStocktake()">Delete</button>
   </div>
 </div>
@@ -941,6 +946,116 @@ function downloadDiscontinuedPDF(){
 
   doc.save('Petrus-Discontinued-' + currentTab + '-' + getSelectedMonth() + '.pdf');
   showStatus('Discontinued PDF downloaded');
+}
+
+function handlePdfSelect(sel){
+  var val=sel.value;
+  sel.value='';
+  if(val==='all')downloadAllInfoPDF();
+  else if(val==='final')downloadPDF();
+  else if(val==='disc')downloadDiscontinuedPDF();
+  else if(val==='zeros')downloadZerosPDF();
+}
+
+function downloadAllInfoPDF(){
+  if(rows.length === 0){ showStatus('Nothing to export'); return; }
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF('landscape');
+  var locs = getLocations();
+
+  doc.setFontSize(16);
+  doc.setTextColor(92,26,26);
+  doc.text('Petrus — Stocktake ' + currentTab.toUpperCase(), 14, 16);
+  doc.setFontSize(9);
+  doc.setTextColor(100,100,100);
+  doc.text(getSelectedMonth() + ' — All Info by Location', 14, 22);
+
+  var tableHead = ['Brand & Description', 'Pack Size'];
+  for(var l=0;l<locs.length;l++) tableHead.push(sanitizeForPDF(locs[l]));
+  tableHead.push('Total');
+
+  var tableRows = [];
+  var lastCat = '';
+  for(var i=0; i<rows.length; i++){
+    if(discontinuedData[i]) continue;
+    var row = rows[i];
+    if(cat_idx > -1){
+      var thisCat = (row[cat_idx]||'').trim();
+      if(thisCat && thisCat !== lastCat){
+        var catRow = [{content: sanitizeForPDF(thisCat), colSpan: tableHead.length, styles: {fillColor: [245,232,232], textColor: [92,26,26], fontStyle: 'bold'}}];
+        tableRows.push(catRow);
+        lastCat = thisCat;
+      }
+    }
+    var name = name_idx > -1 ? sanitizeForPDF((row[name_idx]||'').trim()) : '';
+    var pack = '';
+    for(var c=0; c<headers.length; c++){
+      var hdr=headers[c].trim().toLowerCase();
+      if(hdr.indexOf('pack')>-1||hdr.indexOf('size')>-1||hdr.indexOf('unit')>-1){pack=sanitizeForPDF((row[c]||'').trim());break;}
+    }
+    var rowData = [name, pack];
+    for(var l=0;l<locs.length;l++){
+      rowData.push(locationData[i]?locationData[i][locs[l]]||'':'');
+    }
+    rowData.push(String(calcTotal(i)||''));
+    tableRows.push(rowData);
+  }
+
+  doc.autoTable({
+    startY: 26,
+    head: [tableHead],
+    body: tableRows,
+    headStyles: {fillColor: [92,26,26], textColor: [255,255,255], fontSize: 7},
+    bodyStyles: {fontSize: 7},
+    margin: {left: 10, right: 10},
+    columnStyles: {0: {cellWidth: 60}}
+  });
+
+  doc.save('Petrus-Stocktake-AllInfo-' + currentTab + '-' + getSelectedMonth() + '.pdf');
+  showStatus('All Info PDF downloaded');
+}
+
+function downloadZerosPDF(){
+  if(rows.length === 0){ showStatus('Nothing to export'); return; }
+  var zeroItems = [];
+  for(var i=0; i<rows.length; i++){
+    if(discontinuedData[i]) continue;
+    var total = calcTotal(i);
+    if(total === 0){
+      var row = rows[i];
+      var name = name_idx > -1 ? sanitizeForPDF((row[name_idx]||'').trim()) : '';
+      var cat = cat_idx > -1 ? sanitizeForPDF((row[cat_idx]||'').trim()) : '';
+      var pack = '';
+      for(var c=0; c<headers.length; c++){
+        var hdr=headers[c].trim().toLowerCase();
+        if(hdr.indexOf('pack')>-1||hdr.indexOf('size')>-1||hdr.indexOf('unit')>-1){pack=sanitizeForPDF((row[c]||'').trim());break;}
+      }
+      zeroItems.push([name, cat, pack]);
+    }
+  }
+  if(zeroItems.length === 0){ showStatus('No items with 0 count'); return; }
+
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.setTextColor(92,26,26);
+  doc.text('Petrus — Not Counted / Zero Stock', 14, 16);
+  doc.setFontSize(9);
+  doc.setTextColor(100,100,100);
+  doc.text(currentTab.toUpperCase() + ' — ' + getSelectedMonth() + ' — ' + zeroItems.length + ' items', 14, 22);
+
+  doc.autoTable({
+    startY: 28,
+    head: [['Brand & Description', 'Category', 'Pack Size']],
+    body: zeroItems,
+    headStyles: {fillColor: [184,150,80], textColor: [255,255,255], fontSize: 8},
+    bodyStyles: {fontSize: 8},
+    margin: {left: 14, right: 14}
+  });
+
+  doc.save('Petrus-Zeros-' + currentTab + '-' + getSelectedMonth() + '.pdf');
+  showStatus('Zeros PDF downloaded');
 }
 
 function deleteStocktake(){
