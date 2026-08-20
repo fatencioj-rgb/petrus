@@ -219,7 +219,11 @@ function addQuickTask(){
     var sel=document.getElementById('quickAssign');
     sel.style.borderColor='#c0392b';sel.style.boxShadow='0 0 0 2px rgba(192,57,43,0.2)';
     sel.focus();
-    setTimeout(function(){sel.style.borderColor='#ddd';sel.style.boxShadow='none';},2500);
+    // Show inline message
+    var msgSpan=document.getElementById('assignMsg');
+    if(!msgSpan){msgSpan=document.createElement('span');msgSpan.id='assignMsg';msgSpan.style.cssText='font-size:9px;color:#c0392b;margin-left:6px';sel.parentNode.appendChild(msgSpan);}
+    msgSpan.textContent='Please assign the task';
+    setTimeout(function(){sel.style.borderColor='#ddd';sel.style.boxShadow='none';if(msgSpan)msgSpan.textContent='';},3000);
     return;
   }
   var who=firebase.auth().currentUser;
