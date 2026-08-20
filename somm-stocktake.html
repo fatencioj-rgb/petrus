@@ -492,7 +492,7 @@ function renderTable(){
   for(var l=0; l<locs.length; l++){
     var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
     var lockClass = isLocked ? ' is-locked' : '';
-    var lockLabel = isLocked ? 'Locked' : 'Lock';
+    var lockLabel = isLocked ? '🔒' : '🔓';
     var lockInfo = isLocked ? '<div class="lock-info"><em>by</em> ' + escHtml(lockedCols[locs[l]].by || '') + '</div>' : '';
     html += '<th><div class="loc-header-name">' + escHtml(locs[l]).replace(/\s+/g,'<br>') + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
   }
