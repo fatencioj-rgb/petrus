@@ -526,7 +526,8 @@ function acSearch(input,catalog){
   if(matches.length===0){listEl.classList.remove('show');return;}
   var h='';
   matches.forEach(function(m){
-    h+='<div class="ac-item" onmousedown="acPick(\''+input.id+'\',this)">'+m.name+'</div>';
+    var displayName=m.name.replace(/\b\w/g,function(c){return c.toUpperCase();});
+    h+='<div class="ac-item" onmousedown="acPick(\''+input.id+'\',this)">'+displayName+'</div>';
   });
   listEl.innerHTML=h;
   listEl.classList.add('show');
