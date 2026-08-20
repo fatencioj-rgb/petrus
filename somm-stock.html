@@ -219,26 +219,51 @@ function buildCarousel(items,title,page,type){
 }
 
 function renderFullList(filtered,fullArea){
-  var fh='<div style="background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px">';
+  // Sort by date, most recent first
+  filtered.sort(function(a,b){return b.data.date>a.data.date?1:b.data.date<a.data.date?-1:0;});
+
+  var today=new Date();
+  var weekStart=new Date(today);weekStart.setDate(today.getDate()-today.getDay()+1);
+  var weekStartStr=weekStart.toISOString().slice(0,10);
+  var thisWeek=filtered.filter(function(it){return it.data.date>=weekStartStr;});
+  var older=filtered.filter(function(it){return it.data.date<weekStartStr;});
+
+  var fh='<div style="background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px;font-size:10px">';
   fh+='<table class="tbl"><thead><tr><th>Date</th><th>Product</th>';
   if(TAB==='wine')fh+='<th>Where</th>';
   if(TAB==='bar'||TAB==='kitchen')fh+='<th>Category</th>';
-  fh+='<th>Tag</th><th>Qty</th><th>By</th><th>Restock</th><th></th></tr></thead><tbody>';
-  for(var i=0;i<filtered.length;i++){
-    var it=filtered[i].data;var id=filtered[i].id;
-    fh+='<tr><td>'+it.date+'</td><td>'+it.name+'</td>';
-    if(TAB==='wine')fh+='<td>'+(it.location||'')+'</td>';
-    if(TAB==='bar'||TAB==='kitchen')fh+='<td>'+(it.category||'')+'</td>';
-    var tagCls2=it.tag==='86'?'t86':'low';
-    fh+='<td><span class="s-tag '+tagCls2+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
-    fh+='<td>'+(it.qty?(it.qty+' '+(it.unit||'')):'—')+'</td>';
-    fh+='<td>'+(it.author||'')+'</td>';
-    fh+='<td><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:9px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;width:100px"><button class="restock-btn" onclick="restockItem(\''+id+'\')">✓ Back in stock</button> <button class="restock-btn" onclick="discontinueItem(\''+id+'\')" style="color:#721c24;border-color:#f8d7da">✗ No longer available</button></td>';
-    fh+='<td><button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button></td>';
-    fh+='</tr>';
+  fh+='<th>Tag</th><th>Qty</th><th>By</th><th></th></tr></thead><tbody>';
+
+  if(thisWeek.length>0){
+    fh+='<tr><td colspan="7" style="font-size:8px;color:var(--gld);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;border-bottom:none">This week</td></tr>';
+    fh+=buildFullRows(thisWeek);
   }
+  if(older.length>0){
+    fh+='<tr><td colspan="7" style="font-size:8px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;border-bottom:none;border-top:1px solid #f0ebe5">Earlier</td></tr>';
+    fh+=buildFullRows(older);
+  }
+
   fh+='</tbody></table></div>';
   fullArea.innerHTML=fh;
+}
+
+function buildFullRows(items){
+  var fh='';
+  for(var i=0;i<items.length;i++){
+    var it=items[i].data;var id=items[i].id;
+    var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
+    var author=(it.author||'').charAt(0).toUpperCase()+(it.author||'').slice(1);
+    var tagCls=it.tag==='86'?'t86':'low';
+    fh+='<tr><td style="white-space:nowrap">'+dateFormatted+'</td><td>'+it.name+(it.vintage?' '+it.vintage:'')+'</td>';
+    if(TAB==='wine')fh+='<td>'+(it.location||'')+'</td>';
+    if(TAB==='bar'||TAB==='kitchen')fh+='<td>'+(it.category||'')+'</td>';
+    fh+='<td><span class="s-tag '+tagCls+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
+    fh+='<td>'+(it.qty?(it.qty+' '+(it.unit||'')):'—')+'</td>';
+    fh+='<td>'+author+'</td>';
+    fh+='<td style="white-space:nowrap"><button class="restock-btn" onclick="showRestockDate(\''+id+'\')">✓ Back in stock</button> <button class="restock-btn" onclick="discontinueItem(\''+id+'\')" style="color:#721c24;border-color:#f8d7da">✗ No longer available</button><span id="redate_wrap_'+id+'" style="display:none;margin-left:4px"><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:8px;padding:2px 3px;border:1px solid #ddd;border-radius:3px;width:90px"><button class="restock-btn" onclick="restockItem(\''+id+'\')" style="margin-left:2px">OK</button></span></td>';
+    fh+='</tr>';
+  }
+  return fh;
 }
 
 function carouselNav(type,dir){
@@ -431,6 +456,11 @@ function restockItem(id){
     restockedDate:restockDate,
     restockedBy:U.displayName||U.email.split('@')[0].replace(/\./g,' ')
   }).then(function(){loadStock();msg('Back in stock ✓');});
+}
+
+function showRestockDate(id){
+  var wrap=document.getElementById('redate_wrap_'+id);
+  if(wrap)wrap.style.display='inline';
 }
 
 function discontinueItem(id){
