@@ -40,9 +40,9 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 /* Buttons */
 .profiles { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
 .profile-card {
-  flex:1; min-width:180px; max-width:260px;
-  background:var(--pink); border:1px solid rgba(92,26,26,0.12); border-radius:10px;
-  padding:30px 20px; text-decoration:none; color:var(--green);
+  flex:1; min-width:130px; max-width:180px;
+  background:var(--pink); border:1px solid rgba(92,26,26,0.12); border-radius:8px;
+  padding:18px 12px; text-decoration:none; color:var(--green);
   transition:all 0.3s ease; text-align:center;
 }
 .profile-card:hover {
@@ -50,10 +50,10 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
   box-shadow:0 6px 24px rgba(92,26,26,0.1);
 }
 .profile-card h3 {
-  font-family:var(--serif); font-size:20px; color:var(--green);
-  margin-bottom:6px; letter-spacing:0.5px;
+  font-family:var(--serif); font-size:16px; color:var(--green);
+  margin-bottom:4px; letter-spacing:0.5px;
 }
-.profile-card p { font-size:11px; color:#888; line-height:1.4; }
+.profile-card p { font-size:9px; color:#888; line-height:1.3; }
 </style>
 </head>
 <body>
@@ -81,7 +81,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
     <div id="feedContent"><div class="feed-empty">Loading...</div></div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f0ebe5">
       <input type="text" id="quickTask" placeholder="Add a task..." style="flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);outline:none" onkeydown="if(event.key==='Enter')addQuickTask()">
-      <select id="quickAssign" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-size:9px;font-family:var(--sans)">
+      <select id="quickAssign" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);min-width:90px">
         <option value="">Assign...</option>
         <option value="Fiorella">Fiorella</option>
         <option value="Christian">Christian</option>
@@ -214,10 +214,11 @@ function addQuickTask(){
   var input=document.getElementById('quickTask');
   var text=input.value.trim();
   if(!text)return;
+  var assignee=(document.getElementById('quickAssign')||{}).value||'';
+  if(!assignee){alert('Please assign the task to someone');return;}
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
   author=author.charAt(0).toUpperCase()+author.slice(1);
-  var assignee=(document.getElementById('quickAssign')||{}).value||'';
   db.collection('somm_duties').add({
     text:text,author:author,assignee:assignee,
     date:new Date().toISOString().slice(0,10),
