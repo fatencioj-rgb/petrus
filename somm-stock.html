@@ -105,14 +105,14 @@ var TAB='wine';
 var TABS=['wine','bar','supplies','kitchen'];
 var KITCHEN_ITEMS=['Ruby Port Cockburn','Madeira Blandys','Bacardi Rum 8y','Prosecco','Kirsh'];
 var selTag='';
-var productCatalog={wines:[],beverages:[]};
+var productCatalog={wines:{products:[],categories:[]},beverages:{products:[],categories:[]}};
 
 // Load product catalog for autocomplete
 db.collection('product_catalog').doc('wines').get().then(function(doc){
-  if(doc.exists)productCatalog.wines=doc.data().names||[];
+  if(doc.exists){productCatalog.wines.products=doc.data().products||[];productCatalog.wines.categories=doc.data().categories||[];}
 }).catch(function(){});
 db.collection('product_catalog').doc('beverages').get().then(function(doc){
-  if(doc.exists)productCatalog.beverages=doc.data().names||[];
+  if(doc.exists){productCatalog.beverages.products=doc.data().products||[];productCatalog.beverages.categories=doc.data().categories||[];}
 }).catch(function(){});
 
 auth.onAuthStateChanged(function(u){
@@ -300,10 +300,11 @@ function renderAdd(){
   h+='<div class="fields">';
   h+='<input type="date" id="stk_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)" style="width:110px;flex:0 0 110px">';
   if(TAB==='wine'){
+    h+='<select id="stk_winecat" style="flex:0 0 auto" onchange="filterAcCat()"><option value="">Type...</option></select>';
     h+='<div class="ac-wrap"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'wines\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
     h+='<input type="text" id="stk_vintage" placeholder="Vintage" style="flex:0 0 65px">';
   }else if(TAB==='bar'){
-    h+='<input type="text" id="stk_cat" placeholder="Category">';
+    h+='<select id="stk_barcat" style="flex:0 0 auto" onchange="filterAcCat()"><option value="">Type...</option></select>';
     h+='<div class="ac-wrap"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'beverages\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
   }else if(TAB==='supplies'){
     h+='<input type="text" id="stk_name" placeholder="Product">';
@@ -345,6 +346,15 @@ function renderAdd(){
       var o=document.getElementById('stk_name_other');
       if(o)o.style.display=sel.value==='__other'?'inline-block':'none';
     };
+  }
+  // Populate category dropdowns
+  if(TAB==='wine'){
+    var catSel=document.getElementById('stk_winecat');
+    if(catSel){productCatalog.wines.categories.forEach(function(c){catSel.innerHTML+='<option value="'+c+'">'+c+'</option>';});}
+  }
+  if(TAB==='bar'){
+    var catSel2=document.getElementById('stk_barcat');
+    if(catSel2){productCatalog.beverages.categories.forEach(function(c){catSel2.innerHTML+='<option value="'+c+'">'+c+'</option>';});}
   }
 }
 
@@ -398,11 +408,12 @@ function addItem(){
   if(TAB==='wine'){
     item.name=(document.getElementById('stk_name')||{}).value||'';
     item.vintage=(document.getElementById('stk_vintage')||{}).value||'';
+    item.category=(document.getElementById('stk_winecat')||{}).value||'';
     if(selTag==='86'){
       item.location=(document.getElementById('stk_location')||{}).value||'';
     }
   }else if(TAB==='bar'){
-    item.category=(document.getElementById('stk_cat')||{}).value||'';
+    item.category=(document.getElementById('stk_barcat')||{}).value||'';
     item.name=(document.getElementById('stk_name')||{}).value||'';
   }else if(TAB==='supplies'){
     item.name=(document.getElementById('stk_name')||{}).value||'';
@@ -500,16 +511,27 @@ function acSearch(input,catalog){
   var listEl=document.getElementById('ac_'+input.id);
   if(!listEl)return;
   if(val.length<2){listEl.classList.remove('show');return;}
-  var source=catalog==='wines'?productCatalog.wines:productCatalog.beverages;
-  var matches=source.filter(function(n){return n.toLowerCase().indexOf(val)>-1;}).slice(0,10);
+  var source=catalog==='wines'?productCatalog.wines.products:productCatalog.beverages.products;
+  // Filter by category if selected
+  var catSel=document.getElementById(catalog==='wines'?'stk_winecat':'stk_barcat');
+  var selectedCat=catSel?catSel.value:'';
+  var filtered=source;
+  if(selectedCat){filtered=source.filter(function(p){return p.category===selectedCat;});}
+  var matches=filtered.filter(function(p){return p.name.toLowerCase().indexOf(val)>-1;}).slice(0,10);
   if(matches.length===0){listEl.classList.remove('show');return;}
   var h='';
   matches.forEach(function(m){
-    h+='<div class="ac-item" onmousedown="acPick(\''+input.id+'\',this)">'+m+'</div>';
+    h+='<div class="ac-item" onmousedown="acPick(\''+input.id+'\',this)">'+m.name+'</div>';
   });
   listEl.innerHTML=h;
   listEl.classList.add('show');
   input.addEventListener('blur',function(){setTimeout(function(){listEl.classList.remove('show');},150);},{once:true});
+}
+
+function filterAcCat(){
+  // Clear product field when category changes
+  var nameEl=document.getElementById('stk_name');
+  if(nameEl)nameEl.value='';
 }
 
 function acPick(inputId,el){

@@ -390,36 +390,44 @@ function uploadCatalog(type){
   var reader=new FileReader();
   reader.onload=function(ev){
     var lines=ev.target.result.split(/\r?\n/);
-    // Find the name/brand/description column
+    // Find headers
     var headers=(lines[1]||lines[0]||'').split(',').map(function(h){return h.trim().toLowerCase().replace(/"/g,'');});
-    var nameIdx=-1;
+    var nameIdx=-1,catIdx=-1;
     for(var i=0;i<headers.length;i++){
-      if(headers[i].indexOf('brand')>-1||headers[i].indexOf('description')>-1||headers[i].indexOf('name')>-1){nameIdx=i;break;}
+      if(headers[i].indexOf('brand')>-1||headers[i].indexOf('description')>-1||headers[i].indexOf('name')>-1)nameIdx=i;
+      if(headers[i].indexOf('tertiary')>-1||headers[i].indexOf('category')>-1)catIdx=i;
     }
-    if(nameIdx===-1){
-      // Fallback: try first column after header
-      nameIdx=0;
-    }
-    var names=[];
+    if(nameIdx===-1)nameIdx=0;
+
+    var products=[];
+    var categories={};
     var startLine=headers[0].indexOf('[')>-1||headers[0].indexOf('close')>-1?2:1;
     for(var i=startLine;i<lines.length;i++){
       var line=lines[i].trim();
       if(!line)continue;
       var cells=parseCSVLineCatalog(line);
       var name=(cells[nameIdx]||'').trim().replace(/"/g,'');
-      if(name&&name.length>1)names.push(name);
+      var cat=catIdx>-1?(cells[catIdx]||'').trim().replace(/"/g,''):'Other';
+      if(name&&name.length>1){
+        products.push({name:name,category:cat});
+        categories[cat]=true;
+      }
     }
-    // Remove duplicates
-    names=names.filter(function(v,i,a){return a.indexOf(v)===i;});
-    names.sort();
+    // Remove duplicates by name
+    var seen={};
+    products=products.filter(function(p){if(seen[p.name])return false;seen[p.name]=true;return true;});
+    products.sort(function(a,b){return a.name>b.name?1:-1;});
+    var catList=Object.keys(categories).sort();
+
     // Save to Firestore
     db.collection('product_catalog').doc(type).set({
-      names:names,
-      count:names.length,
+      products:products,
+      categories:catList,
+      count:products.length,
       uploadedAt:firebase.firestore.FieldValue.serverTimestamp(),
       uploadedBy:'Fiorella'
     }).then(function(){
-      msg(names.length+' '+type+' products uploaded');
+      msg(products.length+' '+type+' products uploaded ('+catList.length+' categories)');
       loadCatalogInfo();
     });
   };
