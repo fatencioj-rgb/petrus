@@ -92,9 +92,9 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
     </div>
   </div>
   <!-- 86s Box -->
-  <div class="today-feed" id="eightySixBox" style="margin-bottom:30px">
-    <div class="feed-title" style="font-size:16px">86's</div>
-    <div id="eightySixContent"><div class="feed-empty">Loading...</div></div>
+  <div id="eightySixBox" style="margin-bottom:20px;background:#fff8f0;border:1px solid #f0e0d0;border-radius:6px;padding:10px 14px;max-width:320px">
+    <div style="font-size:9px;font-weight:700;color:#721c24;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="display:inline-flex;width:18px;height:18px;border-radius:50%;background:#f8d7da;color:#721c24;font-size:8px;font-weight:700;align-items:center;justify-content:center">86</span> Current</div>
+    <div id="eightySixContent" style="font-size:9px;line-height:1.6"></div>
   </div>
   <div class="profiles">
     <a href="somm-stock.html" class="profile-card">
@@ -501,7 +501,7 @@ function load86s(){
 
 function render86s(){
   var el=document.getElementById('eightySixContent');
-  if(_86items.length===0){el.innerHTML='<div class="feed-empty">No 86s currently</div>';return;}
+  if(_86items.length===0){el.innerHTML='<span style="color:#ccc">No 86s</span>';return;}
   var total=_86items.length;
   var totalPages=Math.ceil(total/_86size);
   if(_86page>=totalPages)_86page=0;
@@ -512,20 +512,15 @@ function render86s(){
   for(var i=0;i<pageItems.length;i++){
     var it=pageItems[i];
     var fullName=(it.vintage?it.vintage+' ':'')+it.name;
-    if(it.producer)fullName+=' '+it.producer;
-    h+='<div class="feed-item">';
-    h+='<span class="f-tag t86">86</span>';
-    h+='<span class="f-text"><span class="f-highlight">'+fullName+'</span>';
-    if(it.location)h+=' <span style="font-size:8px;padding:1px 6px;border-radius:4px;background:#f0f0f0;color:#888">'+it.location+'</span>';
-    var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
-    h+=' <span style="font-size:9px;color:#888">'+it.section+' · '+dateFormatted+'</span>';
-    h+='</span></div>';
+    h+='<div style="padding:1px 0;color:#5c1a1a">'+fullName;
+    if(it.location)h+=' <span style="color:#999;font-size:8px">'+it.location+'</span>';
+    h+='</div>';
   }
   if(totalPages>1){
-    h+='<div style="text-align:center;padding:6px 0;font-size:9px;color:#bbb">';
-    h+='<span style="cursor:pointer;padding:0 6px" onclick="_86page--;render86s();if(_86interval){clearInterval(_86interval);}">&larr;</span>';
+    h+='<div style="text-align:right;padding-top:4px;font-size:8px;color:#bbb">';
+    h+='<span style="cursor:pointer;padding:0 4px" onclick="_86page--;render86s();if(_86interval){clearInterval(_86interval);}">&larr;</span>';
     h+=(_86page+1)+'/'+totalPages;
-    h+='<span style="cursor:pointer;padding:0 6px" onclick="_86page++;render86s();if(_86interval){clearInterval(_86interval);}">&rarr;</span>';
+    h+='<span style="cursor:pointer;padding:0 4px" onclick="_86page++;render86s();if(_86interval){clearInterval(_86interval);}">&rarr;</span>';
     h+='</div>';
   }
   el.innerHTML=h;
