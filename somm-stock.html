@@ -213,7 +213,7 @@ function buildCarousel(items,title,page,type){
       var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
       h+='<div class="carousel-item">';
       h+='<span class="ci-date">'+dateFormatted+'</span>';
-      h+='<span class="ci-name">'+it.name+(it.vintage?' '+it.vintage:'')+'</span>';
+      h+='<span class="ci-name">'+(it.vintage?it.vintage+' ':'')+it.name+'</span>';
       if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
       h+='</div>';
     }
@@ -222,10 +222,9 @@ function buildCarousel(items,title,page,type){
     h+='<div style="font-size:8px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:6px 0 2px;margin-top:4px;border-top:1px solid #f5f0ea">Earlier</div>';
     for(var i=0;i<older.length;i++){
       var it=older[i].data;
-      var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
-      h+='<div class="carousel-item">';
+      var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';      h+='<div class="carousel-item">';
       h+='<span class="ci-date">'+dateFormatted+'</span>';
-      h+='<span class="ci-name">'+it.name+(it.vintage?' '+it.vintage:'')+'</span>';
+      h+='<span class="ci-name">'+(it.vintage?it.vintage+' ':'')+it.name+'</span>';
       if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
       h+='</div>';
     }
@@ -270,7 +269,7 @@ function buildFullRows(items){
     var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
     var author=(it.author||'').charAt(0).toUpperCase()+(it.author||'').slice(1);
     var tagCls=it.tag==='86'?'t86':'low';
-    fh+='<tr><td style="white-space:nowrap">'+dateFormatted+'</td><td>'+it.name+(it.vintage?' '+it.vintage:'')+'</td>';
+    fh+='<tr><td style="white-space:nowrap">'+dateFormatted+'</td><td>'+(it.vintage?it.vintage+' ':'')+it.name+'</td>';
     if(TAB==='wine')fh+='<td>'+(it.location||'')+'</td>';
     if(TAB==='bar'||TAB==='kitchen')fh+='<td>'+(it.category||'')+'</td>';
     fh+='<td><span class="s-tag '+tagCls+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
