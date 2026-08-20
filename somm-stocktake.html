@@ -111,9 +111,10 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .info-bar span{background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e8e0d4}
 
 /* Search */
-.search-bar{margin-bottom:16px}
-.search-bar input{width:100%;padding:10px 14px;border:1px solid #e8e0d4;border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;background:#fff}
+.search-bar{margin-bottom:16px;position:sticky;top:0;z-index:3;background:var(--cream);padding:8px 0}
+.search-bar input{width:calc(100% - 50px);padding:10px 14px;border:1px solid #e8e0d4;border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;background:#fff;display:inline-block}
 .search-bar input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,150,80,0.12)}
+.search-bar .done-btn{display:inline-block;width:44px;padding:10px 0;text-align:center;font-size:10px;font-weight:600;color:var(--green);cursor:pointer;vertical-align:top}
 
 /* Saved document indicator */
 .saved-doc{background:#fff;border:1px solid #e8e0d4;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#555;display:flex;align-items:center;gap:8px}
@@ -176,6 +177,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
   <!-- Search -->
   <div class="search-bar" id="searchBar" style="display:none">
     <input type="text" id="searchInput" placeholder="Search by name, category..." oninput="filterTable()">
+    <span class="done-btn" onclick="document.getElementById('searchInput').blur()">Done</span>
   </div>
 
   <!-- Table -->
@@ -492,7 +494,7 @@ function renderTable(){
   for(var l=0; l<locs.length; l++){
     var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
     var lockClass = isLocked ? ' is-locked' : '';
-    var lockLabel = isLocked ? '🔒' : '🔓';
+    var lockLabel = isLocked ? 'Locked' : 'Lock';
     var lockInfo = isLocked ? '<div class="lock-info"><em>by</em> ' + escHtml(lockedCols[locs[l]].by || '') + '</div>' : '';
     html += '<th><div class="loc-header-name">' + escHtml(locs[l]).replace(/\s+/g,'<br>') + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
   }
