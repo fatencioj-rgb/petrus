@@ -182,10 +182,11 @@ function buildCarousel(items,title,page,type){
   h+='</div>';
   for(var i=0;i<pageItems.length;i++){
     var it=pageItems[i].data;
+    var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
     h+='<div class="carousel-item">';
-    h+='<span class="ci-date">'+it.date.slice(5)+'</span>';
+    h+='<span class="ci-date">'+dateFormatted+'</span>';
     h+='<span class="ci-name">'+it.name+'</span>';
-    if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
+    if(it.location)h+='<span style="font-size:7px;color:#888;font-style:italic">from: '+it.location+'</span>';
     h+='</div>';
   }
   h+='</div>';
