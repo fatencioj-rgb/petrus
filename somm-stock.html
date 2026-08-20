@@ -162,7 +162,11 @@ function renderPending(){
 }
 
 function buildCarousel(items,title,page,type){
-  if(items.length===0)return '<div class="carousel-box"><div class="carousel-header"><span class="c-title">'+title+' <span class="c-badge">0</span></span></div><div class="em">None</div></div>';
+  var icon86='<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#f8d7da;color:#721c24;font-size:11px;font-weight:700">86</span>';
+  var iconLow='<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fff3cd;color:#856404;font-size:8px;font-weight:700">LOW</span>';
+  var titleIcon=type==='86'?icon86:iconLow;
+
+  if(items.length===0)return '<div class="carousel-box"><div class="carousel-header"><span class="c-title">'+titleIcon+' <span class="c-badge">0</span></span></div><div class="em">None</div></div>';
   var totalPages=Math.ceil(items.length/CAROUSEL_SIZE);
   if(page>=totalPages)page=0;
   if(page<0)page=totalPages-1;
@@ -171,20 +175,17 @@ function buildCarousel(items,title,page,type){
   var pageItems=items.slice(start,start+CAROUSEL_SIZE);
 
   var h='<div class="carousel-box">';
-  h+='<div class="carousel-header"><span class="c-title">'+title+' <span class="c-badge">'+items.length+'</span></span>';
+  h+='<div class="carousel-header"><span class="c-title">'+titleIcon+' <span class="c-badge">'+items.length+'</span></span>';
   if(totalPages>1){
     h+='<div class="carousel-nav"><span onclick="carouselNav(\''+type+'\',-1)">&larr;</span><span style="font-size:9px;color:#999">'+(page+1)+'/'+totalPages+'</span><span onclick="carouselNav(\''+type+'\',1)">&rarr;</span></div>';
   }
   h+='</div>';
   for(var i=0;i<pageItems.length;i++){
     var it=pageItems[i].data;
-    var tagCls=it.tag==='86'?'t86':'low';
-    var tagLbl=it.tag==='86'?'86':'Low';
     h+='<div class="carousel-item">';
     h+='<span class="ci-date">'+it.date.slice(5)+'</span>';
     h+='<span class="ci-name">'+it.name+'</span>';
     if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
-    h+='<span class="ci-tag '+tagCls+'">'+tagLbl+'</span>';
     h+='</div>';
   }
   h+='</div>';
