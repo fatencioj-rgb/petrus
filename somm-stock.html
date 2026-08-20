@@ -197,7 +197,7 @@ function buildCarousel(items,title,page,type){
       var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
       h+='<div class="carousel-item">';
       h+='<span class="ci-date">'+dateFormatted+'</span>';
-      h+='<span class="ci-name">'+it.name+'</span>';
+      h+='<span class="ci-name">'+it.name+(it.vintage?' '+it.vintage:'')+'</span>';
       if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
       h+='</div>';
     }
@@ -209,7 +209,7 @@ function buildCarousel(items,title,page,type){
       var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
       h+='<div class="carousel-item">';
       h+='<span class="ci-date">'+dateFormatted+'</span>';
-      h+='<span class="ci-name">'+it.name+'</span>';
+      h+='<span class="ci-name">'+it.name+(it.vintage?' '+it.vintage:'')+'</span>';
       if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
       h+='</div>';
     }
@@ -260,6 +260,7 @@ function renderAdd(){
   h+='<input type="date" id="stk_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)" style="width:110px;flex:0 0 110px">';
   if(TAB==='wine'){
     h+='<input type="text" id="stk_name" placeholder="Product">';
+    h+='<input type="text" id="stk_vintage" placeholder="Vintage" style="flex:0 0 65px">';
   }else if(TAB==='bar'){
     h+='<input type="text" id="stk_cat" placeholder="Category">';
     h+='<input type="text" id="stk_name" placeholder="Product">';
@@ -355,6 +356,7 @@ function addItem(){
 
   if(TAB==='wine'){
     item.name=(document.getElementById('stk_name')||{}).value||'';
+    item.vintage=(document.getElementById('stk_vintage')||{}).value||'';
     if(selTag==='86'){
       item.location=(document.getElementById('stk_location')||{}).value||'';
     }
