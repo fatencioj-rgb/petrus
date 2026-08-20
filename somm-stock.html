@@ -19,10 +19,27 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .tab{padding:6px 14px;border:1px solid rgba(92,26,26,0.2);border-radius:14px;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn);transition:all .15s}
 .tab:hover{background:#f0d4d4;border-color:var(--grn)}
 .tab.on{background:var(--grn);color:#fff;border-color:var(--grn)}
-/* Pending section */
-.pending-box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px}
-.pending-title{font-family:var(--f);font-size:16px;color:var(--grn);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.pending-title .badge{font-size:9px;background:var(--grn);color:#fff;padding:2px 7px;border-radius:10px}
+/* Layout */
+.stock-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:700px){.stock-layout{grid-template-columns:1fr}}
+.carousel-box{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px}
+.carousel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.carousel-header .c-title{font-family:var(--f);font-size:14px;color:var(--grn)}
+.carousel-header .c-badge{font-size:9px;background:var(--grn);color:#fff;padding:2px 7px;border-radius:10px}
+.carousel-nav{display:flex;gap:6px}
+.carousel-nav span{cursor:pointer;font-size:14px;color:var(--gld);user-select:none;padding:0 4px}
+.carousel-nav span:hover{color:var(--grn)}
+.carousel-item{padding:6px 0;border-bottom:1px solid #f5f0ea;font-size:10px;display:flex;align-items:center;gap:6px}
+.carousel-item:last-child{border-bottom:none}
+.carousel-item .ci-name{flex:1;font-weight:500;color:var(--grn2)}
+.carousel-item .ci-tag{font-size:8px;padding:1px 5px;border-radius:6px;font-weight:600}
+.carousel-item .ci-tag.low{background:#fff3cd;color:#856404}
+.carousel-item .ci-tag.t86{background:#f8d7da;color:#721c24}
+.carousel-item .ci-date{font-size:8px;color:#999}
+.expand-btn{display:inline-block;padding:4px 10px;border:1px solid rgba(92,26,26,0.2);border-radius:4px;font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;background:var(--pink);color:var(--grn);margin-bottom:10px}
+.expand-btn:hover{background:var(--grn);color:#fff}
+.full-list{display:none}
+.full-list.show{display:block}
 /* Table */
 .tbl{width:100%;border-collapse:collapse;font-size:11px}
 .tbl th{background:var(--grn2);color:#fff;padding:7px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
@@ -62,8 +79,12 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 <div class="pg">
 <h1>Stock</h1>
 <div class="tabs" id="tabs"></div>
-<div id="pendingArea"></div>
-<div id="addArea"></div>
+<button class="expand-btn" id="expandBtn" onclick="toggleFullList()">View all details</button>
+<div class="full-list" id="fullList"></div>
+<div class="stock-layout">
+  <div id="addArea"></div>
+  <div id="pendingArea"></div>
+</div>
 </div>
 <div class="sm" id="sm"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -103,31 +124,81 @@ function loadStock(){
   }).catch(function(e){console.error(e);});
 }
 
+var carouselPage=0;
+var CAROUSEL_SIZE=10;
+
 function renderPending(){
   var filtered=stockItems.filter(function(it){return it.data.section===TAB;});
   var area=document.getElementById('pendingArea');
-  if(filtered.length===0){area.innerHTML='<div class="pending-box"><div class="em">No pending stock alerts</div></div>';return;}
-  var h='<div class="pending-box">';
-  h+='<div class="pending-title">Pending <span class="badge">'+filtered.length+'</span></div>';
-  h+='<table class="tbl"><thead><tr><th>Date</th><th>Product</th>';
-  if(TAB==='wine')h+='<th>Where</th>';
-  if(TAB==='bar'||TAB==='kitchen')h+='<th>Category</th>';
-  h+='<th>Tag</th><th>Qty</th><th>By</th><th>Restock</th><th></th></tr></thead><tbody>';
+  var fullArea=document.getElementById('fullList');
+  var expandBtn=document.getElementById('expandBtn');
+
+  if(filtered.length===0){
+    area.innerHTML='<div class="carousel-box"><div class="em">No pending stock alerts</div></div>';
+    fullArea.innerHTML='';expandBtn.style.display='none';
+    return;
+  }
+
+  expandBtn.style.display='inline-block';
+
+  // Carousel (right side)
+  var totalPages=Math.ceil(filtered.length/CAROUSEL_SIZE);
+  if(carouselPage>=totalPages)carouselPage=0;
+  if(carouselPage<0)carouselPage=totalPages-1;
+  var start=carouselPage*CAROUSEL_SIZE;
+  var pageItems=filtered.slice(start,start+CAROUSEL_SIZE);
+
+  var h='<div class="carousel-box">';
+  h+='<div class="carousel-header"><span class="c-title">Pending <span class="c-badge">'+filtered.length+'</span></span>';
+  if(totalPages>1){
+    h+='<div class="carousel-nav"><span onclick="carouselPrev()">&larr;</span><span style="font-size:9px;color:#999">'+(carouselPage+1)+'/'+totalPages+'</span><span onclick="carouselNext()">&rarr;</span></div>';
+  }
+  h+='</div>';
+  for(var i=0;i<pageItems.length;i++){
+    var it=pageItems[i].data;
+    var tagCls=it.tag==='86'?'t86':'low';
+    var tagLbl=it.tag==='86'?'86':'Low';
+    h+='<div class="carousel-item">';
+    h+='<span class="ci-date">'+it.date.slice(5)+'</span>';
+    h+='<span class="ci-name">'+it.name+'</span>';
+    if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
+    h+='<span class="ci-tag '+tagCls+'">'+tagLbl+'</span>';
+    h+='</div>';
+  }
+  h+='</div>';
+  area.innerHTML=h;
+
+  // Full detail list (hidden by default)
+  var fh='<div style="background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px">';
+  fh+='<table class="tbl"><thead><tr><th>Date</th><th>Product</th>';
+  if(TAB==='wine')fh+='<th>Where</th>';
+  if(TAB==='bar'||TAB==='kitchen')fh+='<th>Category</th>';
+  fh+='<th>Tag</th><th>Qty</th><th>By</th><th>Restock</th><th></th></tr></thead><tbody>';
   for(var i=0;i<filtered.length;i++){
     var it=filtered[i].data;var id=filtered[i].id;
-    h+='<tr><td>'+it.date+'</td><td>'+it.name+'</td>';
-    if(TAB==='wine')h+='<td>'+(it.location||'')+'</td>';
-    if(TAB==='bar'||TAB==='kitchen')h+='<td>'+(it.category||'')+'</td>';
-    var tagCls=it.tag==='86'?'t86':'low';
-    h+='<td><span class="s-tag '+tagCls+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
-    h+='<td>'+(it.qty?(it.qty+' '+(it.unit||'')):'—')+'</td>';
-    h+='<td>'+(it.author||'')+'</td>';
-    h+='<td><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:9px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;width:100px"><button class="restock-btn" onclick="restockItem(\''+id+'\')">✓ Back in stock</button> <button class="restock-btn" onclick="discontinueItem(\''+id+'\')" style="color:#721c24;border-color:#f8d7da">✗ No longer available</button></td>';
-    h+='<td><button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button></td>';
-    h+='</tr>';
+    fh+='<tr><td>'+it.date+'</td><td>'+it.name+'</td>';
+    if(TAB==='wine')fh+='<td>'+(it.location||'')+'</td>';
+    if(TAB==='bar'||TAB==='kitchen')fh+='<td>'+(it.category||'')+'</td>';
+    var tagCls2=it.tag==='86'?'t86':'low';
+    fh+='<td><span class="s-tag '+tagCls2+'">'+(it.tag==='86'?'86':'Low')+'</span></td>';
+    fh+='<td>'+(it.qty?(it.qty+' '+(it.unit||'')):'—')+'</td>';
+    fh+='<td>'+(it.author||'')+'</td>';
+    fh+='<td><input type="date" id="redate_'+id+'" value="'+new Date().toISOString().slice(0,10)+'" style="font-size:9px;padding:2px 4px;border:1px solid #ddd;border-radius:3px;width:100px"><button class="restock-btn" onclick="restockItem(\''+id+'\')">✓ Back in stock</button> <button class="restock-btn" onclick="discontinueItem(\''+id+'\')" style="color:#721c24;border-color:#f8d7da">✗ No longer available</button></td>';
+    fh+='<td><button class="s-remove" onclick="removeItem(\''+id+'\')">&times;</button></td>';
+    fh+='</tr>';
   }
-  h+='</tbody></table></div>';
-  area.innerHTML=h;
+  fh+='</tbody></table></div>';
+  fullArea.innerHTML=fh;
+}
+}
+
+function carouselPrev(){carouselPage--;renderPending();}
+function carouselNext(){carouselPage++;renderPending();}
+function toggleFullList(){
+  var el=document.getElementById('fullList');
+  var btn=document.getElementById('expandBtn');
+  if(el.classList.contains('show')){el.classList.remove('show');btn.textContent='View all details';}
+  else{el.classList.add('show');btn.textContent='Hide details';}
 }
 
 function renderAdd(){
