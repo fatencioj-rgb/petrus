@@ -180,14 +180,40 @@ function buildCarousel(items,title,page,type){
     h+='<div class="carousel-nav"><span onclick="carouselNav(\''+type+'\',-1)">&larr;</span><span style="font-size:9px;color:#999">'+(page+1)+'/'+totalPages+'</span><span onclick="carouselNav(\''+type+'\',1)">&rarr;</span></div>';
   }
   h+='</div>';
-  for(var i=0;i<pageItems.length;i++){
-    var it=pageItems[i].data;
-    var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
-    h+='<div class="carousel-item">';
-    h+='<span class="ci-date">'+dateFormatted+'</span>';
-    h+='<span class="ci-name">'+it.name+'</span>';
-    if(it.location)h+='<span style="font-size:7px;color:#888;font-style:italic">from: '+it.location+'</span>';
-    h+='</div>';
+  // Column header for location
+  if(type==='86'){
+    h+='<div style="display:flex;justify-content:space-between;padding:2px 0;margin-bottom:4px;border-bottom:1px solid #f0ebe5"><span style="font-size:8px;color:#999"></span><span style="font-size:8px;color:#999;font-style:italic">from:</span></div>';
+  }
+  // Separate this week vs older
+  var today=new Date();
+  var weekStart=new Date(today);weekStart.setDate(today.getDate()-today.getDay()+1);// Monday
+  var weekStartStr=weekStart.toISOString().slice(0,10);
+  var thisWeek=pageItems.filter(function(it){return it.data.date>=weekStartStr;});
+  var older=pageItems.filter(function(it){return it.data.date<weekStartStr;});
+
+  if(thisWeek.length>0){
+    h+='<div style="font-size:8px;color:var(--gld);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:4px 0 2px">This week</div>';
+    for(var i=0;i<thisWeek.length;i++){
+      var it=thisWeek[i].data;
+      var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
+      h+='<div class="carousel-item">';
+      h+='<span class="ci-date">'+dateFormatted+'</span>';
+      h+='<span class="ci-name">'+it.name+'</span>';
+      if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
+      h+='</div>';
+    }
+  }
+  if(older.length>0){
+    h+='<div style="font-size:8px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:6px 0 2px;margin-top:4px;border-top:1px solid #f5f0ea">Earlier</div>';
+    for(var i=0;i<older.length;i++){
+      var it=older[i].data;
+      var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
+      h+='<div class="carousel-item">';
+      h+='<span class="ci-date">'+dateFormatted+'</span>';
+      h+='<span class="ci-name">'+it.name+'</span>';
+      if(it.location)h+='<span style="font-size:7px;color:#888">'+it.location+'</span>';
+      h+='</div>';
+    }
   }
   h+='</div>';
   return h;
