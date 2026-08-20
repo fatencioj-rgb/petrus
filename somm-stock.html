@@ -510,14 +510,19 @@ function acSearch(input,catalog){
   var val=input.value.toLowerCase().trim();
   var listEl=document.getElementById('ac_'+input.id);
   if(!listEl)return;
-  if(val.length<2){listEl.classList.remove('show');return;}
+  if(val.length<1){listEl.classList.remove('show');return;}
   var source=catalog==='wines'?productCatalog.wines.products:productCatalog.beverages.products;
   // Filter by category if selected
   var catSel=document.getElementById(catalog==='wines'?'stk_winecat':'stk_barcat');
   var selectedCat=catSel?catSel.value:'';
   var filtered=source;
   if(selectedCat){filtered=source.filter(function(p){return p.category===selectedCat;});}
-  var matches=filtered.filter(function(p){return p.name.toLowerCase().indexOf(val)>-1;}).slice(0,10);
+  // Fuzzy search: split input into words, all must match somewhere in name
+  var words=val.split(/\s+/);
+  var matches=filtered.filter(function(p){
+    var name=p.name.toLowerCase();
+    return words.every(function(w){return name.indexOf(w)>-1;});
+  }).slice(0,15);
   if(matches.length===0){listEl.classList.remove('show');return;}
   var h='';
   matches.forEach(function(m){
