@@ -81,9 +81,10 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 <div class="tabs" id="tabs"></div>
 <button class="expand-btn" id="expandBtn" onclick="toggleFullList()">View all details</button>
 <div class="full-list" id="fullList"></div>
+<div id="addArea"></div>
 <div class="stock-layout">
-  <div id="addArea"></div>
-  <div id="pendingArea"></div>
+  <div id="pending86"></div>
+  <div id="pendingLow"></div>
 </div>
 </div>
 <div class="sm" id="sm"></div>
@@ -127,34 +128,52 @@ function loadStock(){
   }).catch(function(e){console.error(e);});
 }
 
-var carouselPage=0;
+var carouselPage86=0;
+var carouselPageLow=0;
 var CAROUSEL_SIZE=10;
 
 function renderPending(){
   var filtered=stockItems.filter(function(it){return it.data.section===TAB;});
-  var area=document.getElementById('pendingArea');
-  var fullArea=document.getElementById('fullList');
+  var items86=filtered.filter(function(it){return it.data.tag==='86';});
+  var itemsLow=filtered.filter(function(it){return it.data.tag!=='86';});
+
+  // Sort most recent first
+  items86.sort(function(a,b){return b.data.date>a.data.date?1:b.data.date<a.data.date?-1:0;});
+  itemsLow.sort(function(a,b){return b.data.date>a.data.date?1:b.data.date<a.data.date?-1:0;});
+
   var expandBtn=document.getElementById('expandBtn');
+  var fullArea=document.getElementById('fullList');
 
   if(filtered.length===0){
-    area.innerHTML='<div class="carousel-box"><div class="em">No pending stock alerts</div></div>';
+    document.getElementById('pending86').innerHTML='';
+    document.getElementById('pendingLow').innerHTML='';
     fullArea.innerHTML='';expandBtn.style.display='none';
     return;
   }
-
   expandBtn.style.display='inline-block';
 
-  // Carousel (right side)
-  var totalPages=Math.ceil(filtered.length/CAROUSEL_SIZE);
-  if(carouselPage>=totalPages)carouselPage=0;
-  if(carouselPage<0)carouselPage=totalPages-1;
-  var start=carouselPage*CAROUSEL_SIZE;
-  var pageItems=filtered.slice(start,start+CAROUSEL_SIZE);
+  // 86 carousel
+  document.getElementById('pending86').innerHTML=buildCarousel(items86,'86',carouselPage86,'86');
+  // Low carousel
+  document.getElementById('pendingLow').innerHTML=buildCarousel(itemsLow,'Low in Stock',carouselPageLow,'low');
+
+  // Full detail list
+  renderFullList(filtered,fullArea);
+}
+
+function buildCarousel(items,title,page,type){
+  if(items.length===0)return '<div class="carousel-box"><div class="carousel-header"><span class="c-title">'+title+' <span class="c-badge">0</span></span></div><div class="em">None</div></div>';
+  var totalPages=Math.ceil(items.length/CAROUSEL_SIZE);
+  if(page>=totalPages)page=0;
+  if(page<0)page=totalPages-1;
+  if(type==='86')carouselPage86=page;else carouselPageLow=page;
+  var start=page*CAROUSEL_SIZE;
+  var pageItems=items.slice(start,start+CAROUSEL_SIZE);
 
   var h='<div class="carousel-box">';
-  h+='<div class="carousel-header"><span class="c-title">Pending <span class="c-badge">'+filtered.length+'</span></span>';
+  h+='<div class="carousel-header"><span class="c-title">'+title+' <span class="c-badge">'+items.length+'</span></span>';
   if(totalPages>1){
-    h+='<div class="carousel-nav"><span onclick="carouselPrev()">&larr;</span><span style="font-size:9px;color:#999">'+(carouselPage+1)+'/'+totalPages+'</span><span onclick="carouselNext()">&rarr;</span></div>';
+    h+='<div class="carousel-nav"><span onclick="carouselNav(\''+type+'\',-1)">&larr;</span><span style="font-size:9px;color:#999">'+(page+1)+'/'+totalPages+'</span><span onclick="carouselNav(\''+type+'\',1)">&rarr;</span></div>';
   }
   h+='</div>';
   for(var i=0;i<pageItems.length;i++){
@@ -169,9 +188,10 @@ function renderPending(){
     h+='</div>';
   }
   h+='</div>';
-  area.innerHTML=h;
+  return h;
+}
 
-  // Full detail list (hidden by default)
+function renderFullList(filtered,fullArea){
   var fh='<div style="background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:14px;margin-bottom:14px">';
   fh+='<table class="tbl"><thead><tr><th>Date</th><th>Product</th>';
   if(TAB==='wine')fh+='<th>Where</th>';
@@ -194,8 +214,11 @@ function renderPending(){
   fullArea.innerHTML=fh;
 }
 
-function carouselPrev(){carouselPage--;renderPending();}
-function carouselNext(){carouselPage++;renderPending();}
+function carouselNav(type,dir){
+  if(type==='86')carouselPage86+=dir;else carouselPageLow+=dir;
+  renderPending();
+}
+
 function toggleFullList(){
   var el=document.getElementById('fullList');
   var btn=document.getElementById('expandBtn');
