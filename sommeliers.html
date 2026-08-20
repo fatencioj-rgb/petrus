@@ -475,30 +475,60 @@ function loadHolidayBtn(){
 }
 loadHolidayBtn();
 
+var _86items=[];
+var _86page=0;
+var _86size=5;
+var _86interval=null;
+
 function load86s(){
   db.collection('somm_stock').get().then(function(snap){
-    var items=[];
+    _86items=[];
     snap.forEach(function(doc){
       var d=doc.data();
-      if(d.tag==='86'&&!d.restocked)items.push(d);
+      if(d.tag==='86'&&!d.restocked)_86items.push(d);
     });
-    var el=document.getElementById('eightySixContent');
-    if(items.length===0){el.innerHTML='<div class="feed-empty">No 86s currently</div>';return;}
-    var h='';
-    for(var i=0;i<items.length;i++){
-      var it=items[i];
-      var fullName=it.name;
-      if(it.producer)fullName+=' '+it.producer;
-      if(it.vintage)fullName+=' '+it.vintage;
-      h+='<div class="feed-item">';
-      h+='<span class="f-tag t86">86</span>';
-      h+='<span class="f-text"><span class="f-highlight">'+fullName+'</span>';
-      if(it.location)h+=' <span style="font-size:8px;padding:1px 6px;border-radius:4px;background:#f0f0f0;color:#888">'+it.location+'</span>';
-      h+=' <span style="font-size:9px;color:#888">'+it.section+' · '+it.date+'</span>';
-      h+='</span></div>';
+    // Sort by date, most recent first
+    _86items.sort(function(a,b){return b.date>a.date?1:b.date<a.date?-1:0;});
+    _86page=0;
+    render86s();
+    // Auto-rotate every 6 seconds
+    if(_86interval)clearInterval(_86interval);
+    if(_86items.length>_86size){
+      _86interval=setInterval(function(){_86page++;render86s();},6000);
     }
-    el.innerHTML=h;
   });
+}
+
+function render86s(){
+  var el=document.getElementById('eightySixContent');
+  if(_86items.length===0){el.innerHTML='<div class="feed-empty">No 86s currently</div>';return;}
+  var total=_86items.length;
+  var totalPages=Math.ceil(total/_86size);
+  if(_86page>=totalPages)_86page=0;
+  if(_86page<0)_86page=totalPages-1;
+  var start=_86page*_86size;
+  var pageItems=_86items.slice(start,start+_86size);
+  var h='';
+  for(var i=0;i<pageItems.length;i++){
+    var it=pageItems[i];
+    var fullName=(it.vintage?it.vintage+' ':'')+it.name;
+    if(it.producer)fullName+=' '+it.producer;
+    h+='<div class="feed-item">';
+    h+='<span class="f-tag t86">86</span>';
+    h+='<span class="f-text"><span class="f-highlight">'+fullName+'</span>';
+    if(it.location)h+=' <span style="font-size:8px;padding:1px 6px;border-radius:4px;background:#f0f0f0;color:#888">'+it.location+'</span>';
+    var dateFormatted=it.date?it.date.split('-').reverse().join('-'):'';
+    h+=' <span style="font-size:9px;color:#888">'+it.section+' · '+dateFormatted+'</span>';
+    h+='</span></div>';
+  }
+  if(totalPages>1){
+    h+='<div style="text-align:center;padding:6px 0;font-size:9px;color:#bbb">';
+    h+='<span style="cursor:pointer;padding:0 6px" onclick="_86page--;render86s();if(_86interval){clearInterval(_86interval);}">&larr;</span>';
+    h+=(_86page+1)+'/'+totalPages;
+    h+='<span style="cursor:pointer;padding:0 6px" onclick="_86page++;render86s();if(_86interval){clearInterval(_86interval);}">&rarr;</span>';
+    h+='</div>';
+  }
+  el.innerHTML=h;
 }
 </script>
 </body>
