@@ -54,7 +54,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .total-cell{text-align:center;font-weight:700;color:var(--green);font-size:12px;background:#f9f5ef}
 
 /* Lock button */
-.loc-header-name{margin-bottom:6px;max-width:70px;word-wrap:break-word;line-height:1.2;text-align:center}
+.loc-header-name{margin-bottom:6px;text-align:center;font-size:8px;line-height:1.3;white-space:nowrap}
 .loc-header-lock{margin-bottom:4px}
 
 /* Discontinued */
@@ -494,7 +494,7 @@ function renderTable(){
     var lockClass = isLocked ? ' is-locked' : '';
     var lockLabel = isLocked ? 'Locked' : 'Lock';
     var lockInfo = isLocked ? '<div class="lock-info"><em>by</em> ' + escHtml(lockedCols[locs[l]].by || '') + '</div>' : '';
-    html += '<th><div class="loc-header-name">' + escHtml(locs[l]) + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
+    html += '<th><div class="loc-header-name">' + escHtml(locs[l]).replace(/\s+/g,'<br>') + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
   }
   html += '<th class="total-header">Total</th>';
   var totalCols = visibleCount + locs.length + 2;
