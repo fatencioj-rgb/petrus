@@ -506,8 +506,10 @@ function renderTable(){
 
     // Filter by search term
     if(searchTerm){
-      var matchText = (row[name_idx]||'') + ' ' + (row[cat_idx]||'');
-      if(matchText.toLowerCase().indexOf(searchTerm) === -1) continue;
+      var matchText = ((row[name_idx]||'') + ' ' + (row[cat_idx]||'')).toLowerCase();
+      var words = searchTerm.split(/\s+/);
+      var allMatch = words.every(function(w){ return matchText.indexOf(w) > -1; });
+      if(!allMatch) continue;
     }
 
     // Category separator
