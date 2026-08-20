@@ -149,7 +149,14 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
       </div>
     </div>
     <button class="btn btn-gold" id="btnSave" style="display:none" onclick="saveMenu()">Save Changes</button>
+    <button class="btn btn-outline" id="btnEdit" style="display:none" onclick="showEditor()">Edit</button>
+    <button class="btn btn-outline" id="btnCloseEdit" style="display:none" onclick="hideEditor()">Close Editor</button>
   </div>
+  <!-- List view (shown by default after load) -->
+  <div id="listView" style="display:none">
+    <div class="menu-preview" id="listPreview" style="max-width:600px;margin:0 auto"></div>
+  </div>
+  <!-- Edit view (hidden until Edit clicked) -->
   <div class="split-view" id="splitView" style="display:none;">
     <div class="split-left">
       <div class="menu-preview" id="menuPreview"></div>
@@ -498,9 +505,17 @@ async function loadMenu() {
 
   renderPreview();
   renderEditor();
+  renderListView();
   btnPrint.disabled = false;
   document.getElementById('btnPdf').disabled = false;
   document.getElementById('btnEmail').disabled = false;
+  document.getElementById('btnEdit').style.display = 'inline-block';
+  document.getElementById('btnSave').style.display = 'none';
+  document.getElementById('btnCloseEdit').style.display = 'none';
+  // Show list view, hide editor
+  document.getElementById('listView').style.display = 'block';
+  document.getElementById('splitView').style.display = 'none';
+  document.getElementById('menuPreviewPlaceholder').style.display = 'none';
   btnLoad.disabled = false; btnLoad.textContent = 'Load Menu';
   showStatus('Pairing loaded');
 }
@@ -698,9 +713,31 @@ function getDatalistsHTML() {
   return h;
 }
 
+// ─── LIST VIEW ──────────────────────────────────────────────────
+function renderListView(){
+  var el=document.getElementById('listPreview');
+  el.innerHTML=document.getElementById('menuPreview').innerHTML;
+}
+
+function showEditor(){
+  document.getElementById('listView').style.display='none';
+  document.getElementById('splitView').style.display='flex';
+  document.getElementById('btnEdit').style.display='none';
+  document.getElementById('btnSave').style.display='inline-block';
+  document.getElementById('btnCloseEdit').style.display='inline-block';
+}
+
+function hideEditor(){
+  document.getElementById('splitView').style.display='none';
+  document.getElementById('listView').style.display='block';
+  document.getElementById('btnEdit').style.display='inline-block';
+  document.getElementById('btnSave').style.display='none';
+  document.getElementById('btnCloseEdit').style.display='none';
+  renderListView();
+}
+
 // ─── EDITOR ─────────────────────────────────────────────────────
 function renderEditor() {
-  document.getElementById('splitView').style.display = 'flex';
   document.getElementById('menuPreviewPlaceholder').style.display = 'none';
   const panel = document.getElementById('editorPanel');
   const container = document.getElementById('courseEditors');
