@@ -81,7 +81,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
     <div id="feedContent"><div class="feed-empty">Loading...</div></div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #f0ebe5">
       <textarea id="quickTask" placeholder="Add a task..." style="flex:1;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);outline:none;resize:none;min-height:28px;max-height:80px;line-height:1.4" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-      <select id="quickAssign" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:10px;font-family:var(--sans);min-width:90px">
+      <select id="quickAssign" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--sans);min-width:110px">
         <option value="">Assign...</option>
         <option value="Fiorella">Fiorella</option>
         <option value="Christian">Christian</option>
@@ -215,7 +215,13 @@ function addQuickTask(){
   var text=input.value.trim();
   if(!text)return;
   var assignee=(document.getElementById('quickAssign')||{}).value||'';
-  if(!assignee){alert('Please assign the task to someone');return;}
+  if(!assignee){
+    var sel=document.getElementById('quickAssign');
+    sel.style.borderColor='#c0392b';sel.style.boxShadow='0 0 0 2px rgba(192,57,43,0.2)';
+    sel.focus();
+    setTimeout(function(){sel.style.borderColor='#ddd';sel.style.boxShadow='none';},2500);
+    return;
+  }
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
   author=author.charAt(0).toUpperCase()+author.slice(1);
