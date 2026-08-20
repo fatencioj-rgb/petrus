@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Sales — Petrus Sommeliers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
+.tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.tb h2{font-family:var(--f);color:#fff;font-size:18px}
+.pg{max-width:900px;margin:0 auto;padding:24px 14px 60px}
+.pg>h1{font-family:var(--f);font-size:26px;color:var(--grn);margin-bottom:8px}
+.pg>p.subtitle{font-size:11px;color:#888;margin-bottom:24px}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.btn{padding:9px 20px;background:var(--grn);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:var(--s);transition:all .2s}
+.btn:hover{background:var(--grn2)}
+.btn:disabled{background:#ccc;cursor:not-allowed}
+.btn.active{background:var(--gld)}
+.cat-btn{padding:9px 20px;border:1px solid var(--grn);background:transparent;color:var(--grn);border-radius:4px;font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:var(--s);transition:all .2s}
+.cat-btn:hover{background:var(--grn);color:#fff}
+.cat-btn.on{background:var(--grn);color:#fff}
+.section{background:#fff;border:1px solid #e8e0d4;border-radius:8px;padding:16px;margin-bottom:14px}
+.section h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gld);margin-bottom:10px;font-weight:600}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.summary-card{text-align:center;padding:12px;background:#fff;border-radius:6px;border:1px solid #e8e0d4}
+.summary-card .num{font-size:28px;font-family:var(--f);font-weight:700;color:var(--grn)}
+.summary-card .lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--grn2);color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:5px 8px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
+.tbl tr:hover td{background:#fdf9f2}
+.loading{text-align:center;padding:40px;color:#888}
+.loading .spinner{width:30px;height:30px;border:3px solid #e8e0d4;border-top:3px solid var(--gld);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.em{text-align:center;padding:30px;color:#ccc;font-size:11px}
+.error{background:#f8d7da;color:#721c24;padding:12px;border-radius:6px;font-size:12px;margin-top:10px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--grn);color:var(--crm);padding:10px 16px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="tb"><a href="somm-admin.html">&larr; Back</a><h2>Petrus</h2><span></span></div>
+<div class="pg">
+  <h1>Daily Sales</h1>
+  <p class="subtitle">Sales report from TISSL Hub — today's data by category</p>
+
+  <div class="actions">
+    <span class="cat-btn on" id="catWine" onclick="setCategory('wine')">Wine</span>
+    <span class="cat-btn" id="catDrinks" onclick="setCategory('drinks')">Drinks</span>
+    <input type="date" id="salesDate" style="padding:8px 12px;border:1px solid var(--gld);border-radius:4px;font-family:var(--s);font-size:11px">
+    <button class="btn" id="btnFetch" onclick="fetchSales()">Fetch Sales</button>
+  </div>
+
+  <div id="output"><div class="em">Select a category and click Fetch Sales</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script src="guard-admin.js"></script>
+<script>
+const API = "https://localhost:5050";
+var selectedCategory = 'wine';
+
+// Set today's date
+document.getElementById('salesDate').value = new Date().toISOString().slice(0,10);
+
+function setCategory(cat){
+  selectedCategory = cat;
+  document.getElementById('catWine').classList.toggle('on', cat==='wine');
+  document.getElementById('catDrinks').classList.toggle('on', cat==='drinks');
+}
+
+async function fetchSales(){
+  var btn = document.getElementById('btnFetch');
+  var output = document.getElementById('output');
+  var date = document.getElementById('salesDate').value;
+  btn.disabled = true;
+  output.innerHTML = '<div class="loading"><div class="spinner"></div><p>Fetching '+selectedCategory+' sales from TISSL Hub...</p><p style="font-size:10px;color:#aaa;margin-top:6px">This may take 30-60 seconds</p></div>';
+
+  try {
+    var res = await fetch(API + '/api/daily-sales', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: selectedCategory, date: date })
+    });
+
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    var data = await res.json();
+
+    if (!data.items || data.items.length === 0) {
+      output.innerHTML = '<div class="em">No sales data found for ' + date + '</div>';
+      btn.disabled = false;
+      return;
+    }
+
+    renderResults(data, date);
+    btn.disabled = false;
+  } catch (err) {
+    output.innerHTML = '<div class="error">⚠ Could not connect to server. Make sure viniv-server.py is running.</div>';
+    btn.disabled = false;
+  }
+}
+
+function renderResults(data, date){
+  var items = data.items;
+  var totalQty = 0, totalRevenue = 0;
+  items.forEach(function(it){ totalQty += it.qty; totalRevenue += it.qty * it.price; });
+
+  var dateFormatted = new Date(date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+  var h = '<div class="section"><h3>'+selectedCategory.toUpperCase()+' Sales — '+dateFormatted+'</h3>';
+  h += '<div class="summary-grid">';
+  h += '<div class="summary-card"><div class="num">'+items.length+'</div><div class="lbl">Products</div></div>';
+  h += '<div class="summary-card"><div class="num">'+totalQty+'</div><div class="lbl">Units Sold</div></div>';
+  h += '<div class="summary-card"><div class="num">£'+totalRevenue.toFixed(0)+'</div><div class="lbl">Revenue</div></div>';
+  h += '</div>';
+
+  h += '<table class="tbl"><thead><tr><th>Session</th><th>Order Type</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>';
+  items.forEach(function(it){
+    h += '<tr><td>'+(it.session||'')+'</td><td>'+(it.orderType||'')+'</td><td>'+it.product+'</td><td>'+it.qty+'</td><td>£'+it.price.toFixed(2)+'</td><td>£'+(it.qty*it.price).toFixed(2)+'</td></tr>';
+  });
+  h += '</tbody></table></div>';
+
+  document.getElementById('output').innerHTML = h;
+}
+
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2000);}
+</script>
+</body>
+</html>
