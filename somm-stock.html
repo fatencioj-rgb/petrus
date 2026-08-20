@@ -299,12 +299,12 @@ function renderAdd(){
   h+='<div class="fields">';
   h+='<input type="date" id="stk_date" value="'+new Date().toISOString().slice(0,10)+'" onchange="checkDay(this)" style="width:110px;flex:0 0 110px">';
   if(TAB==='wine'){
-    h+='<select id="stk_winecat" style="flex:0 0 auto" onchange="filterAcCat()"><option value="">Type...</option></select>';
-    h+='<div class="ac-wrap"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'wines\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
+    h+='<select id="stk_winecat" style="flex:0 0 100px;font-size:10px" onchange="filterAcCat()"><option value="">Type...</option></select>';
+    h+='<div class="ac-wrap" style="flex:2"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'wines\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
     h+='<input type="text" id="stk_vintage" placeholder="Vintage" style="flex:0 0 65px">';
   }else if(TAB==='bar'){
-    h+='<select id="stk_barcat" style="flex:0 0 auto" onchange="filterAcCat()"><option value="">Type...</option></select>';
-    h+='<div class="ac-wrap"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'beverages\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
+    h+='<select id="stk_barcat" style="flex:0 0 100px;font-size:10px" onchange="filterAcCat()"><option value="">Type...</option></select>';
+    h+='<div class="ac-wrap" style="flex:2"><input type="text" id="stk_name" placeholder="Product" oninput="acSearch(this,\'beverages\')" autocomplete="off"><div class="ac-list" id="ac_stk_name"></div></div>';
   }else if(TAB==='supplies'){
     h+='<input type="text" id="stk_name" placeholder="Product">';
   }else if(TAB==='kitchen'){
