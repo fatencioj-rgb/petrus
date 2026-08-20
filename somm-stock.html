@@ -101,9 +101,11 @@ var selTag='';
 auth.onAuthStateChanged(function(u){
   if(!u){window.location.href='index.html';return;}
   U=u;logAccess(u,'page_view','somm-stock.html');
-  renderTabs();renderAdd();
   loadStock();
 });
+
+// Render tabs immediately
+renderTabs();renderAdd();
 
 function setTab(t){TAB=t;renderTabs();renderPending();renderAdd();}
 
