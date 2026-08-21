@@ -83,8 +83,8 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
   <input type="date" id="viewDate" onchange="loadItems()" style="padding:5px 8px;border:1px solid var(--gld);border-radius:4px;font-size:11px;font-family:var(--s)">
   <button onclick="document.getElementById('viewDate').value=new Date().toISOString().slice(0,10);loadItems()" style="padding:4px 10px;border:1px solid var(--gld);border-radius:4px;background:transparent;color:var(--grn);font-size:9px;cursor:pointer">Today</button>
 </div>
-<div id="listArea"></div>
 <div id="addArea"></div>
+<div id="listArea"></div>
 <div class="legend">
   <span><span class="ds" style="background:#f0f0f0;border:1px solid #ddd"></span>Not set</span>
   <span><span class="ds" style="background:#28a745"></span>Done</span>
@@ -170,7 +170,7 @@ function renderList(){
       // Invoice dot (per-delivery)
       var invStatus=grp.items[0].data.invoiceState||grp.items[0].data.tasks&&grp.items[0].data.tasks.invoicePW||'none';
       var invColor=invStatus==='done'?'#28a745':invStatus==='pending'?'#fd7e14':invStatus==='already'?'#007bff':'#e0e0e0';
-      h+='<span style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:8px;color:#888">PW Inv <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+invColor+'"></span></span>';
+      h+='<span style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:8px;color:#fff;background:'+(invStatus==='done'?'#28a745':invStatus==='pending'?'#fd7e14':'var(--grn)')+';padding:2px 8px;border-radius:4px;font-weight:600">PW Invoice '+(invStatus==='done'?'✓':invStatus==='pending'?'⏳':invStatus==='already'?'✓':'—')+'</span>';
       h+='</div>';
 
       // Column headers
@@ -234,7 +234,7 @@ function renderAdd(){
   a+='<span class="tag-opt'+(_ok?' on':'')+'" id="okBtn" onclick="togOk()">Received as ordered</span>';
   a+='<span class="tag-opt'+(_chg?' on':'')+'" id="chgBtn" onclick="togChg()">Order changed</span>';
   a+='<input type="text" id="d_chg_detail" placeholder="What happened?" style="max-width:140px;display:'+(_chg?'inline-block':'none')+'">';
-  a+='<span class="dot-col" style="margin-left:8px"><span class="dot-label">PW Inv</span><span class="dot-btn st-'+(_invoiceState||'none')+'" onclick="cycleInvoice()"></span></span>';
+  a+='<span style="margin-left:8px;padding:3px 10px;border-radius:4px;font-size:9px;font-weight:600;cursor:pointer;color:#fff;background:'+(_invoiceState==='done'?'#28a745':_invoiceState==='pending'?'#fd7e14':_invoiceState==='already'?'#007bff':'var(--grn)')+'" onclick="cycleInvoice()">PW Invoice '+(_invoiceState==='done'?'✓':_invoiceState==='pending'?'⏳':_invoiceState==='already'?'✓':'—')+'</span>';
   a+='</div>';
 
   // Staged items
