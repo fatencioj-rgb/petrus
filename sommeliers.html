@@ -347,27 +347,64 @@ function renderFeed(feed){
     return tsb-tsa;
   });
 
-  for(var i=0;i<Math.min(otherFeed.length,12);i++){
-    var f=otherFeed[i];var d=f.data;
+  // Group stock items by author
+  var stockGroups={};
+  var nonStockFeed=[];
+  for(var i=0;i<otherFeed.length;i++){
+    if(otherFeed[i].type==='stock'){
+      var author=otherFeed[i].data.author||'';
+      if(!stockGroups[author])stockGroups[author]={items:[],ts:otherFeed[i].ts};
+      stockGroups[author].items.push(otherFeed[i].data);
+    }else{
+      nonStockFeed.push(otherFeed[i]);
+    }
+  }
+  // Add grouped stock as single feed items
+  for(var a in stockGroups){
+    nonStockFeed.push({type:'stock-group',data:stockGroups[a],ts:stockGroups[a].ts});
+  }
+  // Re-sort
+  nonStockFeed.sort(function(a,b){
+    var typeOrder2={'delivery-group':0,'stock-group':1,'wastage':2,'transfer':3,'recipe':4,'duty':5,'duty-done':6};
+    var ta=typeOrder2[a.type]!==undefined?typeOrder2[a.type]:9;
+    var tb=typeOrder2[b.type]!==undefined?typeOrder2[b.type]:9;
+    if(ta!==tb)return ta-tb;
+    var tsa=a.ts?a.ts.seconds||0:0;
+    var tsb=b.ts?b.ts.seconds||0:0;
+    return tsb-tsa;
+  });
+
+  for(var i=0;i<Math.min(nonStockFeed.length,12);i++){
+    var f=nonStockFeed[i];var d=f.data;
     h+='<div class="feed-item">';
-    if(f.type==='stock'){
-      var tagCls='low'; // always same color for stock
-      var tagLbl=d.tag==='86'?'86':'low in stock';
-      var aName=d.author.charAt(0).toUpperCase()+d.author.slice(1);
-      // Build full product name with producer + vintage
-      var fullName=d.name;
-      if(d.producer)fullName+=' '+d.producer;
-      if(d.vintage)fullName+=' '+d.vintage;
-      // If low-stock with qty=1, show as "last bottle available"
+    if(f.type==='stock-group'){
+      var aName=(d.items[0].author||'').charAt(0).toUpperCase()+(d.items[0].author||'').slice(1);
+      h+='<span class="f-tag low">Stock</span>';
+      h+='<span class="f-text"><span class="f-author">'+aName+'</span> logged '+d.items.length+' item'+(d.items.length>1?'s':'')+':';
+      for(var si=0;si<d.items.length;si++){
+        var st=d.items[si];
+        var fullName=(st.vintage?st.vintage+' ':'')+st.name;
+        var tagLbl=st.tag==='86'?'<span class="f-tag t86">86</span>':st.qty==='1'?'<span class="f-tag low">last bottle</span>':'<span class="f-tag low">low</span>';
+        var loc=st.tag==='86'&&st.location?' <span style="font-size:8px;color:#888">('+st.location+')</span>':'';
+        h+='<br><span style="margin-left:12px;font-size:10px"><span class="f-highlight">"'+fullName+'"</span> '+tagLbl+loc+'</span>';
+      }
+      h+='</span>';
+    }else if(f.type==='stock'){
+      var tagCls='low';
+      var tagLbl2=d.tag==='86'?'86':'low in stock';
+      var aName2=d.author.charAt(0).toUpperCase()+d.author.slice(1);
+      var fullName2=d.name;
+      if(d.producer)fullName2+=' '+d.producer;
+      if(d.vintage)fullName2+=' '+d.vintage;
       var desc='';
       if(d.tag==='low-stock'&&d.qty==='1'){
         desc='as <span class="f-tag low">last bottle available</span>';
       } else {
-        desc='as <span class="f-tag '+tagCls+'">'+tagLbl+'</span>';
+        desc='as <span class="f-tag '+tagCls+'">'+tagLbl2+'</span>';
         if(d.tag==='86'&&d.location)desc+=' <span style="font-size:9px;color:#888">('+d.location+')</span>';
       }
       h+='<span class="f-tag '+tagCls+'">Stock</span>';
-      h+='<span class="f-text"><span class="f-author">'+aName+'</span> logged <span class="f-highlight">"'+fullName+'"</span> '+desc+'</span>';
+      h+='<span class="f-text"><span class="f-author">'+aName2+'</span> logged <span class="f-highlight">"'+fullName2+'"</span> '+desc+'</span>';
     }else if(f.type==='delivery-group'){
       var authorName=d.author.charAt(0).toUpperCase()+d.author.slice(1);
       h+='<span class="f-tag deliv">Delivery</span>';
@@ -462,7 +499,7 @@ function renderFeed(feed){
     }
     h+='</div>';
   }
-  if(otherFeed.length>12)h+='<div class="feed-empty">+'+(otherFeed.length-12)+' more today</div>';
+  if(nonStockFeed.length>12)h+='<div class="feed-empty">+'+(nonStockFeed.length-12)+' more today</div>';
   el.innerHTML=h;
 }
 
