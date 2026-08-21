@@ -105,8 +105,8 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 var U=null,TAB='wine';
 var TABS=['wine','bar','supplies'];
 var SUPPLIERS={wine:['Liberty Wines','Hallgarten','Les Caves de Pyrene','LCB','Robertson Wine','Corney & Barrow','Ripley Wines'],bar:['Champers'],supplies:['Coravin']};
-var TASK_KEYS=['invoicePW','createdPW','createdHorizon','addedMenu'];
-var TASK_LABELS=['PW Inv','PW Prod','HOR','Menu'];
+var TASK_KEYS=['createdPW','createdHorizon','addedMenu'];
+var TASK_LABELS=['PW Prod','HOR','Menu'];
 var TASK_DUTY_TEXT={invoicePW:'Close invoice in PW for',createdPW:'Create product in PW for',createdHorizon:'Create product in Horizon for',addedMenu:'Add to Wine List:'};
 var MENU_OPTS=['BTG','BTB','Wine Pairing','Bar Menu'];
 var STATES=['none','done','already','pending'];
@@ -166,12 +166,16 @@ function renderList(){
       h+='<div class="del-group">';
       // Header: date, supplier, author
       h+='<div style="font-size:10px;color:#888;margin-bottom:2px">'+grp.date+'</div>';
-      h+='<div class="del-group-head"><strong>'+grp.supplier+'</strong><span style="font-size:9px;color:#888;margin-left:8px">'+grp.author+'</span></div>';
+      h+='<div class="del-group-head"><strong>'+grp.supplier+'</strong><span style="font-size:9px;color:#888;margin-left:8px">'+grp.author+'</span>';
+      // Invoice dot (per-delivery)
+      var invStatus=grp.items[0].data.invoiceState||grp.items[0].data.tasks&&grp.items[0].data.tasks.invoicePW||'none';
+      var invColor=invStatus==='done'?'#28a745':invStatus==='pending'?'#fd7e14':invStatus==='already'?'#007bff':'#e0e0e0';
+      h+='<span style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:8px;color:#888">PW Inv <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+invColor+'"></span></span>';
+      h+='</div>';
 
       // Column headers
       h+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0ebe5;margin-bottom:4px">';
       h+='<span style="min-width:24px"></span><span style="flex:1"></span>';
-      h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">PW Inv</span>';
       h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">PW Prod</span>';
       h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">HOR</span>';
       h+='<span style="font-size:7px;color:#999;text-align:center;width:40px">Menu</span>';
@@ -230,6 +234,7 @@ function renderAdd(){
   a+='<span class="tag-opt'+(_ok?' on':'')+'" id="okBtn" onclick="togOk()">Received as ordered</span>';
   a+='<span class="tag-opt'+(_chg?' on':'')+'" id="chgBtn" onclick="togChg()">Order changed</span>';
   a+='<input type="text" id="d_chg_detail" placeholder="What happened?" style="max-width:140px;display:'+(_chg?'inline-block':'none')+'">';
+  a+='<span class="dot-col" style="margin-left:8px"><span class="dot-label">PW Inv</span><span class="dot-btn st-'+(_invoiceState||'none')+'" onclick="cycleInvoice()"></span></span>';
   a+='</div>';
 
   // Staged items
@@ -289,7 +294,7 @@ function renderAdd(){
 }
 
 // New item dot states
-var newDotStates=[0,0,0,0]; // index into STATES
+var newDotStates=[0,0,0]; // index into STATES
 function cycleNewDot(k){
   newDotStates[k]=(newDotStates[k]+1)%STATES.length;
   var el=document.getElementById('newDot_'+k);
@@ -311,6 +316,13 @@ function removeStaged(i){staged.splice(i,1);renderAdd();}
 
 var _chg=false,_ok=false;
 var _delivNotes='';
+var _invoiceState='none';
+function cycleInvoice(){
+  var states=['none','done','already','pending'];
+  var cur=states.indexOf(_invoiceState);
+  _invoiceState=states[(cur+1)%states.length];
+  renderAdd();
+}
 function togOk(){
   _ok=!_ok;if(_ok)_chg=false;
   var btn=document.getElementById('okBtn');if(btn)btn.classList.toggle('on',_ok);
@@ -334,7 +346,7 @@ function stageItem(){
   staged.push(item);
   document.getElementById('d_name').value='';
   document.getElementById('d_qty').value='1';
-  newDotStates=[0,0,0,0];
+  newDotStates=[0,0,0];
   renderAdd();
 }
 
@@ -357,7 +369,7 @@ function submitAll(){
   for(var i=0;i<staged.length;i++){
     var st=staged[i];
     var docRef=db.collection('somm_deliveries').doc();
-    var item={section:TAB,date:date,supplier:supplier,qty:st.qty,name:st.name,author:author,assignee:assignee,asInvoice:st.asInvoice||false,changed:st.changed,changeDetail:st.changeDetail,tasks:st.tasks,menuPlacement:[],taskLog:[],notes:notes,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    var item={section:TAB,date:date,supplier:supplier,qty:st.qty,name:st.name,author:author,assignee:assignee,asInvoice:st.asInvoice||false,changed:st.changed,changeDetail:st.changeDetail,tasks:st.tasks,invoiceState:_invoiceState,menuPlacement:[],taskLog:[],notes:notes,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
     batch.set(docRef,item);
     // Check for pending tasks -> create duties
     for(var k=0;k<TASK_KEYS.length;k++){
@@ -378,7 +390,7 @@ function submitAll(){
     });
     return Promise.all(dutyPromises);
   }).then(function(){
-    staged=[];newDotStates=[0,0,0,0];_chg=false;_ok=false;_selectedAssignee='';_delivNotes='';
+    staged=[];newDotStates=[0,0,0];_chg=false;_ok=false;_selectedAssignee='';_delivNotes='';_invoiceState='none';
     loadItems();msg('Delivery saved ✓');
   }).catch(function(e){console.error(e);msg('Error');});
 }
