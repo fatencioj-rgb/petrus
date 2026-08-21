@@ -379,14 +379,27 @@ function renderFeed(feed){
     h+='<div class="feed-item">';
     if(f.type==='stock-group'){
       var aName=(d.items[0].author||'').charAt(0).toUpperCase()+(d.items[0].author||'').slice(1);
+      var items86=d.items.filter(function(s){return s.tag==='86';});
+      var itemsLow=d.items.filter(function(s){return s.tag!=='86';});
       h+='<span class="f-tag low">Stock</span>';
       h+='<span class="f-text"><span class="f-author">'+aName+'</span> logged '+d.items.length+' item'+(d.items.length>1?'s':'')+':';
-      for(var si=0;si<d.items.length;si++){
-        var st=d.items[si];
-        var fullName=(st.vintage?st.vintage+' ':'')+st.name;
-        var tagLbl=st.tag==='86'?'<span class="f-tag t86">86</span>':st.qty==='1'?'<span class="f-tag low">last bottle</span>':'<span class="f-tag low">low</span>';
-        var loc=st.tag==='86'&&st.location?' <span style="font-size:8px;color:#888">('+st.location+')</span>':'';
-        h+='<br><span style="margin-left:12px;font-size:10px"><span class="f-highlight">"'+fullName+'"</span> '+tagLbl+loc+'</span>';
+      if(items86.length>0){
+        h+='<br><span style="margin-left:12px;font-size:8px;color:#721c24;font-weight:600">86:</span>';
+        for(var si=0;si<items86.length;si++){
+          var st=items86[si];
+          var fullName=(st.vintage?st.vintage+' ':'')+st.name;
+          var loc=st.location?' <span style="font-size:8px;color:#888">('+st.location+')</span>':'';
+          h+='<br><span style="margin-left:20px;font-size:10px">'+fullName+loc+'</span>';
+        }
+      }
+      if(itemsLow.length>0){
+        h+='<br><span style="margin-left:12px;font-size:8px;color:#856404;font-weight:600">Low in stock:</span>';
+        for(var si2=0;si2<itemsLow.length;si2++){
+          var st2=itemsLow[si2];
+          var fullName2=(st2.vintage?st2.vintage+' ':'')+st2.name;
+          var lastBottle=st2.qty==='1'?' <span style="font-size:8px;color:#856404">(last bottle)</span>':'';
+          h+='<br><span style="margin-left:20px;font-size:10px">'+fullName2+lastBottle+'</span>';
+        }
       }
       h+='</span>';
     }else if(f.type==='stock'){
