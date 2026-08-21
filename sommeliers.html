@@ -294,9 +294,11 @@ function loadFeed(){
       }
     });
     results[2].forEach(function(doc){var d=doc.data();feed.push({type:'wastage',data:d,ts:d.createdAt});});
-    // Duties: show all pending ones + completed today
+    // Duties: show all pending ones + completed today (but skip delivery-generated tasks)
+    var deliveryKeywords=['Create product in PW','Create product in Horizon','Add to Wine List','Update the Menu','Close the invoice'];
     results[3].forEach(function(doc){var d=doc.data();
-      if(!d.done)feed.push({type:'duty',data:d,id:doc.id,ts:d.createdAt});
+      var isDeliveryTask=deliveryKeywords.some(function(kw){return d.text&&d.text.indexOf(kw)>-1;});
+      if(!d.done&&!isDeliveryTask)feed.push({type:'duty',data:d,id:doc.id,ts:d.createdAt});
       else if(d.done&&d.doneDate===FEED_DATE)feed.push({type:'duty-done',data:d,id:doc.id,ts:d.createdAt});
     });
     results[4].forEach(function(doc){var d=doc.data();feed.push({type:'transfer',data:d,ts:d.createdAt});});
