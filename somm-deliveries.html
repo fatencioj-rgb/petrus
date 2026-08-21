@@ -276,6 +276,7 @@ function renderAdd(){
   for(var nd=0;nd<newDotStates.length;nd++){if(STATES[newDotStates[nd]]==='pending')hasPending=true;}
 
   a+='<div class="footer-row">';
+  a+='<div style="margin-bottom:8px"><input type="text" id="d_notes" placeholder="Notes (optional)" style="width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-family:var(--s);outline:none" value="'+(_delivNotes||'')+'"></div>';
   a+='<span id="assignRow" style="display:'+(hasPending?'flex':'none')+';gap:6px;align-items:center">';
   a+='<label>Please finish what\'s pending:</label>';
   a+='<select id="d_assign" onchange="_selectedAssignee=this.value"><option value="">Unassigned</option>';
@@ -309,6 +310,7 @@ function cycleStagedDot(si,k){
 function removeStaged(i){staged.splice(i,1);renderAdd();}
 
 var _chg=false,_ok=false;
+var _delivNotes='';
 function togOk(){
   _ok=!_ok;if(_ok)_chg=false;
   var btn=document.getElementById('okBtn');if(btn)btn.classList.toggle('on',_ok);
@@ -332,7 +334,7 @@ function stageItem(){
   staged.push(item);
   document.getElementById('d_name').value='';
   document.getElementById('d_qty').value='1';
-  newDotStates=[0,0,0,0];_chg=false;_ok=false;
+  newDotStates=[0,0,0,0];
   renderAdd();
 }
 
@@ -347,6 +349,7 @@ function submitAll(){
   var date=(document.getElementById('d_date')||{}).value||new Date().toISOString().slice(0,10);
   var author=U.displayName||U.email.split('@')[0].replace(/\./g,' ');
   var assignee=_selectedAssignee||(document.getElementById('d_assign')||{}).value||'';
+  var notes=(document.getElementById('d_notes')||{}).value.trim()||'';
 
   var batch=db.batch();
   var pendingDuties=[];
@@ -354,7 +357,7 @@ function submitAll(){
   for(var i=0;i<staged.length;i++){
     var st=staged[i];
     var docRef=db.collection('somm_deliveries').doc();
-    var item={section:TAB,date:date,supplier:supplier,qty:st.qty,name:st.name,author:author,assignee:assignee,asInvoice:st.asInvoice||false,changed:st.changed,changeDetail:st.changeDetail,tasks:st.tasks,menuPlacement:[],taskLog:[],createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    var item={section:TAB,date:date,supplier:supplier,qty:st.qty,name:st.name,author:author,assignee:assignee,asInvoice:st.asInvoice||false,changed:st.changed,changeDetail:st.changeDetail,tasks:st.tasks,menuPlacement:[],taskLog:[],notes:notes,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
     batch.set(docRef,item);
     // Check for pending tasks -> create duties
     for(var k=0;k<TASK_KEYS.length;k++){
@@ -375,7 +378,7 @@ function submitAll(){
     });
     return Promise.all(dutyPromises);
   }).then(function(){
-    staged=[];newDotStates=[0,0,0,0];_chg=false;_ok=false;_selectedAssignee='';
+    staged=[];newDotStates=[0,0,0,0];_chg=false;_ok=false;_selectedAssignee='';_delivNotes='';
     loadItems();msg('Delivery saved ✓');
   }).catch(function(e){console.error(e);msg('Error');});
 }
