@@ -432,7 +432,7 @@ function renderFeed(feed){
         ['invoicePW','createdPW','createdHorizon','addedMenu'].forEach(function(k){
           if(tasks[k]==='pending')pendList.push({key:k,label:PEND_LABELS[k],docId:docId});
         });
-        h+='<br><span style="margin-left:12px;font-size:10px">x'+itm.qty+' '+itm.name+'</span>';
+        h+='<br><span style="margin-left:12px;font-size:10px">('+itm.qty+') '+itm.name+'</span>';
         // Show completed tasks for today
         var doneToday=[];
         var log=itm.taskLog||[];
