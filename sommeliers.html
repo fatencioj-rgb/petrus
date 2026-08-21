@@ -432,7 +432,7 @@ function renderFeed(feed){
         ['invoicePW','createdPW','createdHorizon','addedMenu'].forEach(function(k){
           if(tasks[k]==='pending')pendList.push({key:k,label:PEND_LABELS[k],docId:docId});
         });
-        h+='<br><span style="margin-left:12px;font-size:10px;display:inline-block;margin-top:6px">('+itm.qty+') '+itm.name+'</span>';
+        h+='<br><span style="margin-left:12px;font-size:10px">('+itm.qty+') '+itm.name+'</span>';
         // Show completed tasks for today
         var doneToday=[];
         var log=itm.taskLog||[];
@@ -467,7 +467,7 @@ function renderFeed(feed){
           }
           var allKeys=[];for(var pk=0;pk<pendList.length;pk++){allKeys.push(pendList[pk].key);}
           var docId=pendList[0].docId;
-          h+='<br><span style="margin-left:20px;font-size:9px;color:var(--green);font-weight:500">Pending to: '+pendText+' <span style="cursor:pointer;padding:1px 6px;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:3px;font-size:8px;font-weight:400" onclick="markAllDelivTasks(\''+docId+'\',\''+allKeys.join(',')+'\')">Done</span></span>';
+          h+='<br><span style="margin-left:20px;font-size:9px;color:var(--green);font-weight:500">Pending to: '+pendText+' <span style="cursor:pointer;padding:1px 6px;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:3px;font-size:8px;font-weight:400" onclick="markAllDelivTasks(\''+docId+'\',\''+allKeys.join(',')+'\')">Done</span></span><br><span style="display:block;height:4px"></span>';
         }
       }
       // Assignee note at the end
