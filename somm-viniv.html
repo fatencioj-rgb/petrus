@@ -77,7 +77,6 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
       <option value="">Loading accounts...</option>
     </select>
     <select id="weekSelect" class="account-select">
-      <option value="current">This week (auto)</option>
     </select>
     <button class="btn" id="btnGenerate" onclick="generateReport()">Generate Report</button>
     <span id="status" style="font-size:11px;color:#888"></span>
@@ -128,26 +127,26 @@ let reportData = null;
   }
 })();
 
-// ── Populate week selector (last 12 weeks, Monday-Saturday) ──
+// ── Populate week selector (last 12 weeks, Tuesday-Saturday) ──
 (function populateWeeks() {
   const select = document.getElementById('weekSelect');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const today = new Date();
-  // Find this week's Monday
-  const day = today.getDay(); // 0=Sun, 1=Mon...
-  const diffToMonday = (day === 0 ? -6 : 1 - day);
-  const thisMonday = new Date(today);
-  thisMonday.setDate(today.getDate() + diffToMonday);
+  // Find this week's Tuesday
+  const day = today.getDay(); // 0=Sun, 1=Mon, 2=Tue...
+  const diffToTuesday = (day === 0 ? -5 : 2 - day);
+  const thisTuesday = new Date(today);
+  thisTuesday.setDate(today.getDate() + diffToTuesday);
 
   for (let i = 0; i < 12; i++) {
-    const monday = new Date(thisMonday);
-    monday.setDate(thisMonday.getDate() - (i * 7));
-    const saturday = new Date(monday);
-    saturday.setDate(monday.getDate() + 5);
+    const tuesday = new Date(thisTuesday);
+    tuesday.setDate(thisTuesday.getDate() - (i * 7));
+    const saturday = new Date(tuesday);
+    saturday.setDate(tuesday.getDate() + 4);
 
-    const fromStr = monday.toISOString().slice(0, 10);
+    const fromStr = tuesday.toISOString().slice(0, 10);
     const toStr = saturday.toISOString().slice(0, 10);
-    const label = monday.getDate() + ' ' + months[monday.getMonth()] + ' — ' + saturday.getDate() + ' ' + months[saturday.getMonth()];
+    const label = tuesday.getDate() + ' ' + months[tuesday.getMonth()] + ' — ' + saturday.getDate() + ' ' + months[saturday.getMonth()];
 
     const opt = document.createElement('option');
     opt.value = fromStr + '|' + toStr;
