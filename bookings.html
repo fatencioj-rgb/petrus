@@ -20,27 +20,31 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 </style>
 <style>
 /* Upload */
-.upload-col{display:flex;flex-direction:column;gap:8px;max-width:420px;margin-bottom:16px}
-.upload-print-row{display:flex;gap:10px;align-items:stretch}
-.upload-box{flex:1;border:2px dashed var(--border);border-radius:8px;padding:12px 16px;background:white;cursor:pointer;transition:border-color 0.2s,background 0.2s;text-align:center;display:flex;align-items:center;justify-content:center}
+/* TOP GRID: Upload (left, full height) + controls stacked (right) */
+.top-grid{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:stretch;margin-bottom:16px}
+.controls-col{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.upload-box{border:2px dashed var(--border);border-radius:8px;padding:12px;background:white;cursor:pointer;transition:border-color 0.2s,background 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;height:100%}
 .upload-box:hover{border-color:var(--gold);background:#fdf9f2}
 .upload-box p{font-size:0.78rem;color:var(--green-dark);font-weight:500}
 .upload-box input[type="file"]{display:none}
 .upload-status{font-size:0.72rem;color:var(--gold);font-weight:500}
-/* Print dropdown */
+/* Header fields — all four on one line */
+.header-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 12px;background:white;border:1px solid var(--border);border-radius:6px;width:100%}
+/* Print dropdown — options expand horizontally */
 .print-menu{position:relative}
-.print-main-btn{height:100%;border:1px solid #f0c0c0;background:#f8d7da;color:#5c1a1a;padding:0 22px;border-radius:8px;font-family:var(--sans);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.print-main-btn{border:1px solid #f0c0c0;background:#f8d7da;color:#5c1a1a;padding:7px 22px;border-radius:6px;font-family:var(--sans);font-size:0.76rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
 .print-main-btn:hover{background:#f0c0c0}
-.print-options{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,0.12);z-index:200;min-width:110px;overflow:hidden}
-.print-options.open{display:block}
-.print-size-group{padding:4px 0;border-bottom:1px solid var(--border)}
-.print-size-group:last-child{border-bottom:none}
-.print-size-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gold);padding:6px 16px 3px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.print-options{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,0.12);z-index:200;overflow:hidden;flex-direction:row}
+.print-options.open{display:flex}
+.print-size-group{padding:4px 6px;border-right:1px solid var(--border);white-space:nowrap}
+.print-size-group:last-child{border-right:none}
+.print-size-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gold);padding:4px 8px 4px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .print-size-label span{font-weight:500;color:#aaa;text-transform:none;letter-spacing:0}
-.print-options button{display:inline-block;width:auto;text-align:left;border:none;background:white;padding:6px 14px;font-family:var(--sans);font-size:0.74rem;color:var(--green-dark);cursor:pointer;transition:background 0.15s}
+.print-options button{display:inline-block;width:auto;border:1px solid var(--border);background:var(--cream);margin:2px 3px;padding:5px 14px;border-radius:4px;font-family:var(--sans);font-size:0.74rem;color:var(--green-dark);cursor:pointer;transition:background 0.15s}
 .print-options button:hover{background:#f8d7da;color:#5c1a1a}
-/* Saved list collapsible */
-.saved-toggle{background:none;border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-size:0.68rem;font-family:var(--sans);color:var(--green-dark);cursor:pointer;align-self:flex-start;text-align:left;transition:all 0.2s}
+/* Saved list — drawer expands to the right */
+.saved-menu{position:relative;width:100%}
+.saved-toggle{background:none;border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-size:0.68rem;font-family:var(--sans);color:var(--green-dark);cursor:pointer;text-align:left;transition:all 0.2s}
 .saved-toggle:hover{border-color:var(--gold);background:#fdf9f2}
 .saved-drawer{display:none;padding:6px 0 2px;text-align:left}
 .saved-drawer.open{display:block}
@@ -49,17 +53,11 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .saved-item-wrap{display:inline-flex;margin:3px 5px 3px 0}
 .saved-item-delete{padding:4px 7px;font-size:0.78rem;font-family:var(--sans);background:#f5f0ea;border:1px solid var(--border);border-left:none;border-radius:0 4px 4px 0;cursor:pointer;color:#999;transition:all 0.2s}
 .saved-item-delete:hover{background:#5c1a1a;color:white;border-color:#5c1a1a}
-/* Header fields — all four on one line */
-.header-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px 14px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:12px}
 .lock-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:5px;font-family:var(--sans);font-size:0.82rem;text-align:center;margin-bottom:8px;outline:none;background:var(--cream)}
 .lock-input:focus{border-color:var(--gold)}
 .btn-unlock{padding:8px 20px;background:var(--green-dark);color:var(--gold-light);border:none;border-radius:5px;font-family:var(--sans);font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
 .btn-unlock:hover{background:var(--green)}
 .lock-error{margin-top:6px;font-size:0.72rem;color:#c0392b;min-height:16px}
-.upload-box{border:2px dashed var(--border);border-radius:8px;padding:18px;background:white;cursor:pointer;transition:border-color 0.2s,background 0.2s}
-.upload-box:hover{border-color:var(--gold);background:#fdf9f2}
-.upload-box p{font-size:0.82rem;color:var(--green-dark);font-weight:500}
-.upload-box input[type="file"]{display:none}
 .upload-status{margin-top:8px;font-size:0.78rem;color:var(--gold);font-weight:500}
 .saved-item{display:inline-block;padding:5px 10px;font-size:0.7rem;font-family:var(--sans);background:white;border:1px solid var(--border);border-radius:4px 0 0 4px;cursor:pointer;color:var(--green-dark);transition:all 0.2s}
 .saved-item:hover{border-color:var(--gold);color:var(--green)}
@@ -222,7 +220,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 <style>
 @media print{
     body{background:white;padding:0;margin:0}
-    .topbar,.page-header,.header-fields,.upload-col,.form-area,.print-index{display:none !important}
+    .topbar,.page-header,.top-grid,.form-area,.print-index{display:none !important}
     .print-area{display:none !important}
     .print-area.print-active{display:block !important}
     .print-page{margin:0;padding:5mm}
@@ -236,6 +234,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
     /* @page size/margin is set dynamically per print target via #printOrientationStyle */
 }
 @media(max-width:700px){
+    .top-grid{grid-template-columns:1fr}
     .header-fields{grid-template-columns:1fr 1fr}
 }
 </style>
@@ -251,34 +250,36 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <h1>Bookings</h1>
     </div>
 
-    <!-- ROW 1: Service | Date | Covers | Tables all on one line -->
-    <div class="header-fields">
-        <div class="field-group">
-            <label>Service</label>
-            <select id="service"><option value="LUNCH">LUNCH</option><option value="DINNER">DINNER</option></select>
+    <!-- TOP: Upload (left, full height) + controls stacked on the right -->
+    <div class="top-grid">
+        <!-- Left: upload, stretches to match the right column's height -->
+        <div class="upload-box" onclick="document.getElementById('csvFile').click()">
+            <p>&#8593; Upload CSV</p>
+            <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
         </div>
-        <div class="field-group">
-            <label>Date</label>
-            <input type="date" id="serviceDate">
-        </div>
-        <div class="field-group">
-            <label>Covers</label>
-            <input type="number" id="covers" min="0" placeholder="—">
-        </div>
-        <div class="field-group">
-            <label>Tables</label>
-            <input type="number" id="tables" min="0" placeholder="—">
-        </div>
-    </div>
 
-    <!-- ROW 2: upload + print (left column) -->
-    <div class="upload-col">
-        <div class="upload-print-row">
-            <div class="upload-box" onclick="document.getElementById('csvFile').click()">
-                <p>&#8593; Upload CSV</p>
-                <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
+        <!-- Right: header fields, then print, then saved bookings -->
+        <div class="controls-col">
+            <div class="header-fields">
+                <div class="field-group">
+                    <label>Service</label>
+                    <select id="service"><option value="LUNCH">LUNCH</option><option value="DINNER">DINNER</option></select>
+                </div>
+                <div class="field-group">
+                    <label>Date</label>
+                    <input type="date" id="serviceDate">
+                </div>
+                <div class="field-group">
+                    <label>Covers</label>
+                    <input type="number" id="covers" min="0" placeholder="—">
+                </div>
+                <div class="field-group">
+                    <label>Tables</label>
+                    <input type="number" id="tables" min="0" placeholder="—">
+                </div>
             </div>
-            <!-- Print dropdown: choose paper size, then target -->
+
+            <!-- Print dropdown: expands horizontally -->
             <div class="print-menu">
                 <button class="print-main-btn" id="printMainBtn" onclick="togglePrintMenu()">Print ▾</button>
                 <div class="print-options" id="printOptions">
@@ -294,12 +295,16 @@ tr.drag-over td{border-top:2px solid var(--gold)}
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="upload-status" id="uploadStatus"></div>
-        <!-- ROW 3: saved bookings (drawer opens left-aligned below) -->
-        <button class="saved-toggle" id="savedToggle" onclick="toggleSavedDrawer()">Saved bookings ▾</button>
-        <div class="saved-drawer" id="savedDrawer">
-            <div id="savedList"></div>
+
+            <div class="upload-status" id="uploadStatus"></div>
+
+            <!-- Saved bookings: drawer expands to the right -->
+            <div class="saved-menu">
+                <button class="saved-toggle" id="savedToggle" onclick="toggleSavedDrawer()">Saved bookings ▾</button>
+                <div class="saved-drawer" id="savedDrawer">
+                    <div id="savedList"></div>
+                </div>
+            </div>
         </div>
     </div>
 
