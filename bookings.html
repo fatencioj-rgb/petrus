@@ -213,10 +213,11 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 /* the highlight cells — empty boxes to mark by hand */
 .station-table .mark{height:15px}
 /* sub-option chips inside a cell (Still/Sparkling/Tap, BTG/Bottle/Pairing) */
+/* stacked vertically, one per line, with room to highlight */
 .opt-cell{padding:0 !important}
-.opt-row{display:flex;width:100%}
-.opt-chip{flex:1;border-right:0.5px solid #999;padding:2px 1px;font-size:5pt;text-transform:uppercase;letter-spacing:0.2px;color:#444;line-height:1.1}
-.opt-chip:last-child{border-right:none}
+.opt-row{display:flex;flex-direction:column;width:100%}
+.opt-chip{border-bottom:0.5px solid #999;padding:5px 3px;font-size:6pt;text-align:left;text-transform:uppercase;letter-spacing:0.2px;color:#444;line-height:1.2;min-height:16px}
+.opt-chip:last-child{border-bottom:none}
 </style>
 <style>
 @media print{
