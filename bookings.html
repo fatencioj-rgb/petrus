@@ -195,6 +195,28 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .triple-cell .allergy-summary-title{font-size:6.5pt}
 .triple-cell .allergy-summary-table{font-size:5.5pt;width:100%;table-layout:auto}
 .triple-cell .allergy-summary-table td{padding:1px 3px}
+
+/* Station Sheet (highlighter grid per section) */
+.station-page{width:100%;background:white;padding:4mm;box-sizing:border-box;page-break-after:always}
+.station-page:last-child{page-break-after:auto}
+.station-page h2{font-family:var(--serif);font-size:11pt;text-align:center;margin-bottom:0;color:var(--green-dark)}
+.station-page .p-service{text-align:center;font-size:8pt;font-weight:700;margin-bottom:2px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
+.station-page .station-meta{text-align:center;font-size:7pt;color:#555;margin-bottom:5px}
+.station-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:6.5pt}
+.station-table th,.station-table td{border:0.75px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;overflow:hidden}
+.station-table .row-label{background:#efe7d8;font-weight:700;text-align:left;text-transform:uppercase;font-size:6pt;letter-spacing:0.3px;color:var(--green-dark);width:64px;white-space:nowrap}
+.station-table .row-sublabel{font-weight:400;font-style:italic;text-transform:none;color:#666;font-size:6pt}
+.station-table .tbl-num{background:#f6e6d6;font-weight:700;font-size:9pt;color:var(--green-dark);height:20px}
+.station-table .tbl-num.blank{background:#fafafa;color:#bbb}
+.station-table .guest{font-size:6pt;font-weight:600;height:16px;white-space:nowrap}
+.station-table .pax{font-size:6pt;color:#555;height:13px}
+/* the highlight cells — empty boxes to mark by hand */
+.station-table .mark{height:15px}
+/* sub-option chips inside a cell (Still/Sparkling/Tap, BTG/Bottle/Pairing) */
+.opt-cell{padding:0 !important}
+.opt-row{display:flex;width:100%}
+.opt-chip{flex:1;border-right:0.5px solid #999;padding:2px 1px;font-size:5pt;text-transform:uppercase;letter-spacing:0.2px;color:#444;line-height:1.1}
+.opt-chip:last-child{border-right:none}
 </style>
 <style>
 @media print{
@@ -209,6 +231,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
     .triple-cell{border-bottom:0.5px dashed #ddd;overflow:hidden}
     .triple-cell:last-child{border-bottom:none}
     .triple-cell.page-break{page-break-before:always;border-bottom:none}
+    .station-page{margin:0}
     /* @page size/margin is set dynamically per print target via #printOrientationStyle */
 }
 @media(max-width:700px){
@@ -263,6 +286,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
                         <button onclick="printAll('statement');hidePrintMenu()">All</button>
                         <button onclick="printBOH('statement');hidePrintMenu()">BOH</button>
                         <button onclick="printFOH('statement');hidePrintMenu()">FOH</button>
+                        <button onclick="printStationSheet('statement');hidePrintMenu()">Station Sheet</button>
                     </div>
                     <div class="print-size-group">
                         <div class="print-size-label">A4 <span>178×243mm</span></div>
@@ -1578,6 +1602,105 @@ function printFOH(paper) {
     }
 
     setTimeout(function(){ window.print(); }, 300);
+}
+
+// === PRINT STATION SHEET (highlighter grid per section) ===
+// One page per section (S1, S2). Columns = occupied tables of that section
+// (from the day's bookings) + 4 blank columns for walk-ins. Rows are marking
+// boxes: Canapes, Water (Still/Sparkling/Tap), Wine (BTG/Bottle/Pairing).
+function printStationSheet(paper) {
+    var cfg = paperCfg(paper);
+    var info = getHeaderInfo();
+    var rows = gatherRows();
+
+    // Landscape so all the section's tables fit across the sheet
+    setPageStyle(cfg.landscape, '4mm');
+    showPrintArea('printArea');
+
+    var s1 = filterBySection(rows, 1);
+    var s2 = filterBySection(rows, 2);
+
+    var pages = [];
+    pages.push(buildStationHTML(info, s1, 'SECTION 1'));
+    if (s2.length > 0) pages.push(buildStationHTML(info, s2, 'SECTION 2'));
+
+    document.getElementById('printPage1').innerHTML = pages.join('');
+    setTimeout(function(){ window.print(); }, 300);
+}
+
+function buildStationHTML(info, sectionRows, sectionLabel) {
+    var BLANK_WALKINS = 4;
+
+    // Build a list of tables in this section from the bookings, sorted numerically.
+    // Group guests by table so a shared table shows a combined label.
+    var byTable = {};
+    sectionRows.forEach(function(r) {
+        var t = (r.table || '').trim();
+        if (!t) return;
+        if (!byTable[t]) byTable[t] = { pax: 0, names: [] };
+        byTable[t].pax += parseInt(r.pax) || 0;
+        if (r.name) byTable[t].names.push(r.name.split(' ')[0]); // first name to keep it short
+    });
+    var tables = Object.keys(byTable).sort(function(a, b) {
+        return (parseInt(a) || 0) - (parseInt(b) || 0);
+    });
+
+    // Column count = occupied tables + blank walk-in columns
+    var cols = tables.slice();
+    for (var b = 0; b < BLANK_WALKINS; b++) cols.push(null); // null = blank column
+
+    // Header cells
+    function headRow() {
+        var h = '<tr><th class="row-label">Table</th>';
+        cols.forEach(function(t) {
+            if (t === null) h += '<td class="tbl-num blank">—</td>';
+            else h += '<td class="tbl-num">' + esc(t) + '</td>';
+        });
+        return h + '</tr>';
+    }
+    function guestRow() {
+        var h = '<tr><th class="row-label row-sublabel">Guest</th>';
+        cols.forEach(function(t) {
+            var nm = (t !== null && byTable[t]) ? byTable[t].names.join(' / ') : '';
+            h += '<td class="guest">' + esc(nm) + '</td>';
+        });
+        return h + '</tr>';
+    }
+    function paxRow() {
+        var h = '<tr><th class="row-label row-sublabel">Pax</th>';
+        cols.forEach(function(t) {
+            var px = (t !== null && byTable[t] && byTable[t].pax) ? byTable[t].pax : '';
+            h += '<td class="pax">' + px + '</td>';
+        });
+        return h + '</tr>';
+    }
+    // A simple single mark row (empty boxes to highlight)
+    function markRow(label) {
+        var h = '<tr><th class="row-label">' + label + '</th>';
+        cols.forEach(function() { h += '<td class="mark"></td>'; });
+        return h + '</tr>';
+    }
+    // A row where each cell is split into option chips to highlight
+    function optionRow(label, opts) {
+        var h = '<tr><th class="row-label">' + label + '</th>';
+        cols.forEach(function() {
+            var chips = opts.map(function(o) { return '<div class="opt-chip">' + o + '</div>'; }).join('');
+            h += '<td class="opt-cell"><div class="opt-row">' + chips + '</div></td>';
+        });
+        return h + '</tr>';
+    }
+
+    var body = headRow() + guestRow() + paxRow()
+        + markRow('Canapés')
+        + optionRow('Water', ['Still', 'Sparkling', 'Tap'])
+        + optionRow('Wine', ['BTG', 'Bottle', 'Pairing']);
+
+    return '<div class="station-page">' +
+        '<h2>PETRUS</h2>' +
+        '<div class="p-service">' + sectionLabel + ' \u2014 ' + info.service + '</div>' +
+        '<div class="station-meta">' + info.dateStr + '  \u00b7  ' + tables.length + ' tables occupied</div>' +
+        '<table class="station-table">' + body + '</table>' +
+    '</div>';
 }
 
 function buildReceptionHTML(info, rows) {
