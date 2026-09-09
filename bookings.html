@@ -58,20 +58,26 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .res-table-edit{width:100%;border-collapse:collapse;font-size:0.68rem;table-layout:auto}
 .res-table-edit th{background:var(--green-dark);color:white;padding:5px 4px;text-align:left;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
 .res-table-edit td{padding:4px 3px;border-bottom:1px solid var(--border);vertical-align:middle}
-.res-table-edit input,.res-table-edit select{width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:3px;font-size:0.66rem;font-family:var(--sans);background:var(--cream)}
+.res-table-edit input,.res-table-edit select{padding:3px 5px;border:1px solid var(--border);border-radius:3px;font-size:0.66rem;font-family:var(--sans);background:var(--cream)}
 .res-table-edit input.narrow{width:32px;min-width:28px}
 .res-table-edit input.med{width:55px}
-.res-table-edit .r-time{width:70px}
-.res-table-edit .r-pax{width:38px}
-.res-table-edit .r-name{min-width:130px}
-.res-table-edit .r-table{width:32px}
-.res-table-edit .r-voucher{min-width:90px}
-.res-table-edit .r-occasion{min-width:90px}
-.res-table-edit .r-vcode{min-width:85px;white-space:nowrap}
-.res-table-edit .r-vvalue{width:55px}
-.res-table-edit .r-occpos,.res-table-edit .r-allergypos{min-width:70px;width:auto}
-.res-table-edit .r-notes{min-width:260px}
-.res-table-edit .r-menu{min-width:95px}
+/* Fixed-width columns (short predictable content) */
+.res-table-edit .r-time{width:62px;min-width:62px;max-width:62px}
+.res-table-edit .r-pax{width:32px;min-width:32px;max-width:32px}
+.res-table-edit .r-table{width:28px;min-width:28px;max-width:28px}
+.res-table-edit .r-vvalue{width:48px;min-width:48px;max-width:48px}
+/* Auto-sizing text inputs — min width set, grow with content */
+.res-table-edit .r-name{min-width:100px;width:100px}
+.res-table-edit .r-occpos{min-width:60px;width:60px}
+.res-table-edit .r-vcode{min-width:72px;width:72px;white-space:nowrap}
+.res-table-edit .r-notes{min-width:160px;width:160px}
+/* Selects keep a fixed comfortable width */
+.res-table-edit .r-occasion{min-width:90px;width:90px}
+.res-table-edit .r-menu{min-width:88px;width:88px}
+.res-table-edit .r-vprovider{min-width:72px;width:72px}
+.res-table-edit .r-allergypos{min-width:60px;width:60px}
+/* Allergy textarea grows vertically, fixed horizontal */
+.res-table-edit .r-voucher{min-width:80px;width:80px}
 .res-table-edit .r-allergy{min-width:140px;font-size:0.64rem;font-family:var(--sans);padding:3px 5px;border:1px solid var(--border);border-radius:3px;background:var(--cream);resize:vertical;line-height:1.3;width:100%;min-height:30px}
 .res-table-edit .r-vprovider{width:80px;font-size:0.64rem}
 .res-table-edit .r-notes{min-width:260px}
@@ -1450,6 +1456,48 @@ uploadBox.addEventListener('drop', function(e){
 
 // Load saved booking on page load
 autoLoad();
+
+// === AUTO-SIZE INPUTS ===
+// A hidden span mirrors the input font so we can measure text width accurately
+var _sizer = document.createElement('span');
+_sizer.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-size:0.66rem;font-family:Inter,"Segoe UI",sans-serif;padding:0 5px;pointer-events:none';
+document.body.appendChild(_sizer);
+
+var AUTO_SIZE_SELECTORS = ['.r-name', '.r-occpos', '.r-vcode', '.r-notes', '.r-allergypos'];
+
+function sizeInput(input) {
+    _sizer.textContent = input.value || input.placeholder || '';
+    var measured = _sizer.offsetWidth;
+    var cls = input.className.split(' ').find(function(c){ return c.indexOf('r-') === 0; });
+    var minW = {
+        'r-name': 100, 'r-occpos': 60, 'r-vcode': 72,
+        'r-notes': 160, 'r-allergypos': 60
+    }[cls] || 60;
+    input.style.width = Math.max(minW, measured + 10) + 'px';
+}
+
+function sizeAllAutoInputs() {
+    AUTO_SIZE_SELECTORS.forEach(function(sel) {
+        document.querySelectorAll('#resBody ' + sel).forEach(sizeInput);
+    });
+}
+
+// Delegate: listen on the tbody for any input event on auto-size fields
+document.getElementById('resBody').addEventListener('input', function(e) {
+    var input = e.target;
+    if (AUTO_SIZE_SELECTORS.some(function(sel){ return input.matches(sel); })) {
+        sizeInput(input);
+    }
+});
+
+// Re-size all after rows are loaded (autoLoadBooking / loadBooking call addRow)
+// Patch addRow to size new inputs after insertion
+var _origAddRow = addRow;
+addRow = function() {
+    _origAddRow.apply(this, arguments);
+    // Size the newly added row's inputs after the DOM settles
+    setTimeout(sizeAllAutoInputs, 0);
+};
 </script>
 </body>
 </html>
