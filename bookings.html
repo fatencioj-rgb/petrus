@@ -55,25 +55,27 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 
 /* Table */
 .reservations-container{background:white;border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;overflow-x:auto}
-.res-table-edit{width:100%;border-collapse:collapse;font-size:0.78rem;table-layout:auto}
-.res-table-edit th{background:var(--green-dark);color:white;padding:7px 5px;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
-.res-table-edit td{padding:5px 4px;border-bottom:1px solid var(--border);vertical-align:middle}
-.res-table-edit input,.res-table-edit select{width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:3px;font-size:0.74rem;font-family:var(--sans);background:var(--cream)}
-.res-table-edit input.narrow{width:40px;min-width:35px}
-.res-table-edit input.med{width:70px}
-.res-table-edit .r-time{width:80px}
-.res-table-edit .r-pax{width:45px}
-.res-table-edit .r-name{min-width:160px}
-.res-table-edit .r-table{width:38px}
-.res-table-edit .r-voucher{min-width:100px}
-.res-table-edit .r-occasion{min-width:100px}
-.res-table-edit .r-vcode{min-width:100px;white-space:nowrap}
-.res-table-edit .r-vvalue{width:70px}
-.res-table-edit .r-allergy{min-width:160px;font-size:0.72rem;font-family:var(--sans);padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:var(--cream);resize:vertical;line-height:1.3;width:100%;min-height:36px}
-.res-table-edit .r-vprovider{width:95px;font-size:0.74rem}
-.res-table-edit .r-occpos,.res-table-edit .r-allergypos{min-width:80px;width:auto}
-.res-table-edit .r-notes{min-width:350px}
-.res-table-edit .r-menu{min-width:120px}
+.res-table-edit{width:100%;border-collapse:collapse;font-size:0.68rem;table-layout:auto}
+.res-table-edit th{background:var(--green-dark);color:white;padding:5px 4px;text-align:left;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
+.res-table-edit td{padding:4px 3px;border-bottom:1px solid var(--border);vertical-align:middle}
+.res-table-edit input,.res-table-edit select{width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:3px;font-size:0.66rem;font-family:var(--sans);background:var(--cream)}
+.res-table-edit input.narrow{width:32px;min-width:28px}
+.res-table-edit input.med{width:55px}
+.res-table-edit .r-time{width:70px}
+.res-table-edit .r-pax{width:38px}
+.res-table-edit .r-name{min-width:130px}
+.res-table-edit .r-table{width:32px}
+.res-table-edit .r-voucher{min-width:90px}
+.res-table-edit .r-occasion{min-width:90px}
+.res-table-edit .r-vcode{min-width:85px;white-space:nowrap}
+.res-table-edit .r-vvalue{width:55px}
+.res-table-edit .r-occpos,.res-table-edit .r-allergypos{min-width:70px;width:auto}
+.res-table-edit .r-notes{min-width:260px}
+.res-table-edit .r-menu{min-width:95px}
+.res-table-edit .r-allergy{min-width:140px;font-size:0.64rem;font-family:var(--sans);padding:3px 5px;border:1px solid var(--border);border-radius:3px;background:var(--cream);resize:vertical;line-height:1.3;width:100%;min-height:30px}
+.res-table-edit .r-vprovider{width:80px;font-size:0.64rem}
+.res-table-edit .r-notes{min-width:260px}
+.res-table-edit .r-menu{min-width:95px}
 .drag-handle{cursor:grab;color:#bbb;font-size:1rem;padding:0 4px;user-select:none}
 .drag-handle:active{cursor:grabbing}
 tr.dragging{opacity:0.4;background:#f0e8d8}
@@ -225,22 +227,25 @@ tr.drag-over td{border-top:2px solid var(--gold)}
             <table class="res-table-edit">
                 <thead>
                     <tr>
-                        <th></th>
-                        <th>Time</th>
-                        <th>Pax</th>
-                        <th>★</th>
-                        <th>Name</th>
-                        <th>Table</th>
-                        <th>Sec</th>
-                        <th>Menu</th>
-                        <th>Occasion</th>
-                        <th>Detail</th>
-                        <th>Allergy / Req</th>
-                        <th>Prov</th>
-                        <th>Code</th>
-                        <th>£</th>
-                        <th>Notes</th>
-                        <th></th>
+                        <th rowspan="2"></th>
+                        <th rowspan="2">Time</th>
+                        <th rowspan="2">Pax</th>
+                        <th rowspan="2">★</th>
+                        <th rowspan="2">Name</th>
+                        <th rowspan="2">Table</th>
+                        <th rowspan="2">Sec</th>
+                        <th rowspan="2">Menu</th>
+                        <th colspan="2" style="text-align:center;border-bottom:1px solid rgba(255,255,255,0.3)">Occasion</th>
+                        <th rowspan="2">Allergy / Req</th>
+                        <th rowspan="2">Prov</th>
+                        <th rowspan="2">Code</th>
+                        <th rowspan="2">£</th>
+                        <th rowspan="2">Notes</th>
+                        <th rowspan="2"></th>
+                    </tr>
+                    <tr>
+                        <th style="font-size:0.5rem;opacity:0.85">Detail</th>
+                        <th style="font-size:0.5rem;opacity:0.85">Type</th>
                     </tr>
                 </thead>
                 <tbody id="resBody"></tbody>
@@ -614,17 +619,42 @@ function extractOccasionType(notes) {
 function extractOccasionDetail(notes) {
     var full = extractOccasion(notes);
     if (!full) return '';
-    // Try to extract name/number detail
-    // "Kerry's Birthday" → "Kerry's"
-    // "70th Wedding Anniversary" → "70th"
-    // "5-year wedding anniversary" → "5-year"
-    // "Congrats Sarah" → "Sarah"
+
+    // If the full string already contains a possessive name, extract it cleanly
+    // e.g. "Kerry's Birthday" → "Kerry's", "70th Wedding Anniversary" → "70th"
+    // e.g. "Amit's Birthday" → "Amit's"
     var nameMatch = full.match(/([\w']+'s)\s+/i);
     if (nameMatch) return nameMatch[1];
-    var numMatch = full.match(/(\d+\w*)\s+/i);
+
+    var numMatch = full.match(/(\d+[\w-]*)\s+/i);
     if (numMatch) return numMatch[1];
+
     var congMatch = full.match(/Congrats\s+(\w+)/i);
     if (congMatch) return congMatch[1];
+
+    // No detail found in the derived occasion string — try to get a first name
+    // from VISIT NOTES (e.g. "It's Amit's birthday") and combine with the type
+    if (!notes) return '';
+    var vm = notes.match(/VISIT NOTES:\s*(.*?)(?=SPECIAL EVENTS|GENERAL NOTES|FOOD & DRINK|GUEST REQUESTS|\d{5,}|$)/i);
+    if (vm) {
+        var vt = vm[1];
+        // "Amit's birthday" → possessive name
+        var vPoss = vt.match(/([\w]+'s)\s+(?:birthday|anniversary|celebration|engagement|graduation|retirement|wedding|proposal)/i);
+        if (vPoss) return vPoss[1];
+        // "birthday for Amit" / "anniversary for John"
+        var vFor = vt.match(/(?:birthday|anniversary|celebration|engagement)\s+for\s+(\w+)/i);
+        if (vFor) return toTitleCase(vFor[1]) + "'s";
+        // "Celebrating Amit" style
+        var vCelebrating = vt.match(/celebrating\s+(\w+)/i);
+        if (vCelebrating) return toTitleCase(vCelebrating[1]) + "'s";
+    }
+    // Also check SPECIAL EVENTS for a name before a known occasion word
+    var se = notes.match(/SPECIAL EVENTS:\s*(.*?)$/im);
+    if (se) {
+        var raw = se[1].trim();
+        var sePoss = raw.match(/([\w]+'s)\s+(?:birthday|anniversary|celebration|engagement|graduation|retirement|wedding|proposal)/i);
+        if (sePoss) return sePoss[1];
+    }
     return '';
 }
 
@@ -735,6 +765,7 @@ function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher,
             '<option value="ALC"'+(menu.indexOf('ALC')>=0?' selected':'')+'>ALC</option>'+
             '<option value="Lunch Menu"'+(menu.indexOf('Lunch Menu')>=0?' selected':'')+'>Lunch Menu</option>'+
         '</select></td>' +
+        '<td><input type="text" value="'+esc(occasionPos||'')+'" class="r-occpos"></td>' +
         '<td><select class="r-occasion">'+
             '<option value=""'+(!occasion?' selected':'')+'>—</option>'+
             '<option value="Birthday"'+((occasion||'')==='Birthday'?' selected':'')+'>Birthday</option>'+
@@ -754,7 +785,6 @@ function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher,
             '<option value="Welcome"'+((occasion||'')==='Welcome'?' selected':'')+'>Welcome</option>'+
             '<option value="Reunion"'+((occasion||'')==='Reunion'?' selected':'')+'>Reunion</option>'+
         '</select></td>' +
-        '<td><input type="text" value="'+esc(occasionPos||'')+'" class="r-occpos"></td>' +
         '<td><textarea class="r-allergy" rows="2">'+esc(allergy)+'</textarea></td>' +
         '<td><select class="r-vprovider">'+
             '<option value=""'+(!(voucherProvider)?' selected':'')+'>—</option>'+
