@@ -204,6 +204,8 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .station-page .station-meta{text-align:center;font-size:7pt;color:#555;margin-bottom:5px}
 .station-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:6.5pt}
 .station-table th,.station-table td{border:0.75px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;overflow:hidden}
+/* force background colors to print */
+.station-table .row-label,.station-table .opt-col,.station-table .tbl-num{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .station-table .row-label{background:#efe7d8;font-weight:700;text-align:left;text-transform:uppercase;font-size:6pt;letter-spacing:0.3px;color:var(--green-dark);width:54px;white-space:nowrap}
 .station-table .row-sublabel{font-weight:400;font-style:italic;text-transform:none;color:#666;font-size:6pt}
 /* the option column (STILL/SPARK/TAP, BTG/BTB/PAIR/NA/NO) */
@@ -284,7 +286,6 @@ tr.drag-over td{border-top:2px solid var(--gold)}
                         <div class="print-size-label">Statement <span>5.5×8.5"</span></div>
                         <button onclick="printBOH('statement');hidePrintMenu()">BOH</button>
                         <button onclick="printFOH('statement');hidePrintMenu()">FOH</button>
-                        <button onclick="printStationSheet('statement');hidePrintMenu()">Station Sheet</button>
                     </div>
                     <div class="print-size-group">
                         <div class="print-size-label">A4 <span>178×243mm</span></div>
