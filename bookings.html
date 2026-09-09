@@ -282,14 +282,12 @@ tr.drag-over td{border-top:2px solid var(--gold)}
                 <div class="print-options" id="printOptions">
                     <div class="print-size-group">
                         <div class="print-size-label">Statement <span>5.5×8.5"</span></div>
-                        <button onclick="printAll('statement');hidePrintMenu()">All</button>
                         <button onclick="printBOH('statement');hidePrintMenu()">BOH</button>
                         <button onclick="printFOH('statement');hidePrintMenu()">FOH</button>
                         <button onclick="printStationSheet('statement');hidePrintMenu()">Station Sheet</button>
                     </div>
                     <div class="print-size-group">
                         <div class="print-size-label">A4 <span>178×243mm</span></div>
-                        <button onclick="printAll('a4');hidePrintMenu()">All</button>
                         <button onclick="printBOH('a4');hidePrintMenu()">BOH</button>
                         <button onclick="printFOH('a4');hidePrintMenu()">FOH</button>
                     </div>
@@ -1398,37 +1396,6 @@ function printReceptionL() {
     setTimeout(function(){ window.print(); }, 300);
 }
 
-// === PRINT ALL (each section gets its own page) ===
-function printAll(paper) {
-    var cfg = paperCfg(paper);
-    var info = getHeaderInfo();
-    var rows = gatherRows();
-
-    setPageStyle(cfg.portrait, '2mm');
-
-    showPrintArea('printArea');
-
-    var s1Rows = filterBySection(rows, 1);
-    var s2Rows = filterBySection(rows, 2);
-
-    var pages = [];
-    pages.push(buildKitchenHTML(info, rows));
-    pages.push(buildKitchenHTML(info, rows));
-    pages.push(buildPastryHTML(info, rows));
-    if (s1Rows.length > 0) pages.push(buildSalonHTML(info, s1Rows, 'SECTION 1', SECTION_1_TABLES));
-    if (s2Rows.length > 0) pages.push(buildSalonHTML(info, s2Rows, 'SECTION 2', SECTION_2_TABLES));
-    pages.push(buildReceptionHTML(info, rows));
-
-    var allHTML = pages.map(function(content, idx) {
-        var breakStyle = idx > 0 ? ' style="page-break-before:always"' : '';
-        return '<div class="print-page"' + breakStyle + '>' + content + '</div>';
-    }).join('');
-
-    document.getElementById('printPage1').innerHTML = allHTML;
-
-    setTimeout(function(){ window.print(); }, 300);
-}
-
 function buildKitchenHTML(info, rows) {
     var html = '';
     var menuCount = {Prestige:0,Discovery:0,ALC:0,'Lunch Menu':0};
@@ -1569,7 +1536,7 @@ function printBOH(paper) {
     setTimeout(function(){ window.print(); }, 300);
 }
 
-// === PRINT FOH (Section 1 + Section 2 + Reception) ===
+// === PRINT FOH (Section 1 + Section 2 + Reception + Station Sheets) ===
 function printFOH(paper) {
     var cfg = paperCfg(paper);
     var info = getHeaderInfo();
@@ -1600,13 +1567,34 @@ function printFOH(paper) {
         document.getElementById('tripleCell3').className = 'triple-cell page-break';
     }
 
+    // Append the station sheets (S1, S2, KT) after the FOH pages
+    appendStationPagesToTriple(info, rows);
+
     setTimeout(function(){ window.print(); }, 300);
 }
 
+// Add the station-sheet pages into the triple print container (after the 3
+// fixed cells), each starting on its own page. Also removes any station pages
+// left over from a previous print run.
+function appendStationPagesToTriple(info, rows) {
+    var container = document.querySelector('#printAreaTriple .print-triple-page');
+    // Clean up station pages from a prior print
+    container.querySelectorAll('.station-page').forEach(function(el) { el.remove(); });
+
+    var pages = buildAllStationPages(info, rows);
+    pages.forEach(function(html) {
+        var wrap = document.createElement('div');
+        wrap.innerHTML = html;
+        var el = wrap.firstChild;
+        el.style.pageBreakBefore = 'always';
+        container.appendChild(el);
+    });
+}
+
 // === PRINT STATION SHEET (highlighter grid per section) ===
-// One page per section (S1, S2). Columns = occupied tables of that section
-// (from the day's bookings) + 4 blank columns for walk-ins. Rows are marking
-// boxes: Canapes, Water (Still/Sparkling/Tap), Wine (BTG/Bottle/Pairing).
+// One page per section: S1, S2 (if any), and Kitchen Table (if table 800 is
+// booked). Columns = occupied tables + 4 blank walk-in columns. For KT the
+// columns are the seats P1..P[pax] and there's no Canapés row.
 function printStationSheet(paper) {
     var cfg = paperCfg(paper);
     var info = getHeaderInfo();
@@ -1616,71 +1604,56 @@ function printStationSheet(paper) {
     setPageStyle(cfg.landscape, '4mm');
     showPrintArea('printArea');
 
-    var s1 = filterBySection(rows, 1);
-    var s2 = filterBySection(rows, 2);
-
-    var pages = [];
-    pages.push(buildStationHTML(info, s1, 'SECTION 1'));
-    if (s2.length > 0) pages.push(buildStationHTML(info, s2, 'SECTION 2'));
-
-    document.getElementById('printPage1').innerHTML = pages.join('');
+    document.getElementById('printPage1').innerHTML = buildAllStationPages(info, rows).join('');
     setTimeout(function(){ window.print(); }, 300);
 }
 
-function buildStationHTML(info, sectionRows, sectionLabel) {
-    var BLANK_WALKINS = 4;
-
-    // Build a list of tables in this section from the bookings, sorted numerically.
-    // Group guests by table so a shared table shows a combined label.
-    var byTable = {};
-    sectionRows.forEach(function(r) {
-        var t = (r.table || '').trim();
-        if (!t) return;
-        if (!byTable[t]) byTable[t] = { pax: 0, names: [] };
-        byTable[t].pax += parseInt(r.pax) || 0;
-        if (r.name) byTable[t].names.push(r.name.split(' ')[0]); // first name to keep it short
-    });
-    var tables = Object.keys(byTable).sort(function(a, b) {
-        return (parseInt(a) || 0) - (parseInt(b) || 0);
+// Build every station page that applies for the day's bookings.
+function buildAllStationPages(info, rows) {
+    var pages = [];
+    var s1 = filterBySection(rows, 1);
+    var s2 = filterBySection(rows, 2);
+    var kt = rows.filter(function(r) {
+        return r.section === 'KT' || KT_TABLES.indexOf((r.table || '').trim()) >= 0;
     });
 
-    // Column count = occupied tables + blank walk-in columns
-    var cols = tables.slice();
-    for (var b = 0; b < BLANK_WALKINS; b++) cols.push(null); // null = blank column
+    if (s1.length > 0) pages.push(buildStationHTML(info, s1, 'SECTION 1'));
+    if (s2.length > 0) pages.push(buildStationHTML(info, s2, 'SECTION 2'));
+    if (kt.length > 0) pages.push(buildKTStationHTML(info, kt));
+    return pages;
+}
 
-    // Header cells — an extra "option" column sits between the label and tables
+// Shared row builders for a station grid given a set of columns.
+// A column is either a table object {label, guest, pax} or null (blank walk-in).
+function stationRowBuilders(cols, headLabel) {
+    var hl = headLabel || 'Table';
     function headRow() {
-        var h = '<tr><th class="row-label">Table</th><th class="opt-col"></th>';
-        cols.forEach(function(t) {
-            if (t === null) h += '<td class="tbl-num blank">—</td>';
-            else h += '<td class="tbl-num">' + esc(t) + '</td>';
+        var h = '<tr><th class="row-label">' + hl + '</th><th class="opt-col"></th>';
+        cols.forEach(function(c) {
+            if (c === null) h += '<td class="tbl-num blank">—</td>';
+            else h += '<td class="tbl-num">' + esc(c.label) + '</td>';
         });
         return h + '</tr>';
     }
     function guestRow() {
         var h = '<tr><th class="row-label row-sublabel">Guest</th><th class="opt-col"></th>';
-        cols.forEach(function(t) {
-            var nm = (t !== null && byTable[t]) ? byTable[t].names.join(' / ') : '';
-            h += '<td class="guest">' + esc(nm) + '</td>';
+        cols.forEach(function(c) {
+            h += '<td class="guest">' + esc(c ? (c.guest || '') : '') + '</td>';
         });
         return h + '</tr>';
     }
     function paxRow() {
         var h = '<tr><th class="row-label row-sublabel">Pax</th><th class="opt-col"></th>';
-        cols.forEach(function(t) {
-            var px = (t !== null && byTable[t] && byTable[t].pax) ? byTable[t].pax : '';
-            h += '<td class="pax">' + px + '</td>';
+        cols.forEach(function(c) {
+            h += '<td class="pax">' + (c && c.pax ? c.pax : '') + '</td>';
         });
         return h + '</tr>';
     }
-    // A simple single mark row (empty option column + empty boxes to highlight)
     function markRow(label) {
         var h = '<tr><th class="row-label">' + label + '</th><th class="opt-col"></th>';
         cols.forEach(function() { h += '<td class="mark"></td>'; });
         return h + '</tr>';
     }
-    // A group with an option in its own column; one sub-row per option.
-    // The group label spans all its option rows on the left.
     function optionGroup(label, opts) {
         var out = '';
         opts.forEach(function(o, idx) {
@@ -1692,18 +1665,71 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
         });
         return out;
     }
+    return { headRow: headRow, guestRow: guestRow, paxRow: paxRow, markRow: markRow, optionGroup: optionGroup };
+}
 
-    var body = headRow() + guestRow() + paxRow()
-        + markRow('Canapés')
-        + optionGroup('Water', ['Still', 'Spark', 'Tap'])
-        + optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
-
+function stationPageWrap(info, sectionLabel, metaText, body) {
     return '<div class="station-page">' +
         '<h2>PETRUS</h2>' +
         '<div class="p-service">' + sectionLabel + ' \u2014 ' + info.service + '</div>' +
-        '<div class="station-meta">' + info.dateStr + '  \u00b7  ' + tables.length + ' tables occupied</div>' +
+        '<div class="station-meta">' + info.dateStr + '  \u00b7  ' + metaText + '</div>' +
         '<table class="station-table">' + body + '</table>' +
     '</div>';
+}
+
+// Standard section station sheet (S1 / S2)
+function buildStationHTML(info, sectionRows, sectionLabel) {
+    var BLANK_WALKINS = 4;
+
+    var byTable = {};
+    sectionRows.forEach(function(r) {
+        var t = (r.table || '').trim();
+        if (!t) return;
+        if (!byTable[t]) byTable[t] = { pax: 0, names: [] };
+        byTable[t].pax += parseInt(r.pax) || 0;
+        if (r.name) byTable[t].names.push(r.name.split(' ')[0]);
+    });
+    var tables = Object.keys(byTable).sort(function(a, b) {
+        return (parseInt(a) || 0) - (parseInt(b) || 0);
+    });
+
+    var cols = tables.map(function(t) {
+        return { label: t, guest: byTable[t].names.join(' / '), pax: byTable[t].pax };
+    });
+    for (var b = 0; b < BLANK_WALKINS; b++) cols.push(null);
+
+    var R = stationRowBuilders(cols);
+    var body = R.headRow() + R.guestRow() + R.paxRow()
+        + R.markRow('Canapés')
+        + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
+        + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
+
+    return stationPageWrap(info, sectionLabel, tables.length + ' tables occupied', body);
+}
+
+// Kitchen Table station sheet: columns are seats P1..P[pax], no Canapés row.
+function buildKTStationHTML(info, ktRows) {
+    // Total covers on the Kitchen Table
+    var seats = 0, names = [];
+    ktRows.forEach(function(r) {
+        seats += parseInt(r.pax) || 0;
+        if (r.name) names.push(r.name.split(' ')[0]);
+    });
+    if (seats < 1) seats = ktRows.length || 1;
+
+    var cols = [];
+    for (var i = 1; i <= seats; i++) {
+        cols.push({ label: 'P' + i, guest: '', pax: '' });
+    }
+
+    var R = stationRowBuilders(cols, 'Seat');
+    // No guest/pax per-seat header (we don't know seat assignment) — just seat label.
+    var body = R.headRow()
+        + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
+        + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
+
+    var meta = seats + ' covers' + (names.length ? ' \u00b7 ' + names.join(', ') : '');
+    return stationPageWrap(info, 'KITCHEN TABLE', meta, body);
 }
 
 function buildReceptionHTML(info, rows) {
