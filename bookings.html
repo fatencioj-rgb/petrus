@@ -204,20 +204,18 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .station-page .station-meta{text-align:center;font-size:7pt;color:#555;margin-bottom:5px}
 .station-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:6.5pt}
 .station-table th,.station-table td{border:0.75px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;overflow:hidden}
-.station-table .row-label{background:#efe7d8;font-weight:700;text-align:left;text-transform:uppercase;font-size:6pt;letter-spacing:0.3px;color:var(--green-dark);width:64px;white-space:nowrap}
+.station-table .row-label{background:#efe7d8;font-weight:700;text-align:left;text-transform:uppercase;font-size:6pt;letter-spacing:0.3px;color:var(--green-dark);width:54px;white-space:nowrap}
 .station-table .row-sublabel{font-weight:400;font-style:italic;text-transform:none;color:#666;font-size:6pt}
+/* the option column (STILL/SPARK/TAP, BTG/BTB/PAIR/NA/NO) */
+.station-table .opt-col{background:#f7f1e6;font-weight:600;text-align:left;text-transform:uppercase;font-size:5.5pt;letter-spacing:0.2px;color:#555;width:38px;white-space:nowrap}
 .station-table .tbl-num{background:#f6e6d6;font-weight:700;font-size:9pt;color:var(--green-dark);height:20px}
 .station-table .tbl-num.blank{background:#fafafa;color:#bbb}
 .station-table .guest{font-size:6pt;font-weight:600;height:16px;white-space:nowrap}
 .station-table .pax{font-size:6pt;color:#555;height:13px}
 /* the highlight cells — empty boxes to mark by hand */
 .station-table .mark{height:15px}
-/* sub-option chips inside a cell (Still/Sparkling/Tap, BTG/Bottle/Pairing) */
-/* stacked vertically, one per line, with room to highlight */
-.opt-cell{padding:0 !important}
-.opt-row{display:flex;flex-direction:column;width:100%}
-.opt-chip{border-bottom:0.5px solid #999;padding:5px 3px;font-size:6pt;text-align:left;text-transform:uppercase;letter-spacing:0.2px;color:#444;line-height:1.2;min-height:16px}
-.opt-chip:last-child{border-bottom:none}
+/* mark cells in option rows get a bit more height to highlight comfortably */
+.station-table td.mark{height:16px}
 </style>
 <style>
 @media print{
@@ -1650,9 +1648,9 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
     var cols = tables.slice();
     for (var b = 0; b < BLANK_WALKINS; b++) cols.push(null); // null = blank column
 
-    // Header cells
+    // Header cells — an extra "option" column sits between the label and tables
     function headRow() {
-        var h = '<tr><th class="row-label">Table</th>';
+        var h = '<tr><th class="row-label">Table</th><th class="opt-col"></th>';
         cols.forEach(function(t) {
             if (t === null) h += '<td class="tbl-num blank">—</td>';
             else h += '<td class="tbl-num">' + esc(t) + '</td>';
@@ -1660,7 +1658,7 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
         return h + '</tr>';
     }
     function guestRow() {
-        var h = '<tr><th class="row-label row-sublabel">Guest</th>';
+        var h = '<tr><th class="row-label row-sublabel">Guest</th><th class="opt-col"></th>';
         cols.forEach(function(t) {
             var nm = (t !== null && byTable[t]) ? byTable[t].names.join(' / ') : '';
             h += '<td class="guest">' + esc(nm) + '</td>';
@@ -1668,33 +1666,37 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
         return h + '</tr>';
     }
     function paxRow() {
-        var h = '<tr><th class="row-label row-sublabel">Pax</th>';
+        var h = '<tr><th class="row-label row-sublabel">Pax</th><th class="opt-col"></th>';
         cols.forEach(function(t) {
             var px = (t !== null && byTable[t] && byTable[t].pax) ? byTable[t].pax : '';
             h += '<td class="pax">' + px + '</td>';
         });
         return h + '</tr>';
     }
-    // A simple single mark row (empty boxes to highlight)
+    // A simple single mark row (empty option column + empty boxes to highlight)
     function markRow(label) {
-        var h = '<tr><th class="row-label">' + label + '</th>';
+        var h = '<tr><th class="row-label">' + label + '</th><th class="opt-col"></th>';
         cols.forEach(function() { h += '<td class="mark"></td>'; });
         return h + '</tr>';
     }
-    // A row where each cell is split into option chips to highlight
-    function optionRow(label, opts) {
-        var h = '<tr><th class="row-label">' + label + '</th>';
-        cols.forEach(function() {
-            var chips = opts.map(function(o) { return '<div class="opt-chip">' + o + '</div>'; }).join('');
-            h += '<td class="opt-cell"><div class="opt-row">' + chips + '</div></td>';
+    // A group with an option in its own column; one sub-row per option.
+    // The group label spans all its option rows on the left.
+    function optionGroup(label, opts) {
+        var out = '';
+        opts.forEach(function(o, idx) {
+            var h = '<tr>';
+            if (idx === 0) h += '<th class="row-label" rowspan="' + opts.length + '">' + label + '</th>';
+            h += '<th class="opt-col">' + o + '</th>';
+            cols.forEach(function() { h += '<td class="mark"></td>'; });
+            out += h + '</tr>';
         });
-        return h + '</tr>';
+        return out;
     }
 
     var body = headRow() + guestRow() + paxRow()
         + markRow('Canapés')
-        + optionRow('Water', ['Still', 'Spark', 'Tap'])
-        + optionRow('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
+        + optionGroup('Water', ['Still', 'Spark', 'Tap'])
+        + optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
 
     return '<div class="station-page">' +
         '<h2>PETRUS</h2>' +
