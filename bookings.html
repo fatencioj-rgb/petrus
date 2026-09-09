@@ -20,26 +20,33 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 </style>
 <style>
 /* Upload */
-.top-controls{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start;margin-bottom:14px}
-.upload-col{display:flex;flex-direction:column;gap:8px}
-.upload-box{border:2px dashed var(--border);border-radius:8px;padding:12px 16px;background:white;cursor:pointer;transition:border-color 0.2s,background 0.2s;text-align:center}
+.upload-col{display:flex;flex-direction:column;gap:8px;max-width:420px;margin-bottom:16px}
+.upload-print-row{display:flex;gap:10px;align-items:stretch}
+.upload-box{flex:1;border:2px dashed var(--border);border-radius:8px;padding:12px 16px;background:white;cursor:pointer;transition:border-color 0.2s,background 0.2s;text-align:center;display:flex;align-items:center;justify-content:center}
 .upload-box:hover{border-color:var(--gold);background:#fdf9f2}
 .upload-box p{font-size:0.78rem;color:var(--green-dark);font-weight:500}
 .upload-box input[type="file"]{display:none}
 .upload-status{font-size:0.72rem;color:var(--gold);font-weight:500}
+/* Print dropdown */
+.print-menu{position:relative}
+.print-main-btn{height:100%;border:1px solid #f0c0c0;background:#f8d7da;color:#5c1a1a;padding:0 22px;border-radius:8px;font-family:var(--sans);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.print-main-btn:hover{background:#f0c0c0}
+.print-options{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,0.12);z-index:200;min-width:110px;overflow:hidden}
+.print-options.open{display:block}
+.print-options button{display:block;width:100%;text-align:left;border:none;background:white;padding:9px 16px;font-family:var(--sans);font-size:0.76rem;color:var(--green-dark);cursor:pointer;transition:background 0.15s}
+.print-options button:hover{background:#f8d7da;color:#5c1a1a}
 /* Saved list collapsible */
-.saved-toggle{background:none;border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:0.68rem;font-family:var(--sans);color:var(--green-dark);cursor:pointer;width:100%;text-align:left;transition:all 0.2s}
+.saved-toggle{background:none;border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-size:0.68rem;font-family:var(--sans);color:var(--green-dark);cursor:pointer;align-self:flex-start;text-align:left;transition:all 0.2s}
 .saved-toggle:hover{border-color:var(--gold);background:#fdf9f2}
-.saved-drawer{display:none;padding:6px 0 2px}
+.saved-drawer{display:none;padding:6px 0 2px;text-align:left}
 .saved-drawer.open{display:block}
 .saved-item{display:inline-block;padding:4px 9px;font-size:0.66rem;font-family:var(--sans);background:white;border:1px solid var(--border);border-radius:4px 0 0 4px;cursor:pointer;color:var(--green-dark);transition:all 0.2s}
 .saved-item:hover{border-color:var(--gold);color:var(--green)}
 .saved-item-wrap{display:inline-flex;margin:3px 5px 3px 0}
 .saved-item-delete{padding:4px 7px;font-size:0.78rem;font-family:var(--sans);background:#f5f0ea;border:1px solid var(--border);border-left:none;border-radius:0 4px 4px 0;cursor:pointer;color:#999;transition:all 0.2s}
 .saved-item-delete:hover{background:#5c1a1a;color:white;border-color:#5c1a1a}
-/* Header fields — right column of top-controls */
-.header-col{display:flex;flex-direction:column;gap:8px}
-.header-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px;background:white;border:1px solid var(--border);border-radius:6px}
+/* Header fields — all four on one line */
+.header-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px 14px;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:12px}
 .lock-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:5px;font-family:var(--sans);font-size:0.82rem;text-align:center;margin-bottom:8px;outline:none;background:var(--cream)}
 .lock-input:focus{border-color:var(--gold)}
 .btn-unlock{padding:8px 20px;background:var(--green-dark);color:var(--gold-light);border:none;border-radius:5px;font-family:var(--sans);font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
@@ -69,10 +76,6 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .field-group{display:flex;flex-direction:column;gap:3px}
 .field-group label{font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--green)}
 .field-group input,.field-group select{padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:var(--sans);font-size:0.74rem;background:var(--cream)}
-/* Print buttons row — sits between header and table */
-.print-quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.print-quick-btn{border:1px solid #f0c0c0;background:#f8d7da;color:#5c1a1a;padding:7px 18px;border-radius:5px;font-family:var(--sans);font-size:0.76rem;font-weight:600;cursor:pointer;transition:all 0.2s}
-.print-quick-btn:hover{background:#f0c0c0}
 
 /* Table */
 .reservations-container{background:white;border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px;overflow-x:auto}
@@ -192,7 +195,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 <style>
 @media print{
     body{background:white;padding:0;margin:0}
-    .topbar,.page-header,.top-controls,.form-area,.print-index,.print-quick{display:none !important}
+    .topbar,.page-header,.header-fields,.upload-col,.form-area,.print-index{display:none !important}
     .print-area{display:none !important}
     .print-area.print-active{display:block !important}
     .print-page{margin:0;padding:5mm}
@@ -205,7 +208,6 @@ tr.drag-over td{border-top:2px solid var(--gold)}
     @page{margin:0}
 }
 @media(max-width:700px){
-    .top-controls{grid-template-columns:1fr}
     .header-fields{grid-template-columns:1fr 1fr}
 }
 </style>
@@ -221,46 +223,48 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <h1>Bookings</h1>
     </div>
 
-    <!-- TOP CONTROLS: upload (left) + service/date/covers/tables (right) -->
-    <div class="top-controls">
-        <!-- Left: upload + saved list -->
-        <div class="upload-col">
+    <!-- ROW 1: Service | Date | Covers | Tables all on one line -->
+    <div class="header-fields">
+        <div class="field-group">
+            <label>Service</label>
+            <select id="service"><option value="LUNCH">LUNCH</option><option value="DINNER">DINNER</option></select>
+        </div>
+        <div class="field-group">
+            <label>Date</label>
+            <input type="date" id="serviceDate">
+        </div>
+        <div class="field-group">
+            <label>Covers</label>
+            <input type="number" id="covers" min="0" placeholder="—">
+        </div>
+        <div class="field-group">
+            <label>Tables</label>
+            <input type="number" id="tables" min="0" placeholder="—">
+        </div>
+    </div>
+
+    <!-- ROW 2: upload + print (left column) -->
+    <div class="upload-col">
+        <div class="upload-print-row">
             <div class="upload-box" onclick="document.getElementById('csvFile').click()">
                 <p>&#8593; Upload CSV</p>
                 <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
             </div>
-            <div class="upload-status" id="uploadStatus"></div>
-            <button class="saved-toggle" id="savedToggle" onclick="toggleSavedDrawer()">Saved bookings ▾</button>
-            <div class="saved-drawer" id="savedDrawer">
-                <div id="savedList"></div>
+            <!-- Print dropdown: one button that expands to All / BOH / FOH -->
+            <div class="print-menu">
+                <button class="print-main-btn" id="printMainBtn" onclick="togglePrintMenu()">Print ▾</button>
+                <div class="print-options" id="printOptions">
+                    <button onclick="printAll();hidePrintMenu()">All</button>
+                    <button onclick="printBOH();hidePrintMenu()">BOH</button>
+                    <button onclick="printFOH();hidePrintMenu()">FOH</button>
+                </div>
             </div>
         </div>
-        <!-- Right: header fields (2×2 grid) -->
-        <div class="header-col">
-            <div class="header-fields">
-                <div class="field-group">
-                    <label>Service</label>
-                    <select id="service"><option value="LUNCH">LUNCH</option><option value="DINNER">DINNER</option></select>
-                </div>
-                <div class="field-group">
-                    <label>Date</label>
-                    <input type="date" id="serviceDate">
-                </div>
-                <div class="field-group">
-                    <label>Covers</label>
-                    <input type="number" id="covers" min="0" placeholder="—">
-                </div>
-                <div class="field-group">
-                    <label>Tables</label>
-                    <input type="number" id="tables" min="0" placeholder="—">
-                </div>
-            </div>
-            <!-- Print buttons sit under the header fields -->
-            <div class="print-quick">
-                <button class="print-quick-btn" onclick="printAll()">Print All</button>
-                <button class="print-quick-btn" onclick="printBOH()">Print BOH</button>
-                <button class="print-quick-btn" onclick="printFOH()">Print FOH</button>
-            </div>
+        <div class="upload-status" id="uploadStatus"></div>
+        <!-- ROW 3: saved bookings (drawer opens left-aligned below) -->
+        <button class="saved-toggle" id="savedToggle" onclick="toggleSavedDrawer()">Saved bookings ▾</button>
+        <div class="saved-drawer" id="savedDrawer">
+            <div id="savedList"></div>
         </div>
     </div>
 
@@ -350,7 +354,15 @@ var KT_TABLES = ['800'];
 // === NAME FORMATTING ===
 function toTitleCase(str) {
     if (!str) return '';
-    return str.toLowerCase().replace(/(?:^|\s|[-'])\S/g, function(c) { return c.toUpperCase(); });
+    str = str.toLowerCase();
+    // Capitalize after start, space, or hyphen
+    str = str.replace(/(?:^|\s|-)\S/g, function(c) { return c.toUpperCase(); });
+    // Capitalize after an apostrophe ONLY for prefixes like O'Brien / D'Angelo
+    // (single letter before the apostrophe). Leave possessives like "Chris's" alone.
+    str = str.replace(/(^|\s)([a-z])'(\w)/gi, function(m, pre, letter, next) {
+        return pre + letter.toUpperCase() + "'" + next.toUpperCase();
+    });
+    return str;
 }
 
 // === CSV ===
@@ -790,8 +802,19 @@ function cleanVoucherCode(code) {
 function extractVoucherValue(notes) {
     if (!notes) return '';
     var valMatch = notes.match(/[£€]\s*(\d+)\/checked/i);
-    if (valMatch) return '£' + valMatch[1];
+    if (valMatch) return valMatch[1];
     return '';
+}
+
+// Format a money value with a single £ symbol regardless of whether the
+// stored value already includes one (prevents "££118").
+function fmtMoney(val) {
+    if (val === undefined || val === null) return '';
+    var s = String(val).trim();
+    if (!s) return '';
+    s = s.replace(/^[£€\s]+/, '').trim(); // strip any leading currency symbols
+    if (!s) return '';
+    return '\u00a3' + s;
 }
 
 function extractNotes(notes) {
@@ -1143,9 +1166,18 @@ function recleanRows() {
         var notesEl   = tr.querySelector('.r-notes');
         var occTypeEl = tr.querySelector('.r-occasion');
         var occDetEl  = tr.querySelector('.r-occpos');
+        var nameEl    = tr.querySelector('.r-name');
         if (!codeEl) return;
 
-        var before = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value].join('|');
+        var before = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value, nameEl ? nameEl.value : '', valueEl ? valueEl.value : ''].join('|');
+
+        // 0) Fix name casing (Chris'S → Chris's, keep O'Brien correct)
+        if (nameEl && nameEl.value) nameEl.value = toTitleCase(nameEl.value);
+        // Fix occasion detail casing too
+        if (occDetEl.value) occDetEl.value = fixApostropheCase(occDetEl.value);
+
+        // 0b) Strip any leading £ from the money value
+        if (valueEl && valueEl.value) valueEl.value = valueEl.value.replace(/^[£€\s]+/, '').trim();
 
         // 1) Strip name glued to voucher code
         if (codeEl.value) codeEl.value = cleanVoucherCode(codeEl.value.trim());
@@ -1165,7 +1197,7 @@ function recleanRows() {
             if (det) occDetEl.value = det;
         }
 
-        var after = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value].join('|');
+        var after = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value, nameEl ? nameEl.value : '', valueEl ? valueEl.value : ''].join('|');
         if (before !== after) changed++;
 
         // Re-size the auto-size inputs after value change
@@ -1201,6 +1233,18 @@ function dedupeAllergyText(text) {
         });
     });
     return out.join(', ');
+}
+
+// Lowercase the letter after a possessive apostrophe: "Amit'S" → "Amit's"
+// but keep O'Brien style (single letter before apostrophe) capitalized.
+function fixApostropheCase(text) {
+    if (!text) return '';
+    return text.replace(/(\w)'([A-Z])/g, function(m, before, letter) {
+        // If exactly one letter precedes the apostrophe, it's likely O'/D' — keep upper
+        // We can't easily see the whole word here, so use simple rule: lowercase 's'
+        if (letter === 'S') return before + "'s";
+        return m;
+    });
 }
 
 // Extract an occasion detail (name/relationship + age) from a free text blob.
@@ -1440,7 +1484,7 @@ function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+(r.voucherValue ? '\u00a3'+esc(r.voucherValue) : '')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+esc(fmtMoney(r.voucherValue))+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
     for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td></td><td></td><td></td><td></td><td>&nbsp;</td></tr>';
 
@@ -1540,7 +1584,7 @@ function buildReceptionHTML(info, rows) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+(r.voucherValue ? '\u00a3'+esc(r.voucherValue) : '')+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td>'+esc(r.voucherProvider||'')+'</td><td>'+esc(r.voucherCode||r.voucher||'')+'</td><td>'+esc(fmtMoney(r.voucherValue))+'</td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
     for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td></td><td></td><td></td></tr>';
 
@@ -1662,6 +1706,18 @@ function toggleSavedDrawer() {
     toggle.textContent = text + (isOpen ? ' ▾' : ' ▴');
 }
 
+function togglePrintMenu() {
+    document.getElementById('printOptions').classList.toggle('open');
+}
+function hidePrintMenu() {
+    document.getElementById('printOptions').classList.remove('open');
+}
+// Close the print dropdown when clicking elsewhere
+document.addEventListener('click', function(e) {
+    var menu = document.querySelector('.print-menu');
+    if (menu && !menu.contains(e.target)) hidePrintMenu();
+});
+
 // Auto-load if there's a saved booking for today's date and service
 function autoLoad() {
     updateSavedList();
@@ -1711,22 +1767,37 @@ _sizer.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font
 document.body.appendChild(_sizer);
 
 var AUTO_SIZE_SELECTORS = ['.r-name', '.r-occpos', '.r-vcode', '.r-notes', '.r-allergypos'];
+var AUTO_SIZE_MIN = { 'r-name': 100, 'r-occpos': 60, 'r-vcode': 72, 'r-notes': 160, 'r-allergypos': 60 };
+var AUTO_SIZE_MAX = { 'r-name': 260, 'r-occpos': 200, 'r-vcode': 180, 'r-notes': 420, 'r-allergypos': 200 };
 
+function measure(text) {
+    _sizer.textContent = text || '';
+    return _sizer.offsetWidth;
+}
+
+// Size every input in a column to match the WIDEST content in that column,
+// so all rows share one uniform width per column.
+function sizeColumn(cls) {
+    var inputs = document.querySelectorAll('#resBody .' + cls);
+    if (!inputs.length) return;
+    var widest = AUTO_SIZE_MIN[cls] || 60;
+    inputs.forEach(function(inp) {
+        var w = measure(inp.value || inp.placeholder || '') + 12;
+        if (w > widest) widest = w;
+    });
+    var maxW = AUTO_SIZE_MAX[cls] || 400;
+    widest = Math.min(widest, maxW);
+    inputs.forEach(function(inp) { inp.style.width = widest + 'px'; });
+}
+
+// Kept for callers that pass a single input — resize its whole column.
 function sizeInput(input) {
-    _sizer.textContent = input.value || input.placeholder || '';
-    var measured = _sizer.offsetWidth;
     var cls = input.className.split(' ').find(function(c){ return c.indexOf('r-') === 0; });
-    var minW = {
-        'r-name': 100, 'r-occpos': 60, 'r-vcode': 72,
-        'r-notes': 160, 'r-allergypos': 60
-    }[cls] || 60;
-    input.style.width = Math.max(minW, measured + 10) + 'px';
+    if (cls) sizeColumn(cls);
 }
 
 function sizeAllAutoInputs() {
-    AUTO_SIZE_SELECTORS.forEach(function(sel) {
-        document.querySelectorAll('#resBody ' + sel).forEach(sizeInput);
-    });
+    AUTO_SIZE_SELECTORS.forEach(function(sel) { sizeColumn(sel.replace('.', '')); });
 }
 
 // Delegate: listen on the tbody for any input event on auto-size fields
@@ -1737,12 +1808,20 @@ document.getElementById('resBody').addEventListener('input', function(e) {
     }
 });
 
+// Strip any leading £/€ the user types in the money field — the column is
+// already labelled £, and this prevents a stored "£118" from doubling up.
+document.getElementById('resBody').addEventListener('blur', function(e) {
+    if (e.target && e.target.matches('.r-vvalue')) {
+        e.target.value = e.target.value.replace(/^[£€\s]+/, '').trim();
+    }
+}, true);
+
 // Re-size all after rows are loaded (autoLoadBooking / loadBooking call addRow)
 // Patch addRow to size new inputs after insertion
 var _origAddRow = addRow;
 addRow = function() {
     _origAddRow.apply(this, arguments);
-    // Size the newly added row's inputs after the DOM settles
+    // Size all columns after the DOM settles so widths stay uniform
     setTimeout(sizeAllAutoInputs, 0);
 };
 </script>
