@@ -297,6 +297,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <div class="actions">
             <button class="btn btn-add" onclick="addEmptyRow()">+ Add</button>
             <button class="btn btn-clear" onclick="clearAll()">Clear</button>
+            <button class="btn" id="recleanBtn" style="background:#b89650;color:white" onclick="recleanRows()" title="Re-apply the auto cleanup rules to the rows currently loaded">Re-clean</button>
             <button class="btn" id="saveBtn" style="background:#5c1a1a;color:white" onclick="saveBooking()">Save</button>
             <span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span>
         </div>
@@ -1127,6 +1128,96 @@ function gatherRows() {
         });
     });
     return data;
+}
+
+// === RE-CLEAN (field-level) ===
+// Re-applies the cleanup rules to rows already loaded in the table (from a
+// saved booking), working on the already-separated fields — no CSV needed.
+function recleanRows() {
+    var rows = document.querySelectorAll('#resBody tr');
+    var changed = 0;
+    rows.forEach(function(tr) {
+        var codeEl    = tr.querySelector('.r-vcode');
+        var valueEl   = tr.querySelector('.r-vvalue');
+        var allergyEl = tr.querySelector('.r-allergy');
+        var notesEl   = tr.querySelector('.r-notes');
+        var occTypeEl = tr.querySelector('.r-occasion');
+        var occDetEl  = tr.querySelector('.r-occpos');
+        if (!codeEl) return;
+
+        var before = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value].join('|');
+
+        // 1) Strip name glued to voucher code
+        if (codeEl.value) codeEl.value = cleanVoucherCode(codeEl.value.trim());
+
+        // 2) Dedupe allergy entries (e.g. "1x No seafood, No Seafood")
+        if (allergyEl.value) allergyEl.value = dedupeAllergyText(allergyEl.value);
+
+        // 3) Clean redundant phrases from notes based on what's in other columns
+        var hasVoucher  = !!(codeEl.value.trim() || (valueEl && valueEl.value.trim()));
+        var hasAllergy  = !!allergyEl.value.trim();
+        var hasOccasion = !!(occTypeEl.value.trim() || occDetEl.value.trim());
+        if (notesEl.value) notesEl.value = cleanNotes(notesEl.value, hasVoucher, hasAllergy, hasOccasion);
+
+        // 4) Try to fill occasion detail from notes if it's empty but there's a type
+        if (occTypeEl.value && !occDetEl.value) {
+            var det = detailFromText(notesEl.value + ' ' + occTypeEl.value);
+            if (det) occDetEl.value = det;
+        }
+
+        var after = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value].join('|');
+        if (before !== after) changed++;
+
+        // Re-size the auto-size inputs after value change
+        if (typeof sizeInput === 'function') {
+            [tr.querySelector('.r-name'), occDetEl, codeEl, notesEl].forEach(function(el){
+                if (el && el.matches('.r-name,.r-occpos,.r-vcode,.r-notes')) sizeInput(el);
+            });
+        }
+    });
+    var status = document.getElementById('saveStatus');
+    status.style.color = '#b89650';
+    status.textContent = changed > 0 ? ('Cleaned ' + changed + ' row' + (changed===1?'':'s') + ' — review & Save') : 'Nothing to clean';
+    setTimeout(function(){ status.textContent = ''; status.style.color = '#2d7d46'; }, 5000);
+}
+
+// Dedupe a comma-separated allergy string, dropping plain entries that a
+// quantified entry already covers (e.g. drop "No Seafood" when "1x No seafood" exists).
+function dedupeAllergyText(text) {
+    var items = text.split(/,\s*/).map(function(s){ return s.trim(); }).filter(Boolean);
+    // exact case-insensitive dedupe
+    var out = items.filter(function(v,i,a){
+        return a.findIndex(function(x){ return x.toLowerCase() === v.toLowerCase(); }) === i;
+    });
+    // drop plain entry when a qty-prefixed one has the same core
+    out = out.filter(function(v){
+        var vCore = v.toLowerCase().replace(/^\d+x\s*/, '').trim();
+        var vHasQty = /^\d+x\s/i.test(v);
+        return !out.some(function(other){
+            if (other === v) return false;
+            var oCore = other.toLowerCase().replace(/^\d+x\s*/, '').trim();
+            var oHasQty = /^\d+x\s/i.test(other);
+            return oCore === vCore && oHasQty && !vHasQty;
+        });
+    });
+    return out.join(', ');
+}
+
+// Extract an occasion detail (name/relationship + age) from a free text blob.
+function detailFromText(text) {
+    if (!text) return '';
+    var poss = text.match(/([\w']+'s)\b/);
+    if (poss) return poss[1];
+    var relRe = /\b(husband|wife|partner|boyfriend|girlfriend|mum|mother|dad|father|son|daughter|sister|brother|friend|colleague|boss)\b/i;
+    var rel = text.match(relRe);
+    if (rel) {
+        var relWord = rel[1].charAt(0).toUpperCase() + rel[1].slice(1).toLowerCase();
+        var ageM = text.match(/(\d+(?:st|nd|rd|th))\b/i);
+        return ageM ? relWord + "'s " + ageM[1].toLowerCase() : relWord + "'s";
+    }
+    var ageOnly = text.match(/(\d+(?:st|nd|rd|th))\b/i);
+    if (ageOnly) return ageOnly[1].toLowerCase();
+    return '';
 }
 
 function getHeaderInfo() {
