@@ -552,7 +552,28 @@ function extractAllergies(notes) {
     
     if (/FOOD & DRINK PREFERENCES:.*Allergy/i.test(notes) && found.length===0) found.push('Allergy (check notes)');
     if (hasNoDiet && found.length===0) return '';
-    return found.filter(function(v,i,a){return a.indexOf(v)===i;}).join(', ');
+
+    // Dedupe: exact case-insensitive duplicates
+    var deduped = found.filter(function(v,i,a){
+        return a.findIndex(function(x){ return x.toLowerCase() === v.toLowerCase(); }) === i;
+    });
+
+    // Remove entries that are redundant substrings of a richer entry.
+    // e.g. "No Seafood" is redundant when "1x No seafood" is already present.
+    deduped = deduped.filter(function(v){
+        var vCore = v.toLowerCase().replace(/^\d+x\s*/, '').trim();
+        return !deduped.some(function(other){
+            if (other === v) return false;
+            var oCore = other.toLowerCase().replace(/^\d+x\s*/, '').trim();
+            // other is "richer" (has qty prefix or is longer) and contains v's core
+            var otherHasQty = /^\d+x\s/i.test(other);
+            var vHasQty = /^\d+x\s/i.test(v);
+            if (oCore === vCore && otherHasQty && !vHasQty) return true; // drop the plain one
+            return false;
+        });
+    });
+
+    return deduped.join(', ');
 }
 function extractOccasion(notes) {
     if (!notes) return '';
@@ -636,6 +657,27 @@ function extractOccasion(notes) {
         occ.push(visitDetail);
     }
 
+    // Final fallback: scan the WHOLE notes for an occasion keyword when nothing
+    // was captured from SPECIAL EVENTS or VISIT NOTES (e.g. it lives in
+    // GUEST REQUESTS: "40th birthday present for my husband")
+    if (occ.length === 0) {
+        var scan = [
+            {r:/\bbirthday\b/i, l:'Birthday'},
+            {r:/\banniversary\b/i, l:'Anniversary'},
+            {r:/\bengagement\b/i, l:'Engagement'},
+            {r:/\bgraduation\b/i, l:'Graduation'},
+            {r:/\bretirement\b/i, l:'Retirement'},
+            {r:/\bhoneymoon\b/i, l:'Honeymoon'},
+            {r:/\bproposal\b/i, l:'Proposal'},
+            {r:/\bwedding\b/i, l:'Wedding'},
+            {r:/\bbaby\s*shower\b/i, l:'Baby Shower'},
+            {r:/\bcelebrat/i, l:'Celebration'}
+        ];
+        for (var si = 0; si < scan.length; si++) {
+            if (scan[si].r.test(notes)) { occ.push(scan[si].l); break; }
+        }
+    }
+
     return occ.filter(function(v,i,a){return a.indexOf(v)===i;}).join(', ');
 }
 
@@ -661,6 +703,21 @@ function extractOccasionDetail(notes) {
     // e.g. "Amit's Birthday" → "Amit's"
     var nameMatch = full.match(/([\w']+'s)\s+/i);
     if (nameMatch) return nameMatch[1];
+
+    // Relationship + optional age from the raw notes, e.g.
+    // "40th birthday present for my husband" → "Husband's 40th"
+    // "anniversary for my wife" → "Wife's"
+    if (notes) {
+        var relRe = /\b(husband|wife|partner|boyfriend|girlfriend|mum|mother|dad|father|son|daughter|sister|brother|friend|colleague|boss)\b/i;
+        var rel = notes.match(relRe);
+        if (rel) {
+            var relWord = rel[1].charAt(0).toUpperCase() + rel[1].slice(1).toLowerCase();
+            // Look for an ordinal age near the occasion word (e.g. 40th, 21st, 50th)
+            var ageM = notes.match(/(\d+(?:st|nd|rd|th))\b/i);
+            if (ageM) return relWord + "'s " + ageM[1].toLowerCase();
+            return relWord + "'s";
+        }
+    }
 
     var numMatch = full.match(/(\d+[\w-]*)\s+/i);
     if (numMatch) return numMatch[1];
@@ -711,9 +768,22 @@ function extractVoucherCode(notes) {
         var digitCount = (code.match(/\d/g) || []).length;
         var hasLetter = /[A-Za-z]/.test(code);
         var isWord = /^[A-Za-z]+$/.test(code);
-        if (digitCount >= 5 && hasLetter && !isWord) return code;
+        if (digitCount >= 5 && hasLetter && !isWord) {
+            return cleanVoucherCode(code);
+        }
     }
     return '';
+}
+
+// Strip a leading word (e.g. a name accidentally glued to the code like
+// "Ramsay4378853JUTFH5" → "4378853JUTFH5"). The real code starts at the
+// first block of digits.
+function cleanVoucherCode(code) {
+    // If the code starts with letters immediately followed by digits, and the
+    // leading letter run looks like a word (>=3 letters), drop it.
+    var m = code.match(/^([A-Za-z]{3,})(\d.*)$/);
+    if (m) return m[2];
+    return code;
 }
 
 function extractVoucherValue(notes) {
@@ -731,7 +801,50 @@ function extractNotes(notes) {
         var req = gr[1].trim().replace(/Voucher:\s*\S+/i, '').trim();
         if (req) parts.push(req);
     }
-    return parts.join('; ');
+    var raw = parts.join('; ');
+
+    // Clean out anything already captured in other columns
+    var hasVoucher = !!(extractVoucherCode(notes) || extractVoucherValue(notes));
+    var hasAllergy = !!extractAllergies(notes);
+    var hasOccasion = !!extractOccasion(notes);
+
+    return cleanNotes(raw, hasVoucher, hasAllergy, hasOccasion);
+}
+
+// Remove sentences/phrases from the free-text notes that duplicate data
+// already shown in the Voucher, Allergy, or Occasion columns.
+function cleanNotes(text, hasVoucher, hasAllergy, hasOccasion) {
+    if (!text) return '';
+
+    // Split into sentence-like fragments so we can drop whole redundant ones
+    var fragments = text.split(/(?:\.\s+|;\s*|\n)/);
+
+    var kept = fragments.filter(function(frag) {
+        var f = frag.trim();
+        if (!f) return false;
+        var low = f.toLowerCase();
+
+        // Drop voucher-related lines if the voucher is already captured
+        if (hasVoucher && /voucher|gift\s*card|redeem|experience\s+voucher|virgin\s+experience/i.test(low)) {
+            // But keep it if it carries a real condition worth noting (e.g. expiry)
+            if (!/valid until|expir|before the|day of this booking/i.test(low)) return false;
+            return false; // expiry is not actionable for service; drop it
+        }
+
+        // Drop dietary/seafood lines already captured as an allergy
+        if (hasAllergy && /(do(?:es)?n?'?t?\s+not\s+eat|cannot eat|can'?t eat|nothing from the sea|no seafood|no sea food|from the sea|allerg|intoleran|pescatarian|vegetarian|vegan)/i.test(low)) {
+            return false;
+        }
+
+        // Drop occasion lines already captured (birthday/anniversary present etc.)
+        if (hasOccasion && /(birthday|anniversary|engagement|graduation|retirement|honeymoon|wedding|proposal|celebration)\b.*(present|gift|surprise|celebrat|for (?:my|his|her|their))/i.test(low)) {
+            return false;
+        }
+
+        return true;
+    });
+
+    return kept.join('. ').replace(/\.\s*\./g, '.').trim();
 }
 
 // === POPULATE ===
