@@ -301,7 +301,6 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <div class="actions">
             <button class="btn btn-add" onclick="addEmptyRow()">+ Add</button>
             <button class="btn btn-clear" onclick="clearAll()">Clear</button>
-            <button class="btn" id="recleanBtn" style="background:#b89650;color:white" onclick="recleanRows()" title="Re-apply the auto cleanup rules to the rows currently loaded">Re-clean</button>
             <button class="btn" id="saveBtn" style="background:#5c1a1a;color:white" onclick="saveBooking()">Save</button>
             <span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span>
         </div>
@@ -381,6 +380,16 @@ function handleCSV(event) {
     var reader = new FileReader();
     reader.onload = function(e) {
         var rows = parseCSV(e.target.result);
+        var existingCount = document.querySelectorAll('#resBody tr').length;
+        if (existingCount > 0) {
+            // There's already data — offer to merge (keep manual edits) or replace
+            var doMerge = confirm(
+                'This service already has ' + existingCount + ' reservation(s).\n\n' +
+                'OK = Merge (add new guests, update table/time/pax from CSV, keep your manual edits to notes, allergies, occasion, voucher).\n\n' +
+                'Cancel = Replace everything with the CSV.'
+            );
+            if (doMerge) { mergeFromCSV(rows); return; }
+        }
         populateFromCSV(rows);
         document.getElementById('uploadStatus').textContent = rows.length + ' reservations loaded';
     };
@@ -892,6 +901,86 @@ function populateFromCSV(rows) {
     updateSaveButton();
 }
 
+// Normalize a name for matching: lowercase, trim, collapse spaces, strip star
+function normName(n) {
+    return (n || '').toLowerCase().replace(/\u2605/g, '').replace(/\s+/g, ' ').trim();
+}
+
+// === MERGE FROM CSV (match by name) ===
+// - Existing guest (same name): update table/time/pax/menu from CSV, keep the
+//   manual fields (allergy, occasion detail+type, notes, section, star, voucher).
+// - New guest: add a fresh cleaned row at the end.
+// - Guest no longer in the CSV: kept as-is, reported for review.
+function mergeFromCSV(rows) {
+    // Index existing rows by normalized name
+    var existingByName = {};
+    document.querySelectorAll('#resBody tr').forEach(function(tr) {
+        var nm = normName(tr.querySelector('.r-name').value);
+        if (nm) existingByName[nm] = tr;
+    });
+
+    var csvNames = {};
+    var added = 0, updated = 0;
+
+    rows.forEach(function(row) {
+        var time = row['TIME'] || '';
+        var pax = parseInt(row['PARTY SIZE'] || row['PAX'] || '0');
+        var name = toTitleCase(row['GUEST'] || row['NAME'] || '');
+        var table = row['TABLE'] || '';
+        var notesRaw = row['NOTES AND TAGS'] || '';
+        var nm = normName(name);
+        if (nm) csvNames[nm] = true;
+
+        var tr = existingByName[nm];
+        if (tr) {
+            // Update only the CSV-driven fields; preserve manual edits
+            var timeEl = tr.querySelector('.r-time');
+            var paxEl = tr.querySelector('.r-pax');
+            var tableEl = tr.querySelector('.r-table');
+            var menuEl = tr.querySelector('.r-menu');
+            var changedThis = false;
+            if (time && timeEl.value !== time) { timeEl.value = time; changedThis = true; }
+            if (pax && String(pax) !== paxEl.value) { paxEl.value = pax; changedThis = true; }
+            if (table && tableEl.value.trim() !== table) {
+                tableEl.value = table;
+                updateSectionBadge(tableEl);
+                changedThis = true;
+            }
+            // Menu: only fill if CSV has one and the cell is empty (don't overwrite a manual pick)
+            var csvMenu = extractMenu(notesRaw);
+            if (csvMenu && !menuEl.value) {
+                var opt = Array.from(menuEl.options).find(function(o){ return o.value === csvMenu.split(', ')[0]; });
+                if (opt) { menuEl.value = opt.value; changedThis = true; }
+            }
+            if (changedThis) updated++;
+        } else {
+            // New guest — add cleaned row
+            addRow(time, pax, name, table, extractMenu(notesRaw), extractOccasionType(notesRaw), extractAllergies(notesRaw), extractNotes(notesRaw), '', '', '', extractVoucherCode(notesRaw), extractVoucherValue(notesRaw), extractOccasionDetail(notesRaw));
+            added++;
+        }
+    });
+
+    // Find existing guests no longer present in the CSV (possible cancellations)
+    var removed = [];
+    Object.keys(existingByName).forEach(function(nm) {
+        if (!csvNames[nm]) {
+            var nameVal = existingByName[nm].querySelector('.r-name').value.trim();
+            if (nameVal) removed.push(nameVal);
+        }
+    });
+
+    recalc();
+    document.getElementById('formArea').classList.add('visible');
+    updateSaveButton();
+
+    var msg = 'Merged: ' + added + ' new, ' + updated + ' updated';
+    if (removed.length) {
+        msg += ' — ' + removed.length + ' no longer in CSV (kept): ' + removed.join(', ');
+    }
+    var status = document.getElementById('uploadStatus');
+    status.textContent = msg;
+}
+
 // === ROW MANAGEMENT ===
 function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher, visits, allergyPos, voucherCode, voucherValue, occasionPos, star, voucherProvider) {
     // Handle old-style calls where voucher is a single field
@@ -1151,117 +1240,6 @@ function gatherRows() {
         });
     });
     return data;
-}
-
-// === RE-CLEAN (field-level) ===
-// Re-applies the cleanup rules to rows already loaded in the table (from a
-// saved booking), working on the already-separated fields — no CSV needed.
-function recleanRows() {
-    var rows = document.querySelectorAll('#resBody tr');
-    var changed = 0;
-    rows.forEach(function(tr) {
-        var codeEl    = tr.querySelector('.r-vcode');
-        var valueEl   = tr.querySelector('.r-vvalue');
-        var allergyEl = tr.querySelector('.r-allergy');
-        var notesEl   = tr.querySelector('.r-notes');
-        var occTypeEl = tr.querySelector('.r-occasion');
-        var occDetEl  = tr.querySelector('.r-occpos');
-        var nameEl    = tr.querySelector('.r-name');
-        if (!codeEl) return;
-
-        var before = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value, nameEl ? nameEl.value : '', valueEl ? valueEl.value : ''].join('|');
-
-        // 0) Fix name casing (Chris'S → Chris's, keep O'Brien correct)
-        if (nameEl && nameEl.value) nameEl.value = toTitleCase(nameEl.value);
-        // Fix occasion detail casing too
-        if (occDetEl.value) occDetEl.value = fixApostropheCase(occDetEl.value);
-
-        // 0b) Strip any leading £ from the money value
-        if (valueEl && valueEl.value) valueEl.value = valueEl.value.replace(/^[£€\s]+/, '').trim();
-
-        // 1) Strip name glued to voucher code
-        if (codeEl.value) codeEl.value = cleanVoucherCode(codeEl.value.trim());
-
-        // 2) Dedupe allergy entries (e.g. "1x No seafood, No Seafood")
-        if (allergyEl.value) allergyEl.value = dedupeAllergyText(allergyEl.value);
-
-        // 3) Clean redundant phrases from notes based on what's in other columns
-        var hasVoucher  = !!(codeEl.value.trim() || (valueEl && valueEl.value.trim()));
-        var hasAllergy  = !!allergyEl.value.trim();
-        var hasOccasion = !!(occTypeEl.value.trim() || occDetEl.value.trim());
-        if (notesEl.value) notesEl.value = cleanNotes(notesEl.value, hasVoucher, hasAllergy, hasOccasion);
-
-        // 4) Try to fill occasion detail from notes if it's empty but there's a type
-        if (occTypeEl.value && !occDetEl.value) {
-            var det = detailFromText(notesEl.value + ' ' + occTypeEl.value);
-            if (det) occDetEl.value = det;
-        }
-
-        var after = [codeEl.value, allergyEl.value, notesEl.value, occDetEl.value, nameEl ? nameEl.value : '', valueEl ? valueEl.value : ''].join('|');
-        if (before !== after) changed++;
-
-        // Re-size the auto-size inputs after value change
-        if (typeof sizeInput === 'function') {
-            [tr.querySelector('.r-name'), occDetEl, codeEl, notesEl].forEach(function(el){
-                if (el && el.matches('.r-name,.r-occpos,.r-vcode,.r-notes')) sizeInput(el);
-            });
-        }
-    });
-    var status = document.getElementById('saveStatus');
-    status.style.color = '#b89650';
-    status.textContent = changed > 0 ? ('Cleaned ' + changed + ' row' + (changed===1?'':'s') + ' — review & Save') : 'Nothing to clean';
-    setTimeout(function(){ status.textContent = ''; status.style.color = '#2d7d46'; }, 5000);
-}
-
-// Dedupe a comma-separated allergy string, dropping plain entries that a
-// quantified entry already covers (e.g. drop "No Seafood" when "1x No seafood" exists).
-function dedupeAllergyText(text) {
-    var items = text.split(/,\s*/).map(function(s){ return s.trim(); }).filter(Boolean);
-    // exact case-insensitive dedupe
-    var out = items.filter(function(v,i,a){
-        return a.findIndex(function(x){ return x.toLowerCase() === v.toLowerCase(); }) === i;
-    });
-    // drop plain entry when a qty-prefixed one has the same core
-    out = out.filter(function(v){
-        var vCore = v.toLowerCase().replace(/^\d+x\s*/, '').trim();
-        var vHasQty = /^\d+x\s/i.test(v);
-        return !out.some(function(other){
-            if (other === v) return false;
-            var oCore = other.toLowerCase().replace(/^\d+x\s*/, '').trim();
-            var oHasQty = /^\d+x\s/i.test(other);
-            return oCore === vCore && oHasQty && !vHasQty;
-        });
-    });
-    return out.join(', ');
-}
-
-// Lowercase the letter after a possessive apostrophe: "Amit'S" → "Amit's"
-// but keep O'Brien style (single letter before apostrophe) capitalized.
-function fixApostropheCase(text) {
-    if (!text) return '';
-    return text.replace(/(\w)'([A-Z])/g, function(m, before, letter) {
-        // If exactly one letter precedes the apostrophe, it's likely O'/D' — keep upper
-        // We can't easily see the whole word here, so use simple rule: lowercase 's'
-        if (letter === 'S') return before + "'s";
-        return m;
-    });
-}
-
-// Extract an occasion detail (name/relationship + age) from a free text blob.
-function detailFromText(text) {
-    if (!text) return '';
-    var poss = text.match(/([\w']+'s)\b/);
-    if (poss) return poss[1];
-    var relRe = /\b(husband|wife|partner|boyfriend|girlfriend|mum|mother|dad|father|son|daughter|sister|brother|friend|colleague|boss)\b/i;
-    var rel = text.match(relRe);
-    if (rel) {
-        var relWord = rel[1].charAt(0).toUpperCase() + rel[1].slice(1).toLowerCase();
-        var ageM = text.match(/(\d+(?:st|nd|rd|th))\b/i);
-        return ageM ? relWord + "'s " + ageM[1].toLowerCase() : relWord + "'s";
-    }
-    var ageOnly = text.match(/(\d+(?:st|nd|rd|th))\b/i);
-    if (ageOnly) return ageOnly[1].toLowerCase();
-    return '';
 }
 
 function getHeaderInfo() {
