@@ -60,9 +60,9 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 /* Discontinued */
 .disc-check{width:13px;height:13px;accent-color:#c0392b;cursor:pointer}
 .disc-row td{opacity:0.4;text-decoration:line-through}
-.lock-btn{display:inline-block;cursor:pointer;font-size:12px;line-height:1;padding:2px 4px;border-radius:4px;border:1px solid transparent;background:transparent;transition:all 0.2s;white-space:nowrap}
-.lock-btn:hover{border-color:var(--green)}
-.lock-btn.is-locked{border-color:var(--green-dark)}
+.lock-btn{display:inline-block;cursor:pointer;font-size:7px;padding:2px 5px;border-radius:4px;border:1px solid var(--green);color:var(--green);background:transparent;font-family:var(--sans);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;transition:all 0.2s;white-space:nowrap}
+.lock-btn:hover{background:var(--green);color:#fff}
+.lock-btn.is-locked{background:var(--green-dark);color:#fff;border-color:var(--green-dark)}
 .lock-info{font-size:var(--fs);font-weight:400;letter-spacing:0;text-transform:none;color:#999;margin-top:4px}
 .qty-input.locked{background:#f0f0f0;color:#aaa;border-color:#e0e0e0;cursor:not-allowed}
 /* Focus (local view filter) button in location headers */
@@ -545,13 +545,12 @@ function renderTable(){
     visibleLocCount++;
     var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
     var lockClass = isLocked ? ' is-locked' : '';
-    var lockLabel = isLocked ? '🔒' : '🔓';
-    var lockTitle = isLocked ? 'Locked — click to unlock' : 'Click to lock';
+    var lockLabel = isLocked ? 'Locked' : 'Lock';
     var lockInfo = isLocked ? '<div class="lock-info"><em>by</em> ' + escHtml(lockedCols[locs[l]].by || '') + '</div>' : '';
     var locEsc = locs[l].replace(/'/g,"\\'");
     html += '<th><div class="loc-header-name">' + escHtml(locs[l]).replace(/\s+/g,'<br>') + '</div>'
          + '<div class="loc-header-lock">'
-         + '<span class="lock-btn' + lockClass + '" title="' + lockTitle + '" onclick="toggleLock(\'' + locEsc + '\')">' + lockLabel + '</span>'
+         + '<span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locEsc + '\')">' + lockLabel + '</span>'
          + '<span class="focus-btn" onclick="focusLocation(\'' + locEsc + '\')" title="Count only this location on this device">Focus on this</span>'
          + '</div>' + lockInfo + '</th>';
   }
