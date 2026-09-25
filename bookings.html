@@ -202,13 +202,16 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .station-page h2{font-family:var(--serif);font-size:11pt;text-align:center;margin-bottom:0;color:var(--green-dark)}
 .station-page .p-service{text-align:center;font-size:8pt;font-weight:700;margin-bottom:2px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
 .station-page .station-meta{text-align:center;font-size:7pt;color:#555;margin-bottom:5px}
+/* Station block: a labelled table (SECTION 1 / SECTION 2 share one page) */
+.station-block{margin-bottom:10px;page-break-inside:avoid}
+.station-block-label{display:inline-block;background:var(--green-dark);color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:8pt;padding:3px 12px;border-radius:3px 3px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .station-table{border-collapse:collapse;table-layout:fixed;font-size:6.5pt}
 .station-table th,.station-table td{border:0.75px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;overflow:hidden}
 /* Thick separator line above each group (after Pax, and between Canapés / Water / Wine) */
 .station-table tr.group-top>th,.station-table tr.group-top>td{border-top:2.5px solid #000}
-/* Empty walk-in columns: no grid lines, no fill — just blank space */
-.station-table td.blank-col{border:none;background:none}
-.station-table tr.group-top>td.blank-col{border-top:none}
+/* Empty walk-in columns: keep the grid (borders) but no fill and no "—" */
+.station-table td.blank-col{background:none}
+.station-table .tbl-num.blank-col{background:#fafafa;color:#bbb}
 /* force background colors to print */
 .station-table .row-label,.station-table .opt-col,.station-table .tbl-num{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .station-table .row-label{background:#efe7d8;font-weight:700;text-align:left;text-transform:uppercase;font-size:6pt;letter-spacing:0.3px;color:var(--green-dark);width:54px;white-space:nowrap}
@@ -1676,9 +1679,14 @@ function buildAllStationPages(info, rows) {
         return r.section === 'KT' || KT_TABLES.indexOf((r.table || '').trim()) >= 0;
     });
 
-    if (s1.length > 0) pages.push(buildStationHTML(info, s1, 'SECTION 1'));
-    if (s2.length > 0) pages.push(buildStationHTML(info, s2, 'SECTION 2'));
-    if (kt.length > 0) pages.push(buildKTStationHTML(info, kt));
+    // Section 1 and Section 2 share a single page (each with its own labelled table).
+    var sectionBlocks = '';
+    if (s1.length > 0) sectionBlocks += buildStationHTML(info, s1, 'SECTION 1');
+    if (s2.length > 0) sectionBlocks += buildStationHTML(info, s2, 'SECTION 2');
+    if (sectionBlocks) pages.push(stationPage(sectionBlocks));
+
+    // Kitchen Table on its own page.
+    if (kt.length > 0) pages.push(stationPage(buildKTStationHTML(info, kt)));
     return pages;
 }
 
@@ -1740,10 +1748,16 @@ function stationRowBuilders(cols, headLabel) {
     return { colGroup: colGroup, headRow: headRow, guestRow: guestRow, paxRow: paxRow, markRow: markRow, optionGroup: optionGroup };
 }
 
-function stationPageWrap(info, sectionLabel, metaText, body) {
-    return '<div class="station-page">' +
+// A single labelled station block: a "SECTION x" title box above its table.
+function stationBlock(sectionLabel, body) {
+    return '<div class="station-block">' +
+        '<div class="station-block-label">' + esc(sectionLabel) + '</div>' +
         '<table class="station-table">' + body + '</table>' +
     '</div>';
+}
+// Wrap one or more station blocks into a printed page.
+function stationPage(blocksHTML) {
+    return '<div class="station-page">' + blocksHTML + '</div>';
 }
 
 // Standard section station sheet (S1 / S2)
@@ -1774,7 +1788,7 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
         + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
         + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
 
-    return stationPageWrap(info, sectionLabel, resList.length + ' covers', body);
+    return stationBlock(sectionLabel, body);
 }
 
 // Kitchen Table station sheet: columns are seats P1..P[pax], no Canapés row.
@@ -1798,8 +1812,7 @@ function buildKTStationHTML(info, ktRows) {
         + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
         + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
 
-    var meta = seats + ' covers' + (names.length ? ' \u00b7 ' + names.join(', ') : '');
-    return stationPageWrap(info, 'KITCHEN TABLE', meta, body);
+    return stationBlock('KITCHEN TABLE', body);
 }
 
 function buildReceptionHTML(info, rows) {
