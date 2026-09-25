@@ -65,6 +65,13 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .lock-btn.is-locked{background:var(--green-dark);color:#fff;border-color:var(--green-dark)}
 .lock-info{font-size:8px;font-weight:400;letter-spacing:0;text-transform:none;color:#999;margin-top:4px}
 .qty-input.locked{background:#f0f0f0;color:#aaa;border-color:#e0e0e0;cursor:not-allowed}
+/* Focus (local view filter) button in location headers */
+.focus-btn{display:inline-block;cursor:pointer;font-size:8px;padding:3px 7px;border-radius:4px;border:1px solid var(--gold);color:var(--gold);background:transparent;font-family:var(--sans);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;transition:all 0.2s;white-space:nowrap;margin-top:4px}
+.focus-btn:hover{background:var(--gold);color:#fff}
+/* Focus banner */
+.focus-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff8e8;border:1px solid var(--gold-light);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green)}
+.focus-banner button{padding:8px 16px;background:var(--gold);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;font-family:var(--sans)}
+.focus-banner button:hover{background:#a07f3e}
 
 /* Actions */
 .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
@@ -167,7 +174,6 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 <body>
 <div class="top-bar">
   <a href="sommeliers.html">&larr; Back</a>
-  <h2>Petrus</h2>
   <span></span>
 </div>
 
@@ -211,6 +217,12 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
       <span class="saved-doc-icon">●</span>
       <span id="savedDocInfo"></span>
     </span>
+  </div>
+
+  <!-- Focus banner (local view filter) -->
+  <div class="focus-banner" id="focusBanner" style="display:none">
+    <span>Counting only <strong id="focusName"></strong> on this device</span>
+    <button onclick="clearFocus()">Show all locations</button>
   </div>
 
   <!-- Search -->
@@ -272,6 +284,7 @@ var name_idx = -1;
 var hiddenCols = [];
 var locationData = [];
 var lockedCols = {};  // {locationName: {locked: true, by: 'Fiorella'} }
+var focusedLoc = null; // Local-only view filter: when set, only this location column is shown on THIS device
 var docExists = false; // Whether a saved document exists in Firestore
 var docInfo = {};      // {createdBy, date, updatedBy}
 var discontinuedData = []; // Boolean per row — true = product discontinued
@@ -353,6 +366,7 @@ function switchTab(tab){
   // Reset and load data for this tab
   rows = []; headers = []; metaLine = ''; headerLine = ''; locationData = []; lockedCols = {};
   docExists = false; docInfo = {};
+  focusedLoc = null; updateFocusBanner();
   updateDocIndicator();
   renderTable();
   loadStocktake();
@@ -533,16 +547,25 @@ function renderTable(){
   }
   // Discontinued column after product info
   html += '<th>X</th>';
-  // Location headers with lock buttons
+  // Location headers with lock + focus buttons
+  var visibleLocCount = 0;
   for(var l=0; l<locs.length; l++){
+    // Local view filter: if a location is focused, skip the others (visual only)
+    if(focusedLoc && locs[l] !== focusedLoc) continue;
+    visibleLocCount++;
     var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
     var lockClass = isLocked ? ' is-locked' : '';
     var lockLabel = isLocked ? 'Locked' : 'Lock';
     var lockInfo = isLocked ? '<div class="lock-info"><em>by</em> ' + escHtml(lockedCols[locs[l]].by || '') + '</div>' : '';
-    html += '<th><div class="loc-header-name">' + escHtml(locs[l]).replace(/\s+/g,'<br>') + '</div><div class="loc-header-lock"><span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locs[l].replace(/'/g,"\\'") + '\')">' + lockLabel + '</span></div>' + lockInfo + '</th>';
+    var locEsc = locs[l].replace(/'/g,"\\'");
+    html += '<th><div class="loc-header-name">' + escHtml(locs[l]).replace(/\s+/g,'<br>') + '</div>'
+         + '<div class="loc-header-lock">'
+         + '<span class="lock-btn' + lockClass + '" onclick="toggleLock(\'' + locEsc + '\')">' + lockLabel + '</span>'
+         + '<span class="focus-btn" onclick="focusLocation(\'' + locEsc + '\')" title="Count only this location on this device">Focus</span>'
+         + '</div>' + lockInfo + '</th>';
   }
   html += '<th class="total-header">Total</th>';
-  var totalCols = visibleCount + locs.length + 2;
+  var totalCols = visibleCount + visibleLocCount + 2;
   html += '</tr></thead><tbody>';
 
   var lastCat = '';
@@ -581,6 +604,7 @@ function renderTable(){
     html += '<td style="text-align:center"><input type="checkbox" class="disc-check"' + discChecked + ' data-row="' + i + '" onchange="toggleDiscontinued(this)"></td>';
     // Location inputs
     for(var l=0; l<locs.length; l++){
+      if(focusedLoc && locs[l] !== focusedLoc) continue;
       var locVal = locationData[i] ? (locationData[i][locs[l]] || '') : '';
       var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
       var disabledAttr = isLocked || discontinuedData[i] ? ' disabled' : '';
@@ -634,6 +658,33 @@ function toggleLock(locName){
     }).catch(function(e){ console.error(e); });
   }
   renderTable();
+}
+
+// ── Local view focus (does NOT touch Firestore / other devices) ──
+function focusLocation(locName){
+  focusedLoc = locName;
+  updateFocusBanner();
+  renderTable();
+  showStatus('Showing only ' + locName + ' on this device');
+}
+
+function clearFocus(){
+  focusedLoc = null;
+  updateFocusBanner();
+  renderTable();
+  showStatus('Showing all locations');
+}
+
+function updateFocusBanner(){
+  var banner = document.getElementById('focusBanner');
+  var nameEl = document.getElementById('focusName');
+  if(!banner) return;
+  if(focusedLoc){
+    nameEl.textContent = focusedLoc;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 function escHtml(str){
