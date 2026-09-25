@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stocktake — Petrus Sommeliers</title>
+<title>Stock Take — Petrus Sommeliers</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -168,7 +168,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 </div>
 
 <div class="page">
-  <h1 class="page-title">Stocktake</h1>
+  <h1 class="page-title">Stock Take</h1>
 
   <!-- Tabs -->
   <div class="tabs">
@@ -750,7 +750,7 @@ function saveStocktake(){
     docExists = true;
     docInfo = {createdBy: author, date: getSelectedDate(), updatedBy: author, updatedAt: new Date()};
     updateDocIndicator();
-    showStatus('Stocktake saved ✓');
+    showStatus('Stock Take saved ✓');
   }).catch(function(e){
     console.error('Save error:', e);
     showStatus('Error: ' + e.message);
@@ -776,7 +776,7 @@ function updateStocktake(){
     docInfo.date = getSelectedDate();
     docInfo.updatedAt = new Date();
     updateDocIndicator();
-    showStatus('Stocktake updated ✓');
+    showStatus('Stock Take updated ✓');
   }).catch(function(e){
     console.error(e);
     showStatus('Error updating: ' + e.message);
@@ -910,7 +910,7 @@ function buildTotalTable(){
   html += 'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#5c1a1a;color:#fff;padding:8px;font-size:10px;text-transform:uppercase;text-align:left}';
   html += 'td{padding:6px 8px;font-size:11px;border-bottom:1px solid #ddd}.total{font-weight:700;text-align:center}';
   html += '.cat-row td{background:#f5e8e8;font-weight:700;color:#5c1a1a;font-size:11px;padding:8px}</style></head><body>';
-  html += '<h2>Petrus Stocktake \u2014 ' + currentTab.toUpperCase() + '</h2>';
+  html += '<h2>Petrus Stock Take \u2014 ' + currentTab.toUpperCase() + '</h2>';
   html += '<p style="font-size:11px;color:#888">' + getSelectedMonth() + ' \u2014 ' + getSelectedDate() + '</p>';
   html += '<table><thead><tr><th>Brand & Description</th><th>Pack Size</th><th>Total</th></tr></thead><tbody>';
 
@@ -975,7 +975,7 @@ function downloadPDF(){
   // Title
   doc.setFontSize(16);
   doc.setTextColor(92, 26, 26);
-  doc.text('Petrus Stocktake - ' + currentTab.toUpperCase(), 14, 20);
+  doc.text('Petrus Stock Take - ' + currentTab.toUpperCase(), 14, 20);
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text(getSelectedMonth() + ' - ' + getSelectedDate(), 14, 27);
@@ -1074,7 +1074,7 @@ function downloadAllInfoPDF(){
 
   doc.setFontSize(16);
   doc.setTextColor(92,26,26);
-  doc.text('Petrus — Stocktake ' + currentTab.toUpperCase(), 14, 16);
+  doc.text('Petrus — Stock Take ' + currentTab.toUpperCase(), 14, 16);
   doc.setFontSize(9);
   doc.setTextColor(100,100,100);
   doc.text(getSelectedMonth() + ' — All Info by Location', 14, 22);
@@ -1182,7 +1182,7 @@ function deleteStocktake(){
     docExists = false; docInfo = {};
     updateDocIndicator();
     renderTable();
-    showStatus('Stocktake deleted');
+    showStatus('Stock Take deleted');
   }).catch(function(e){
     console.error(e);
     showStatus('Error deleting');
