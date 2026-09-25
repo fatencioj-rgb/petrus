@@ -76,7 +76,13 @@ body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
     <select id="accountSelect" class="account-select">
       <option value="">Loading accounts...</option>
     </select>
+    <select id="modeSelect" class="account-select" onchange="onModeChange()">
+      <option value="week">Weekly</option>
+      <option value="month">Monthly (by week)</option>
+    </select>
     <select id="weekSelect" class="account-select">
+    </select>
+    <select id="monthSelect" class="account-select" style="display:none">
     </select>
     <button class="btn" id="btnGenerate" onclick="generateReport()">Generate Report</button>
     <span id="status" style="font-size:11px;color:#888"></span>
@@ -155,6 +161,59 @@ let reportData = null;
   }
 })();
 
+// ── Populate month selector (last 12 months) ──
+(function populateMonths() {
+  const select = document.getElementById('monthSelect');
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  const today = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const opt = document.createElement('option');
+    // value format: YYYY-MM
+    opt.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    opt.textContent = monthNames[d.getMonth()] + ' ' + d.getFullYear() + (i === 0 ? ' (this month)' : '');
+    select.appendChild(opt);
+  }
+})();
+
+// ── Toggle week/month selectors based on mode ──
+function onModeChange() {
+  const mode = document.getElementById('modeSelect').value;
+  document.getElementById('weekSelect').style.display = (mode === 'week') ? '' : 'none';
+  document.getElementById('monthSelect').style.display = (mode === 'month') ? '' : 'none';
+}
+
+// ── Build the list of Tue–Sat weeks that fall within a given month ──
+// Returns array of { fromDate, toDate, label } for weeks whose Tuesday is in the month.
+function getWeeksOfMonth(year, month /* 1-12 */) {
+  const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const first = new Date(year, month - 1, 1);
+  // Find the first Tuesday on or after the 1st of the month
+  let d = new Date(first);
+  const day = d.getDay(); // 0=Sun,1=Mon,2=Tue...
+  const diffToTue = (day <= 2) ? (2 - day) : (9 - day);
+  d.setDate(d.getDate() + diffToTue);
+
+  const weeks = [];
+  while (d.getMonth() === (month - 1) && d.getFullYear() === year) {
+    const tue = new Date(d);
+    const sat = new Date(d);
+    sat.setDate(tue.getDate() + 4);
+    const fromStr = toLocalISO(tue);
+    const toStr = toLocalISO(sat);
+    const label = tue.getDate() + ' ' + monthsShort[tue.getMonth()] + ' — ' + sat.getDate() + ' ' + monthsShort[sat.getMonth()];
+    weeks.push({ fromDate: fromStr, toDate: toStr, label: label });
+    d.setDate(d.getDate() + 7);
+  }
+  return weeks;
+}
+
+// Local-date ISO (avoids UTC off-by-one from toISOString)
+function toLocalISO(dt) {
+  return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+}
+
 // ── Load history from Firestore ──
 function loadHistory() {
   db.collection('viniv_reports')
@@ -219,8 +278,17 @@ function showWeekDetail(docId) {
   });
 }
 
-// ── Generate Report ──
+// ── Generate Report (dispatch by mode) ──
 async function generateReport() {
+  const mode = document.getElementById('modeSelect').value;
+  if (mode === 'month') {
+    return generateMonthlyReport();
+  }
+  return generateWeeklyReport();
+}
+
+// ── Generate Weekly Report ──
+async function generateWeeklyReport() {
   const btn = document.getElementById('btnGenerate');
   const output = document.getElementById('output');
   const status = document.getElementById('status');
@@ -264,6 +332,170 @@ async function generateReport() {
   } catch (err) {
     output.innerHTML = '<div class="error">⚠ Could not connect to server. Make sure viniv-server.py is running.</div>';
     btn.disabled = false;
+  }
+}
+
+// ── Generate Monthly Report (detailed by week) ──
+async function generateMonthlyReport() {
+  const btn = document.getElementById('btnGenerate');
+  const output = document.getElementById('output');
+  const status = document.getElementById('status');
+  const monthVal = document.getElementById('monthSelect').value; // YYYY-MM
+  const accountId = document.getElementById('accountSelect').value;
+  const accountName = document.getElementById('accountSelect').selectedOptions[0].textContent;
+
+  const [yearStr, monthStr] = monthVal.split('-');
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+  const monthNames = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+  const monthLabel = monthNames[month - 1] + ' ' + year;
+
+  const weeks = getWeeksOfMonth(year, month);
+  if (weeks.length === 0) {
+    output.innerHTML = '<div class="error">⚠ No weeks found for ' + monthLabel + '.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = '';
+
+  const weekResults = [];
+  let done = 0;
+
+  for (const wk of weeks) {
+    output.innerHTML = '<div class="loading"><div class="spinner"></div>'
+      + '<p>Fetching ' + monthLabel + ' — week ' + (done + 1) + ' of ' + weeks.length + '</p>'
+      + '<p style="font-size:11px;color:#666;margin-top:4px">' + wk.label + '</p>'
+      + '<p style="font-size:10px;color:#aaa;margin-top:6px">Each week takes 30-60 seconds. Please keep this tab open.</p></div>';
+
+    try {
+      const res = await fetch(API + '/api/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId: accountId, fromDate: wk.fromDate, toDate: wk.toDate })
+      });
+      const json = await res.json();
+      if (json.success) {
+        weekResults.push({ label: wk.label, data: json.data });
+      } else {
+        // No data for this week (e.g. closed) — record an empty week
+        weekResults.push({ label: wk.label, data: null, error: json.error });
+      }
+    } catch (err) {
+      weekResults.push({ label: wk.label, data: null, error: 'Connection error' });
+    }
+    done++;
+  }
+
+  renderMonthlyReport(monthLabel, weekResults, accountId, accountName);
+  btn.disabled = false;
+  status.textContent = '✓ Monthly report generated';
+}
+
+// ── Render Monthly Report (by week) ──
+function renderMonthlyReport(monthLabel, weekResults, accountId, accountName) {
+  // Month totals
+  let mGlass = 0, mPairing = 0, mTotal = 0;
+  for (const w of weekResults) {
+    if (w.data) {
+      mGlass += w.data.totalGlass;
+      mPairing += w.data.totalPairing;
+      mTotal += w.data.totalAll;
+    }
+  }
+
+  let h = '';
+  h += '<div class="summary-grid">';
+  h += '<div class="summary-card"><div class="num">' + mGlass + '</div><div class="lbl">By the Glass</div></div>';
+  h += '<div class="summary-card"><div class="num">' + mPairing + '</div><div class="lbl">Pairings</div></div>';
+  h += '<div class="summary-card"><div class="num">' + mTotal + '</div><div class="lbl">Total (Month)</div></div>';
+  h += '</div>';
+
+  h += '<div class="section"><h3>' + monthLabel + ' — Weekly Summary</h3>';
+  h += '<table class="tbl"><thead><tr><th>Week</th><th>By the Glass</th><th>Pairings</th><th>Total</th></tr></thead><tbody>';
+  for (const w of weekResults) {
+    if (w.data) {
+      h += '<tr><td>' + w.label + '</td><td>' + w.data.totalGlass + '</td>'
+         + '<td>' + w.data.totalPairing + '</td><td><strong>' + w.data.totalAll + '</strong></td></tr>';
+    } else {
+      h += '<tr><td>' + w.label + '</td><td colspan="3" style="color:#aaa">No data</td></tr>';
+    }
+  }
+  h += '<tr style="background:#faf7f1"><td><strong>Total</strong></td><td><strong>' + mGlass + '</strong></td>'
+     + '<td><strong>' + mPairing + '</strong></td><td><strong>' + mTotal + '</strong></td></tr>';
+  h += '</tbody></table></div>';
+
+  // Detailed breakdown per week
+  for (const w of weekResults) {
+    if (!w.data) continue;
+    h += '<div class="section"><h3>' + w.label + '  ·  Glass ' + w.data.totalGlass
+       + ' / Pairing ' + w.data.totalPairing + ' / Total ' + w.data.totalAll + '</h3>';
+    h += '<table class="tbl"><thead><tr><th>Date</th><th>Session</th><th>Order Type</th><th>Qty</th><th>Price</th><th>Type</th></tr></thead><tbody>';
+    for (const row of w.data.entries) {
+      const tagClass = row.type === 'By the Glass' ? 'tag-glass' : 'tag-pair';
+      h += '<tr><td>' + row.date + '</td><td>' + row.session + '</td><td>' + row.orderType + '</td>';
+      h += '<td>' + row.qty + '</td><td>£' + row.price.toFixed(2) + '</td>';
+      h += '<td><span class="s-tag ' + tagClass + '">' + row.type + '</span></td></tr>';
+    }
+    h += '</tbody></table></div>';
+  }
+
+  // Email preview for the whole month
+  h += '<div class="email-preview">';
+  h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b89650;margin-bottom:8px">Email Preview</h3>';
+  h += '<textarea id="emailBody">' + buildMonthlyEmailBody(monthLabel, weekResults, mGlass, mPairing, mTotal) + '</textarea>';
+  h += '<div class="email-actions">';
+  h += '<button class="btn btn-send" onclick="sendMonthlyEmail(\'' + monthLabel.replace(/'/g, "") + '\')">Send to my email</button>';
+  h += '<span id="sendStatus" style="font-size:11px;color:#888"></span>';
+  h += '</div></div>';
+
+  document.getElementById('output').innerHTML = h;
+}
+
+function buildMonthlyEmailBody(monthLabel, weekResults, mGlass, mPairing, mTotal) {
+  let body = 'Dear Giuseppe,\n\n';
+  body += 'Please find below the Viniv monthly sales report for ' + monthLabel + ', broken down by week.\n\n';
+  body += 'The Restaurant Collection - Monthly Summary:\n\n';
+  body += '  By the Glass: ' + mGlass + ' glasses sold\n';
+  body += '  Pairings: ' + mPairing + ' pairings sold\n';
+  body += '  Total: ' + mTotal + '\n\n';
+  body += 'Weekly breakdown:\n';
+  for (const w of weekResults) {
+    if (w.data) {
+      body += '  ' + w.label + '  —  Glass: ' + w.data.totalGlass
+            + ', Pairing: ' + w.data.totalPairing + ', Total: ' + w.data.totalAll + '\n';
+    } else {
+      body += '  ' + w.label + '  —  No data\n';
+    }
+  }
+  body += '\nBest regards,\nFiorella\n';
+  body += '\n—\nThis report has been generated through a custom-built automation by Fiorella Atencio';
+  return body;
+}
+
+async function sendMonthlyEmail(monthLabel) {
+  const body = document.getElementById('emailBody').value;
+  const sendStatus = document.getElementById('sendStatus');
+  sendStatus.textContent = 'Sending...';
+  try {
+    const res = await fetch(API + '/api/send-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subject: 'Viniv Monthly Report - The Restaurant Collection (' + monthLabel + ')',
+        body: body
+      })
+    });
+    const json = await res.json();
+    if (json.success) {
+      sendStatus.textContent = '✓ Sent!';
+      toast('Email sent successfully');
+    } else {
+      sendStatus.textContent = '✗ ' + json.error;
+    }
+  } catch (err) {
+    sendStatus.textContent = '✗ Server error';
   }
 }
 

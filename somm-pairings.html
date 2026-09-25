@@ -49,9 +49,14 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 .course-dish { font-family: var(--serif); font-size: 17px; font-weight: 600; color: #1a1a1a; line-height: 1.3; }
 .course-desc { font-family: var(--serif); font-size: 15px; font-weight: 300; font-style: italic; color: #333; margin-top: 2px; }
 .course-wine { font-family: var(--serif); font-size: 13px; font-style: italic; color: var(--gold); margin-top: 6px; }
+.menu-price { font-family: var(--serif); font-size: 16px; color: #1a1a1a; margin-top: 8px; }
+.menu-pairings { margin-top: 20px; }
+.menu-pairings p { font-family: var(--serif); font-size: 14px; font-weight: 300; color: #333; line-height: 1.8; }
 .preview-footer { margin-top: 32px; }
 .preview-footer .name { font-family: var(--serif); font-size: 14px; font-weight: 600; color: #1a1a1a; }
 .preview-footer .role { font-family: var(--sans); font-size: 9px; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+.menu-legal { margin-top: 20px; padding-top: 14px; border-top: 1px solid #ddd; }
+.menu-legal p { font-family: var(--sans); font-size: 9px; color: #888; line-height: 1.6; }
 /* Editor */
 .editor-panel { background: #f5f0e8; border: 1px solid #e0d5c5; border-radius: 8px; padding: 20px; display: none; }
 .editor-panel h3 { font-family: var(--serif); font-size: 20px; color: var(--green); margin-bottom: 16px; }
@@ -74,7 +79,12 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
 .somm-options { display: flex; gap: 8px; flex-wrap: wrap; }
 .somm-opt { padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; cursor: pointer; background: #fff; transition: all 0.15s; }
 .somm-opt:hover { border-color: var(--gold); }
-.somm-opt.active { background: var(--green); color: #fff; border-color: var(--green); }.meta-info { font-size: 11px; color: #888; font-style: italic; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e0d5c5; }
+.somm-opt.active { background: var(--green); color: #fff; border-color: var(--green); }
+.meta-editor label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-bottom: 3px; }
+.meta-editor input, .meta-editor textarea { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: var(--sans); font-size: 13px; outline: none; margin-bottom: 8px; }
+.meta-editor input:focus, .meta-editor textarea:focus { border-color: var(--gold); }
+.meta-editor textarea { resize: vertical; min-height: 60px; font-size: 12px; }
+.meta-info { font-size: 11px; color: #888; font-style: italic; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e0d5c5; }
 .status-msg { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: var(--cream); padding: 12px 20px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
 .status-msg.show { opacity: 1; }
 </style>
@@ -93,6 +103,9 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
   .course-desc { font-size: 13px; }
   .course-wine { font-size: 11px; }
   .course-separator { margin: 12px 0; }
+  .menu-price { font-size: 14px; }
+  .menu-pairings p { font-size: 12px; line-height: 1.6; }
+  .menu-legal p { font-size: 8px; }
   .preview-footer .name { font-size: 12px; }
 }
 @media (max-width: 600px) {
@@ -179,6 +192,15 @@ body { font-family: var(--sans); background: var(--cream); color: #2c2c2c; min-h
           <h4>Sommelier</h4>
           <div class="somm-options" id="sommOptions"></div>
         </div>
+        <div class="editor-section meta-editor" id="metaEditor" style="margin-top:16px;padding-top:12px;border-top:1px solid #e0d5c5">
+          <h4>Price &amp; Pairings</h4>
+          <label>Price line</label>
+          <input type="text" id="editPrice" placeholder="e.g. £150 per person" oninput="updateMeta('price',this.value)">
+          <label>Pairing options (one per line)</label>
+          <textarea id="editPairings" oninput="updateMeta('pairings',this.value)"></textarea>
+          <label>Footer text (one line per line)</label>
+          <textarea id="editFooter" oninput="updateMeta('footer',this.value)"></textarea>
+        </div>
         <div class="meta-info" id="metaInfo"></div>
       </div>
     </div>
@@ -206,6 +228,10 @@ const MENU_CONFIG = {
 };
 const PAIRING_LABELS = {'matching':'Matching Pairing','connoisseur':'Connoisseur Pairing','indulgence':'Indulgence Pairing','3wines':'3 Wines Pairing','kt-matching':'Matching Wines','kt-connoisseur':'Connoisseur Wines','kt-indulgence':'Indulgence Wines','kt-bespoke':'Bespoke'};
 const SIZE_LABELS = {'statement':'Statement (5.5 × 8.5 in)','a4':'A4 (21 × 29.7 cm)'};
+
+// Defaults for the menu meta block (price / pairing options / legal footer)
+const DEFAULT_FOOTER = 'All prices are inclusive of VAT.\nA 15% discretionary service charge will be added to your bill.\nIf you have a food allergy, intolerance or sensitivity, please speak to your waiter\nabout ingredients in our dishes before you order your meal.';
+const DEFAULT_PAIRINGS = 'Non-alcoholic pairing £80\n3 Wines £90\nMatching wines £150\nThe Connoisseur matching wines £325\nThe Indulgence matching wines £975';
 
 let currentMenu = null;
 let U = null;
@@ -489,7 +515,10 @@ async function loadMenu() {
   try { const doc = await db.collection('somm_pairings').doc(firestoreId).get(); if (doc.exists) data = doc.data(); } catch(e) { console.log('Firestore unavailable, using template'); }
 
   if (data) {
-    currentMenu = { id: firestoreId, type, variant, diet, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '', pairingDate: data.pairingDate || '', showDate: data.showDate || false };
+    currentMenu = { id: firestoreId, type, variant, diet, courses: data.courses || [], lastEditBy: data.lastEditBy || '', lastEditDate: data.lastEditDate || '', sommelier: data.sommelier || '', pairingDate: data.pairingDate || '', showDate: data.showDate || false,
+      price: data.price !== undefined ? data.price : '',
+      pairings: data.pairings !== undefined ? data.pairings : DEFAULT_PAIRINGS,
+      footer: data.footer !== undefined ? data.footer : DEFAULT_FOOTER };
   } else {
     // Try diet-specific template first, then fall back to regular
     const tplKey = diet === 'regular' ? docId : `${type}_${diet}_${variant}`;
@@ -497,7 +526,8 @@ async function loadMenu() {
     currentMenu = {
       id: firestoreId, type, variant, diet,
       courses: tpl ? JSON.parse(JSON.stringify(tpl)) : [{ dish:'', desc:'', producer:'', wine:'', region:'', vintage:'' }],
-      lastEditBy: '', lastEditDate: '', sommelier: '', pairingDate: '', showDate: false
+      lastEditBy: '', lastEditDate: '', sommelier: '', pairingDate: '', showDate: false,
+      price: '', pairings: DEFAULT_PAIRINGS, footer: DEFAULT_FOOTER
     };
   }
   // Set alcDiet for ALC
@@ -569,7 +599,28 @@ function renderPreview() {
     h += '</div>';
   });
 
+  // Price line
+  if (currentMenu.price && currentMenu.price.trim()) {
+    h += '<div class="course-separator">~</div>';
+    h += `<div class="menu-price">${esc(currentMenu.price)}</div>`;
+  }
+
+  // Pairing options (one per line)
+  if (currentMenu.pairings && currentMenu.pairings.trim()) {
+    h += '<div class="menu-pairings">';
+    currentMenu.pairings.split('\n').forEach(l => { if (l.trim()) h += `<p>${esc(l.trim())}</p>`; });
+    h += '</div>';
+  }
+
   h += `<div class="preview-footer"><div class="name">${esc(somm.name)}</div><div class="role">${somm.role}</div></div>`;
+
+  // Legal footer text (one per line)
+  if (currentMenu.footer && currentMenu.footer.trim()) {
+    h += '<div class="menu-legal">';
+    currentMenu.footer.split('\n').forEach(l => { if (l.trim()) h += `<p>${esc(l.trim())}</p>`; });
+    h += '</div>';
+  }
+
   p.innerHTML = h;
 }
 </script>
@@ -872,6 +923,14 @@ function renderEditor() {
     sommEl.innerHTML += `<div class="somm-opt${active}" onclick="selectSomm('${s.name}')">${s.name}<br><span style="font-size:9px;color:${active?'#ddd':'#888'}">${s.role}</span></div>`;
   });
 
+  // Price / Pairings / Footer editor
+  const metaWrap = document.getElementById('metaEditor');
+  if (metaWrap) {
+    document.getElementById('editPrice').value = currentMenu.price || '';
+    document.getElementById('editPairings').value = currentMenu.pairings || '';
+    document.getElementById('editFooter').value = currentMenu.footer || '';
+  }
+
   const metaEl = document.getElementById('metaInfo');
   if (currentMenu.lastEditBy) {
     metaEl.textContent = 'Last edited by ' + currentMenu.lastEditBy + ' — ' + currentMenu.lastEditDate;
@@ -942,6 +1001,7 @@ function clearDate() {
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function upd(i, f, v) { currentMenu.courses[i][f] = v; renderPreview(); }
 function upd2(i, f, v) { currentMenu.courses[i][f] = v; renderPreview(); }
+function updateMeta(f, v) { if (currentMenu) { currentMenu[f] = v; renderPreview(); } }
 function addWine2(i) { currentMenu.courses[i].producer2=''; currentMenu.courses[i].wine2=''; currentMenu.courses[i].region2=''; currentMenu.courses[i].vintage2=''; renderEditor(); }
 function addCourseEditor() { currentMenu.courses.push({dish:'',desc:'',producer:'',wine:'',region:'',vintage:''}); renderEditor(); }
 function removeCourse(i) { currentMenu.courses.splice(i,1); renderEditor(); renderPreview(); }
@@ -1014,6 +1074,9 @@ async function saveMenu() {
       sommelier: currentMenu.sommelier || '',
       pairingDate: currentMenu.pairingDate || '',
       showDate: currentMenu.showDate || false,
+      price: currentMenu.price || '',
+      pairings: currentMenu.pairings || '',
+      footer: currentMenu.footer || '',
       lastEditBy: author,
       lastEditDate: dateStr,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
