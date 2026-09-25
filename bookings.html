@@ -1411,9 +1411,9 @@ function buildKitchenHTML(info, rows) {
         if (r.menu && menuCount[r.menu] !== undefined) menuCount[r.menu] += parseInt(r.pax)||1;
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
-        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td></tr>';
     });
-    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+    for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
 
     var mp = [];
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
@@ -1425,7 +1425,7 @@ function buildKitchenHTML(info, rows) {
         allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
     }
 
-    return '<h2>PETRUS</h2><div class="p-service">KITCHEN \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:8%"><col style="width:5%"><col style="width:18%"><col style="width:5%"><col style="width:10%"><col style="width:22%"><col style="width:5%"><col style="width:27%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return '<h2>PETRUS</h2><div class="p-service">KITCHEN \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:10%"><col style="width:6%"><col style="width:24%"><col style="width:6%"><col style="width:14%"><col style="width:35%"><col style="width:5%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Allergy / Req</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
 function buildPastryHTML(info, rows) {
@@ -1438,7 +1438,7 @@ function buildPastryHTML(info, rows) {
         if (r.allergy && r.allergy.trim()) allergyList.push({name:r.name||'Guest',table:r.table,pax:r.pax,allergies:r.allergy});
         var starName = (r.star ? '\u2605 ' : '') + esc(r.name);
         var occClass = r.occasion ? 'occasion-cell' : '';
-        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td>'+esc(r.occasionPos||'')+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
+        html += '<tr><td>'+formatTimePrint(r.time,info.service)+'</td><td>'+esc(r.pax)+'</td><td style="white-space:nowrap"><strong>'+starName+'</strong></td><td>'+esc(r.table)+'</td><td>'+esc(r.menu)+'</td><td class="'+occClass+'">'+esc(r.occasion)+'</td><td class="'+(r.allergy?'allergy-cell':'')+'">'+formatAllergyPrint(r.allergy)+'</td><td></td><td class="notes-cell">'+esc(r.notes)+'</td></tr>';
     });
     for (var i=0;i<3;i++) html += '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
 
@@ -1452,7 +1452,7 @@ function buildPastryHTML(info, rows) {
         allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
     }
 
-    return '<h2>PETRUS</h2><div class="p-service">PASTRY \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:7%"><col style="width:4%"><col style="width:16%"><col style="width:5%"><col style="width:9%"><col style="width:14%"><col style="width:5%"><col style="width:18%"><col style="width:5%"><col style="width:17%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return '<h2>PETRUS</h2><div class="p-service">PASTRY \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:7%"><col style="width:4%"><col style="width:16%"><col style="width:5%"><col style="width:10%"><col style="width:18%"><col style="width:18%"><col style="width:5%"><col style="width:17%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th>Occasion</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
 function buildReceptionLHTML(info, rows) {
