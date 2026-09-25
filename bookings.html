@@ -204,6 +204,9 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .station-table th,.station-table td{border:0.75px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;overflow:hidden}
 /* Thick separator line above each group (after Pax, and between Canapés / Water / Wine) */
 .station-table tr.group-top>th,.station-table tr.group-top>td{border-top:2.5px solid #000}
+/* Empty walk-in columns: no grid lines, no fill — just blank space */
+.station-table td.blank-col{border:none;background:none}
+.station-table tr.group-top>td.blank-col{border-top:none}
 /* force background colors to print */
 .station-table .row-label,.station-table .opt-col,.station-table .tbl-num{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .station-table .row-label{background:#efe7d8;font-weight:700;text-align:left;text-transform:uppercase;font-size:6pt;letter-spacing:0.3px;color:var(--green-dark);width:54px;white-space:nowrap}
@@ -1190,6 +1193,20 @@ function formatTimePrint(time, service) {
     return h+':'+m+' pm';
 }
 
+// Convert a time string ("19:00" or "7:00 pm") to minutes-since-midnight for sorting.
+function timeToMinutes(time) {
+    if (!time) return 99999;
+    var m = time.match(/(\d{1,2}):(\d{2})/);
+    if (!m) return 99999;
+    var h = parseInt(m[1]);
+    var min = parseInt(m[2]);
+    var pm = /pm/i.test(time);
+    var am = /am/i.test(time);
+    if (pm && h < 12) h += 12;
+    if (am && h === 12) h = 0;
+    return h * 60 + min;
+}
+
 // Helper: filter rows by section, respecting manual override
 function filterBySection(rows, sectionNum) {
     var tables = sectionNum === 1 ? SECTION_1_TABLES : SECTION_2_TABLES;
@@ -1638,7 +1655,7 @@ function stationRowBuilders(cols, headLabel) {
     function headRow() {
         var h = '<tr><th class="row-label">' + hl + '</th><th class="opt-col"></th>';
         cols.forEach(function(c) {
-            if (c === null) h += '<td class="tbl-num blank">—</td>';
+            if (c === null) h += '<td class="tbl-num blank-col"></td>';
             else h += '<td class="tbl-num">' + esc(c.label) + '</td>';
         });
         return h + '</tr>';
@@ -1646,20 +1663,20 @@ function stationRowBuilders(cols, headLabel) {
     function guestRow() {
         var h = '<tr><th class="row-label row-sublabel">Guest</th><th class="opt-col"></th>';
         cols.forEach(function(c) {
-            h += '<td class="guest">' + esc(c ? (c.guest || '') : '') + '</td>';
+            h += '<td class="guest' + (c === null ? ' blank-col' : '') + '">' + esc(c ? (c.guest || '') : '') + '</td>';
         });
         return h + '</tr>';
     }
     function paxRow() {
         var h = '<tr><th class="row-label row-sublabel">Pax</th><th class="opt-col"></th>';
         cols.forEach(function(c) {
-            h += '<td class="pax">' + (c && c.pax ? c.pax : '') + '</td>';
+            h += '<td class="pax' + (c === null ? ' blank-col' : '') + '">' + (c && c.pax ? c.pax : '') + '</td>';
         });
         return h + '</tr>';
     }
     function markRow(label, groupTop) {
         var h = '<tr' + (groupTop ? ' class="group-top"' : '') + '><th class="row-label">' + label + '</th><th class="opt-col"></th>';
-        cols.forEach(function() { h += '<td class="mark"></td>'; });
+        cols.forEach(function(c) { h += '<td class="mark' + (c === null ? ' blank-col' : '') + '"></td>'; });
         return h + '</tr>';
     }
     function optionGroup(label, opts) {
@@ -1668,7 +1685,7 @@ function stationRowBuilders(cols, headLabel) {
             var h = '<tr' + (idx === 0 ? ' class="group-top"' : '') + '>';
             if (idx === 0) h += '<th class="row-label" rowspan="' + opts.length + '">' + label + '</th>';
             h += '<th class="opt-col">' + o + '</th>';
-            cols.forEach(function() { h += '<td class="mark"></td>'; });
+            cols.forEach(function(c) { h += '<td class="mark' + (c === null ? ' blank-col' : '') + '"></td>'; });
             out += h + '</tr>';
         });
         return out;
@@ -1686,20 +1703,21 @@ function stationPageWrap(info, sectionLabel, metaText, body) {
 function buildStationHTML(info, sectionRows, sectionLabel) {
     var BLANK_WALKINS = 4;
 
-    var byTable = {};
-    sectionRows.forEach(function(r) {
-        var t = (r.table || '').trim();
-        if (!t) return;
-        if (!byTable[t]) byTable[t] = { pax: 0, names: [] };
-        byTable[t].pax += parseInt(r.pax) || 0;
-        if (r.name) byTable[t].names.push(r.name.split(' ')[0]);
-    });
-    var tables = Object.keys(byTable).sort(function(a, b) {
-        return (parseInt(a) || 0) - (parseInt(b) || 0);
+    // One column per reservation (a shared table appears once per booking),
+    // ordered by reservation time, then by table number.
+    var resList = sectionRows.filter(function(r){ return (r.table || '').trim(); });
+    resList.sort(function(a, b) {
+        var ta = timeToMinutes(a.time), tb = timeToMinutes(b.time);
+        if (ta !== tb) return ta - tb;
+        return (parseInt(a.table) || 0) - (parseInt(b.table) || 0);
     });
 
-    var cols = tables.map(function(t) {
-        return { label: t, guest: byTable[t].names.join(' / '), pax: byTable[t].pax };
+    var cols = resList.map(function(r) {
+        return {
+            label: (r.table || '').trim(),
+            guest: r.name ? r.name.split(' ')[0] : '',
+            pax: parseInt(r.pax) || ''
+        };
     });
     for (var b = 0; b < BLANK_WALKINS; b++) cols.push(null);
 
@@ -1709,7 +1727,7 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
         + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
         + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
 
-    return stationPageWrap(info, sectionLabel, tables.length + ' tables occupied', body);
+    return stationPageWrap(info, sectionLabel, resList.length + ' covers', body);
 }
 
 // Kitchen Table station sheet: columns are seats P1..P[pax], no Canapés row.
