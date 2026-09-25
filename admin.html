@@ -166,6 +166,51 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 
 .empty-state p { font-size: 14px; }
 
+/* ── Maintenance ──────────────────────────────────────────────── */
+.maintenance {
+  background: #fff;
+  border: 1px solid #e8e4de;
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 40px;
+}
+
+.maintenance h2 {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.maintenance p {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.danger-btn {
+  padding: 10px 20px;
+  background: #b23b3b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-family: var(--sans);
+}
+
+.danger-btn:hover { background: #8f2d2d; }
+.danger-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+#clearStatus {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--green);
+  min-height: 18px;
+}
+
 .access-denied {
   text-align: center;
   padding: 80px 20px;
@@ -278,6 +323,14 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 
   <div class="load-more" id="loadMore" style="display:none;">
     <button onclick="loadMoreLogs()">Load More</button>
+  </div>
+
+  <!-- Maintenance: clear old stocktakes -->
+  <div class="maintenance">
+    <h2>Stocktake Maintenance</h2>
+    <p>Delete saved stocktake data from previous months to keep storage lean. The current month is always kept.</p>
+    <button class="danger-btn" id="clearStocktakesBtn" onclick="clearOldStocktakes()">Delete Past Stocktakes</button>
+    <div id="clearStatus"></div>
   </div>
 </div>
 
@@ -491,6 +544,73 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ── Maintenance: delete past stocktakes ───────────────────────────
+function currentMonthStr() {
+  const now = new Date();
+  return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+}
+
+// Extracts the YYYY-MM portion from a docId like "stocktake_wine_2026-01"
+function stocktakeMonth(docId) {
+  const m = docId.match(/(\d{4}-\d{2})$/);
+  return m ? m[1] : null;
+}
+
+async function clearOldStocktakes() {
+  const btn = document.getElementById('clearStocktakesBtn');
+  const status = document.getElementById('clearStatus');
+  const keepMonth = currentMonthStr();
+
+  status.style.color = 'var(--green)';
+  status.textContent = 'Checking for past stocktakes…';
+  btn.disabled = true;
+
+  try {
+    const snapshot = await db.collection('somm_stocktake').get();
+    const toDelete = [];
+    snapshot.forEach(doc => {
+      const month = stocktakeMonth(doc.id);
+      // Delete anything whose month is before the current month (keep current + undated docs)
+      if (month && month < keepMonth) {
+        toDelete.push(doc.ref);
+      }
+    });
+
+    if (toDelete.length === 0) {
+      status.textContent = 'No past stocktakes to delete.';
+      btn.disabled = false;
+      return;
+    }
+
+    const ok = confirm(
+      'Delete ' + toDelete.length + ' past stocktake record(s)? ' +
+      'The current month (' + keepMonth + ') will be kept. This cannot be undone.'
+    );
+    if (!ok) {
+      status.textContent = 'Cancelled.';
+      btn.disabled = false;
+      return;
+    }
+
+    // Batch deletes (Firestore batch limit is 500)
+    let deleted = 0;
+    for (let i = 0; i < toDelete.length; i += 450) {
+      const batch = db.batch();
+      toDelete.slice(i, i + 450).forEach(ref => batch.delete(ref));
+      await batch.commit();
+      deleted += Math.min(450, toDelete.length - i);
+    }
+
+    status.textContent = 'Deleted ' + deleted + ' past stocktake record(s) ✓';
+  } catch (err) {
+    console.error('Error clearing stocktakes:', err);
+    status.style.color = '#b23b3b';
+    status.textContent = 'Error: ' + (err.message || 'could not delete stocktakes.');
+  } finally {
+    btn.disabled = false;
+  }
 }
 </script>
 </body>

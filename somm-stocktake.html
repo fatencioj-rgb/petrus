@@ -79,6 +79,9 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .btn-print:hover{background:var(--green-dark)}
 .btn-delete{background:#fff;color:#c0392b;border:1px solid #c0392b}
 .btn-delete:hover{background:#c0392b;color:#fff}
+/* Delete button in controls row — sits apart from Save/Update, styled as destructive */
+.delete-btn-top{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;background:#fff;color:#c0392b;border:1px solid #e0b4b4;border-radius:5px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;font-family:var(--sans);transition:all 0.2s}
+.delete-btn-top:hover{background:#c0392b;color:#fff;border-color:#c0392b}
 
 /* Print styles */
 @media print{
@@ -106,9 +109,10 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .status-msg{position:fixed;bottom:20px;right:20px;background:var(--green);color:var(--cream);padding:10px 18px;border-radius:6px;font-size:12px;opacity:0;transition:opacity 0.3s;z-index:9999}
 .status-msg.show{opacity:1}
 
-/* Info bar */
-.info-bar{font-size:11px;color:#888;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap}
-.info-bar span{background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e8e0d4}
+/* Info bar — single line, horizontal scroll if needed on narrow screens */
+.info-bar{font-size:11px;color:#888;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+.info-bar>span{background:#fff;padding:5px 10px;border-radius:4px;border:1px solid #e8e0d4;flex:0 0 auto}
+.info-bar .saved-doc-inline{display:inline-flex;align-items:center;gap:6px;color:#555}
 
 /* Search */
 .search-bar{margin-bottom:16px;position:sticky;top:0;z-index:3;background:var(--cream);padding:8px 0}
@@ -119,6 +123,35 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 /* Saved document indicator */
 .saved-doc{background:#fff;border:1px solid #e8e0d4;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#555;display:flex;align-items:center;gap:8px}
 .saved-doc-icon{color:#27ae60;font-size:10px}
+
+/* iPad + tablets: keep controls compact on a single row */
+@media(min-width:701px) and (max-width:1200px){
+  .controls{gap:10px;padding:12px 14px}
+  .ctrl-group select,.ctrl-group input[type="date"]{padding:7px 10px;font-size:12px}
+  .upload-btn{padding:8px 12px;font-size:10px}
+}
+
+/* iPad / touch-friendly stocktake table */
+@media(min-width:701px) and (max-width:1366px){
+  .stock-table td{padding:9px 10px;font-size:13px}
+  .stock-table th{font-size:10px;padding:11px 10px}
+  /* Bigger tap targets for counting */
+  .stock-table .qty-input{width:66px;height:42px;padding:8px 6px;font-size:15px}
+  .total-cell{font-size:13px}
+  .cat-row td{font-size:13px}
+  /* Keep the product name column visible while scrolling sideways */
+  .stock-table td.name-cell,
+  .stock-table th:first-child{
+    position:sticky;left:0;z-index:1;background:#fff;
+    box-shadow:2px 0 4px rgba(0,0,0,0.04);max-width:200px;
+  }
+  .stock-table th:first-child{background:#f5e8e8;z-index:3}
+}
+
+/* Prevent iOS auto-zoom on input focus (needs >=16px) while keeping layout tight */
+@media(hover:none) and (pointer:coarse){
+  .stock-table .qty-input{font-size:16px}
+}
 
 @media(max-width:700px){
   .controls{flex-direction:column;align-items:stretch}
@@ -159,19 +192,21 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload CSV
       </button>
+      <button class="delete-btn-top" id="deleteBtnTop" onclick="deleteStocktake()" style="display:none" title="Delete this stocktake">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete
+      </button>
     </div>
   </div>
 
-  <!-- Info -->
+  <!-- Info + saved document indicator (single line) -->
   <div class="info-bar" id="infoBar" style="display:none">
     <span id="infoCount"></span>
     <span id="infoMeta"></span>
-  </div>
-
-  <!-- Saved document indicator -->
-  <div class="saved-doc" id="savedDoc" style="display:none">
-    <span class="saved-doc-icon">●</span>
-    <span id="savedDocInfo"></span>
+    <span class="saved-doc-inline" id="savedDoc" style="display:none">
+      <span class="saved-doc-icon">●</span>
+      <span id="savedDocInfo"></span>
+    </span>
   </div>
 
   <!-- Search -->
@@ -201,7 +236,6 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
       <option value="disc">Discontinued</option>
       <option value="zeros">0's (not counted)</option>
     </select>
-    <button class="action-btn btn-delete" onclick="deleteStocktake()">Delete</button>
   </div>
 </div>
 
@@ -547,7 +581,7 @@ function renderTable(){
       var isLocked = lockedCols[locs[l]] && lockedCols[locs[l]].locked;
       var disabledAttr = isLocked || discontinuedData[i] ? ' disabled' : '';
       var lockedClass = isLocked || discontinuedData[i] ? ' locked' : '';
-      html += '<td><input class="qty-input' + lockedClass + '" type="number" min="0" step="0.5" value="' + escHtml(String(locVal)) + '" data-row="' + i + '" data-loc="' + locs[l] + '" onchange="setLocValue(this)"' + disabledAttr + '></td>';
+      html += '<td><input class="qty-input' + lockedClass + '" type="number" inputmode="decimal" min="0" step="0.5" value="' + escHtml(String(locVal)) + '" data-row="' + i + '" data-loc="' + locs[l] + '" onchange="setLocValue(this)"' + disabledAttr + '></td>';
     }
     // Total
     var total = calcTotal(i);
@@ -767,15 +801,18 @@ function loadStocktake(){
 function updateDocIndicator(){
   var el = document.getElementById('savedDoc');
   var infoEl = document.getElementById('savedDocInfo');
+  var delBtn = document.getElementById('deleteBtnTop');
   if(docExists && rows.length > 0){
-    el.style.display = 'flex';
+    el.style.display = 'inline-flex';
     var text = currentTab.toUpperCase() + ' — ' + getSelectedMonth();
     if(docInfo.date) text += ' — saved ' + docInfo.date;
     if(docInfo.updatedBy) text += ' — last update by ' + docInfo.updatedBy;
     else if(docInfo.createdBy) text += ' — created by ' + docInfo.createdBy;
     infoEl.textContent = text;
+    if(delBtn && !isReadOnly) delBtn.style.display = 'inline-flex';
   } else {
     el.style.display = 'none';
+    if(delBtn) delBtn.style.display = 'none';
   }
   updateActionButtons();
 }
@@ -1059,7 +1096,14 @@ function downloadZerosPDF(){
 }
 
 function deleteStocktake(){
-  if(!confirm('Delete this stocktake? This cannot be undone.')) return;
+  var label = currentTab.toUpperCase() + ' — ' + getSelectedMonth();
+  // First confirmation
+  if(!confirm('Delete this stocktake (' + label + ')?\n\nThis cannot be undone.')) return;
+  // Second confirmation
+  if(!confirm('Are you absolutely sure?\n\nThe ' + label + ' stocktake will be permanently deleted.')) {
+    showStatus('Delete cancelled');
+    return;
+  }
   db.collection('somm_stocktake').doc(getDocId()).delete().then(function(){
     rows = []; headers = []; metaLine = ''; headerLine = '';
     locationData = []; lockedCols = {};

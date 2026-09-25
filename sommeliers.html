@@ -54,6 +54,11 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
   margin-bottom:4px; letter-spacing:0.5px;
 }
 .profile-card p { font-size:9px; color:#888; line-height:1.3; }
+/* Inverted card (dark background, light text) */
+.profile-card.inverted { background:var(--green-dark); border-color:var(--green-dark); color:var(--gold-light); }
+.profile-card.inverted h3 { color:#fff; }
+.profile-card.inverted p { color:var(--gold-light); }
+.profile-card.inverted:hover { border-color:var(--gold); }
 </style>
 </head>
 <body>
@@ -116,7 +121,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       <h3>Recipes</h3>
       <p>Cocktails &amp; preparations</p>
     </a>
-    <a href="somm-stocktake.html" class="profile-card">
+    <a href="somm-stocktake.html" class="profile-card inverted">
       <h3>Stocktake</h3>
       <p>Inventory counts</p>
     </a>
