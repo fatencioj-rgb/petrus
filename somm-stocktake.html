@@ -122,15 +122,10 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .info-bar .saved-doc-inline{display:inline-flex;align-items:center;gap:6px;color:#555}
 
 /* Search */
-.search-bar{margin-bottom:16px;position:sticky;top:0;z-index:3;background:var(--cream);padding:8px 0;display:flex;align-items:stretch;gap:12px}
-/* Search box: input + Done, one bordered unit taking ~3/4 width */
-.search-box{flex:0 0 75%;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e8e0d4;border-radius:6px;padding:0 6px 0 0}
-.search-box input{flex:1 1 auto;width:auto;padding:10px 14px;border:none;border-radius:6px;font-family:var(--sans);font-size:var(--fs);outline:none;background:transparent}
-.search-box:focus-within{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,150,80,0.12)}
-.search-box .done-btn{flex:0 0 auto;width:44px;padding:8px 0;text-align:center;font-size:var(--fs);font-weight:600;color:var(--green);cursor:pointer}
-/* Update: separate standalone button */
-.search-bar .search-update-btn{flex:1 1 auto;padding:10px 14px;border:none;border-radius:6px;background:var(--green);color:#fff;font-family:var(--sans);font-size:var(--fs);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
-.search-bar .search-update-btn:hover{background:var(--green-dark)}
+.search-bar{margin-bottom:16px;position:sticky;top:0;z-index:3;background:var(--cream);padding:8px 0}
+.search-bar input{width:calc(100% - 50px);padding:10px 14px;border:1px solid #e8e0d4;border-radius:6px;font-family:var(--sans);font-size:var(--fs);outline:none;background:#fff;display:inline-block}
+.search-bar input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,150,80,0.12)}
+.search-bar .done-btn{display:inline-block;width:44px;padding:10px 0;text-align:center;font-size:var(--fs);font-weight:600;color:var(--green);cursor:pointer;vertical-align:top}
 
 /* Saved document indicator */
 .saved-doc{background:#fff;border:1px solid #e8e0d4;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:var(--fs);color:#555;display:flex;align-items:center;gap:8px}
@@ -220,11 +215,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 
   <!-- Search -->
   <div class="search-bar" id="searchBar" style="display:none">
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search by name, category..." oninput="filterTable()">
-      <span class="done-btn" onclick="document.getElementById('searchInput').blur()">Done</span>
-    </div>
-    <button class="search-update-btn" id="searchUpdateBtn" onclick="updateStocktake()" style="display:none">Update</button>
+    <input type="text" id="searchInput" placeholder="Search by name, category..." oninput="filterTable()">
+    <span class="done-btn" onclick="document.getElementById('searchInput').blur()">Done</span>
   </div>
 
   <!-- Table -->
@@ -238,6 +230,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
   <!-- Actions -->
   <div class="actions" id="actionsArea" style="display:none">
     <button class="action-btn btn-save" onclick="saveStocktake()">Save</button>
+    <button class="action-btn btn-update" onclick="updateStocktake()">Update</button>
     <button class="action-btn btn-export" onclick="exportCSV()">Export CSV</button>
     <button class="action-btn btn-print" onclick="printTotal()">Print</button>
     <select class="action-btn btn-print" onchange="handlePdfSelect(this)" style="cursor:pointer">
@@ -894,16 +887,13 @@ function updateDocIndicator(){
 function updateActionButtons(){
   var saveBtn = document.querySelector('.btn-save');
   var updateBtn = document.querySelector('.btn-update');
-  var searchUpdateBtn = document.getElementById('searchUpdateBtn');
-  if(saveBtn){
+  if(saveBtn && updateBtn){
     if(docExists){
       saveBtn.style.display = 'none';
-      if(updateBtn) updateBtn.style.display = 'none';       // moved into search bar
-      if(searchUpdateBtn) searchUpdateBtn.style.display = 'inline-block';
+      updateBtn.style.display = 'inline-block';
     } else {
       saveBtn.style.display = 'inline-block';
-      if(updateBtn) updateBtn.style.display = 'none';
-      if(searchUpdateBtn) searchUpdateBtn.style.display = 'none';
+      updateBtn.style.display = 'none';
     }
   }
 }
