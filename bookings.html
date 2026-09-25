@@ -187,6 +187,8 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .triple-cell .print-table{font-size:6.5pt;width:100%;table-layout:auto;border-collapse:collapse}
 .triple-cell .print-table th{padding:2px 3px;font-size:5.5pt;text-align:left;white-space:nowrap;background:none;color:#333;font-weight:700;border-bottom:1.5px solid #333;text-transform:uppercase}
 .triple-cell .print-table td{padding:2px 3px;font-size:6.5pt;text-align:left;border-bottom:1px solid #999;height:28px;vertical-align:top}
+/* Reception table: pack tightly so all reservations fit on one page */
+.triple-cell .reception-table td{height:auto;padding:1px 3px;line-height:1.15}
 .triple-cell .menu-summary{font-size:6pt;padding:2px 5px;margin-top:4px}
 .triple-cell .menu-summary span{margin-right:10px}
 .triple-cell .allergy-summary{font-size:6pt;padding:2px 5px;margin-top:3px}
@@ -200,7 +202,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .station-page h2{font-family:var(--serif);font-size:11pt;text-align:center;margin-bottom:0;color:var(--green-dark)}
 .station-page .p-service{text-align:center;font-size:8pt;font-weight:700;margin-bottom:2px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
 .station-page .station-meta{text-align:center;font-size:7pt;color:#555;margin-bottom:5px}
-.station-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:6.5pt}
+.station-table{border-collapse:collapse;table-layout:fixed;font-size:6.5pt}
 .station-table th,.station-table td{border:0.75px solid #333;padding:2px 3px;text-align:center;vertical-align:middle;overflow:hidden}
 /* Thick separator line above each group (after Pax, and between Canapés / Water / Wine) */
 .station-table tr.group-top>th,.station-table tr.group-top>td{border-top:2.5px solid #000}
@@ -215,7 +217,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .station-table .opt-col{background:#f7f1e6;font-weight:600;text-align:left;text-transform:uppercase;font-size:5.5pt;letter-spacing:0.2px;color:#555;width:38px;white-space:nowrap}
 .station-table .tbl-num{background:#f6e6d6;font-weight:700;font-size:9pt;color:var(--green-dark);height:20px}
 .station-table .tbl-num.blank{background:#fafafa;color:#bbb}
-.station-table .guest{font-size:6pt;font-weight:600;height:16px;white-space:nowrap}
+.station-table .guest{font-size:6pt;font-weight:600;height:16px;white-space:normal;word-break:break-word}
 .station-table .pax{font-size:6pt;color:#555;height:13px}
 /* the highlight cells — empty boxes to mark by hand */
 .station-table .mark{height:15px}
@@ -1595,7 +1597,39 @@ function printFOH(paper) {
     // Append the station sheets (S1, S2, KT) after the FOH pages
     appendStationPagesToTriple(info, rows);
 
+    // Make sure the Reception page (its own full page) never overflows onto a
+    // second sheet: scale it down to fit the printable page height if needed.
+    fitCellToPage('tripleCell3', cfg.landscape);
+
     setTimeout(function(){ window.print(); }, 300);
+}
+
+// Scale a full-page print cell down so its content always fits one printed
+// page. `dims` is the @page size string, e.g. "8.5in 5.5in" (width height).
+function fitCellToPage(cellId, dims) {
+    var cell = document.getElementById(cellId);
+    if (!cell) return;
+    // Reset any previous scaling
+    cell.style.transform = '';
+    cell.style.transformOrigin = 'top left';
+
+    // Parse the page HEIGHT (second value) into px. 1in=96px, 1mm=3.7795px.
+    var parts = (dims || '').trim().split(/\s+/);
+    var hStr = parts[1] || parts[0] || '';
+    var m = hStr.match(/([\d.]+)(in|mm|px)?/);
+    if (!m) return;
+    var val = parseFloat(m[1]);
+    var unit = m[2] || 'px';
+    var pageH = unit === 'in' ? val * 96 : unit === 'mm' ? val * 3.7795 : val;
+    // Subtract page margins (2mm top+bottom) and a little safety padding.
+    var usableH = pageH - (2 * 3.7795 * 2) - 6;
+
+    // Measure content; scale down if taller than the usable page height.
+    var contentH = cell.scrollHeight;
+    if (contentH > usableH && usableH > 0) {
+        var scale = usableH / contentH;
+        cell.style.transform = 'scale(' + scale + ')';
+    }
 }
 
 // Add the station-sheet pages into the triple print container (after the 3
@@ -1652,6 +1686,19 @@ function buildAllStationPages(info, rows) {
 // A column is either a table object {label, guest, pax} or null (blank walk-in).
 function stationRowBuilders(cols, headLabel) {
     var hl = headLabel || 'Table';
+    // Uniform data-column width based on the longest guest name (so every
+    // column is the same size and names are never clipped).
+    function colGroup() {
+        var maxLen = 0;
+        cols.forEach(function(c) {
+            if (c && c.guest) maxLen = Math.max(maxLen, c.guest.length);
+        });
+        // ~0.62ch per character at this font + padding; clamp to a sensible range.
+        var chW = Math.min(Math.max(maxLen + 2, 6), 16);
+        var g = '<colgroup><col style="width:54px"><col style="width:38px">';
+        cols.forEach(function() { g += '<col style="width:' + chW + 'ch">'; });
+        return g + '</colgroup>';
+    }
     function headRow() {
         var h = '<tr><th class="row-label">' + hl + '</th><th class="opt-col"></th>';
         cols.forEach(function(c) {
@@ -1690,7 +1737,7 @@ function stationRowBuilders(cols, headLabel) {
         });
         return out;
     }
-    return { headRow: headRow, guestRow: guestRow, paxRow: paxRow, markRow: markRow, optionGroup: optionGroup };
+    return { colGroup: colGroup, headRow: headRow, guestRow: guestRow, paxRow: paxRow, markRow: markRow, optionGroup: optionGroup };
 }
 
 function stationPageWrap(info, sectionLabel, metaText, body) {
@@ -1722,7 +1769,7 @@ function buildStationHTML(info, sectionRows, sectionLabel) {
     for (var b = 0; b < BLANK_WALKINS; b++) cols.push(null);
 
     var R = stationRowBuilders(cols);
-    var body = R.headRow() + R.guestRow() + R.paxRow()
+    var body = R.colGroup() + R.headRow() + R.guestRow() + R.paxRow()
         + R.markRow('Canapés', true)
         + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
         + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
@@ -1747,7 +1794,7 @@ function buildKTStationHTML(info, ktRows) {
 
     var R = stationRowBuilders(cols, 'Seat');
     // No guest/pax per-seat header (we don't know seat assignment) — just seat label.
-    var body = R.headRow()
+    var body = R.colGroup() + R.headRow()
         + R.optionGroup('Water', ['Still', 'Spark', 'Tap'])
         + R.optionGroup('Wine', ['BTG', 'BTB', 'Pair', 'NA', 'No']);
 
@@ -1779,7 +1826,7 @@ function buildReceptionHTML(info, rows) {
         allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
     }
 
-    return '<h2>PETRUS</h2><div class="p-service">RECEPTION \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return '<h2>PETRUS</h2><div class="p-service">RECEPTION \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table reception-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
 }
 
 // === SAVE / LOAD BOOKINGS (Firestore) ===
