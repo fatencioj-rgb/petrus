@@ -622,7 +622,9 @@ function populateLocationPdfSelect(){
   var locs = getLocations();
   var html = '<option value="">By Location ▾</option>';
   for(var l=0; l<locs.length; l++){
-    html += '<option value="' + escHtml(locs[l]) + '">' + escHtml(locs[l]) + '</option>';
+    var name = escHtml(locs[l]);
+    html += '<option value="full|||' + name + '">' + name + ' — Full</option>';
+    html += '<option value="stock|||' + name + '">' + name + ' — With stock only</option>';
   }
   sel.innerHTML = html;
 }
@@ -1078,13 +1080,18 @@ function handlePdfSelect(sel){
 }
 
 function handleLocationPdfSelect(sel){
-  var loc = sel.value;
+  var val = sel.value;
   sel.value = '';
-  if(loc) downloadLocationPDF(loc);
+  if(!val) return;
+  var parts = val.split('|||');
+  var mode = parts[0];           // 'full' or 'stock'
+  var loc = parts[1] || '';
+  downloadLocationPDF(loc, mode === 'stock');
 }
 
-// Export a PDF for a single location column only (e.g. just "Main Cellar")
-function downloadLocationPDF(loc){
+// Export a PDF for a single location column only (e.g. just "Main Cellar").
+// stockOnly = true -> include only items with a quantity > 0 in that location.
+function downloadLocationPDF(loc, stockOnly){
   if(rows.length === 0){ showStatus('Nothing to export'); return; }
   var { jsPDF } = window.jspdf;
   var doc = new jsPDF();
@@ -1094,19 +1101,29 @@ function downloadLocationPDF(loc){
   doc.text('Petrus \u2014 Stock Take ' + currentTab.toUpperCase(), 14, 16);
   doc.setFontSize(9);
   doc.setTextColor(100,100,100);
-  doc.text(getSelectedMonth() + ' \u2014 ' + sanitizeForPDF(loc), 14, 22);
+  var subtitle = getSelectedMonth() + ' \u2014 ' + sanitizeForPDF(loc)
+    + (stockOnly ? ' (with stock only)' : '');
+  doc.text(subtitle, 14, 22);
 
   var tableRows = [];
-  var lastCat = '';
+  var pendingCat = '';   // hold category header until we know a row follows it
   var locTotal = 0;
+  var count = 0;
   for(var i=0; i<rows.length; i++){
     if(discontinuedData[i]) continue;
     var row = rows[i];
+
+    var qty = locationData[i] ? (locationData[i][loc] || '') : '';
+    var qn = parseFloat(qty);
+
+    // In stock-only mode, skip items that are blank or 0 in this location
+    if(stockOnly && (isNaN(qn) || qn <= 0)) continue;
+
     if(cat_idx > -1){
       var thisCat = (row[cat_idx]||'').trim();
-      if(thisCat && thisCat !== lastCat){
+      if(thisCat && thisCat !== pendingCat){
+        pendingCat = thisCat;
         tableRows.push([{content: sanitizeForPDF(thisCat), colSpan: 3, styles: {fillColor: [245,232,232], textColor: [92,26,26], fontStyle: 'bold'}}]);
-        lastCat = thisCat;
       }
     }
     var name = name_idx > -1 ? sanitizeForPDF((row[name_idx]||'').trim()) : '';
@@ -1115,10 +1132,14 @@ function downloadLocationPDF(loc){
       var hdr=headers[c].trim().toLowerCase();
       if(hdr.indexOf('pack')>-1||hdr.indexOf('size')>-1||hdr.indexOf('unit')>-1){pack=sanitizeForPDF((row[c]||'').trim());break;}
     }
-    var qty = locationData[i] ? (locationData[i][loc] || '') : '';
-    var qn = parseFloat(qty);
     if(!isNaN(qn)) locTotal += qn;
+    count++;
     tableRows.push([name, pack, qty]);
+  }
+
+  if(count === 0){
+    showStatus('No items with stock in ' + sanitizeForPDF(loc));
+    return;
   }
 
   doc.autoTable({
@@ -1134,8 +1155,9 @@ function downloadLocationPDF(loc){
   });
 
   var safeLoc = loc.replace(/[^A-Za-z0-9]+/g, '-');
-  doc.save('Petrus-Stocktake-' + safeLoc + '-' + currentTab + '-' + getSelectedMonth() + '.pdf');
-  showStatus(sanitizeForPDF(loc) + ' PDF downloaded');
+  var suffix = stockOnly ? '-WithStock' : '-Full';
+  doc.save('Petrus-Stocktake-' + safeLoc + suffix + '-' + currentTab + '-' + getSelectedMonth() + '.pdf');
+  showStatus(sanitizeForPDF(loc) + (stockOnly ? ' (with stock)' : '') + ' PDF downloaded');
 }
 
 function downloadAllInfoPDF(){
