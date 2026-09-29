@@ -2426,10 +2426,15 @@ function initLanguage() {
   syncLanguageButtons(currentLanguage);
 }
 
-/* ── INIT ── */
-initLanguage();
-applyTheme(getSavedTheme());
-buildDishes(); // Initial render of dishes for the default selected menu
-buildAllergies(); // Build the allergies table
-renderQuizModeTabs();
-renderQuizMenuTabs(); // Render quiz menu tabs and initial quiz info
+/* ── INIT ──
+   Only auto-render when the portal's own DOM is present. This lets the same
+   data/logic be reused by a custom renderer (food-net.html) that supplies its
+   own layout without the portal's markup. */
+if (typeof document !== 'undefined' && document.getElementById('menu-tabs')) {
+  initLanguage();
+  applyTheme(getSavedTheme());
+  buildDishes(); // Initial render of dishes for the default selected menu
+  buildAllergies(); // Build the allergies table
+  renderQuizModeTabs();
+  renderQuizMenuTabs(); // Render quiz menu tabs and initial quiz info
+}
