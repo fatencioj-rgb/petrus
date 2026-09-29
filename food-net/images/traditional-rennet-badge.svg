@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" role="img" aria-label="Traditional rennet">
+  <circle cx="280" cy="280" r="250" fill="none" stroke="#10b300" stroke-width="18"/>
+  <path d="M133 143c42 25 82 83 116 167 18 43 33 84 45 123 33-82 77-172 135-270l41 18c-70 114-119 212-147 296-8 24-18 47-29 68h-48c-13-25-26-53-39-85-39-94-87-184-144-270z" fill="#12b800"/>
+  <path d="M365 178c38-34 76-52 114-54-4 41-18 78-44 111-25 31-57 49-93 53 3-37 10-65 23-83z" fill="#12b800"/>
+  <path d="M125 90L470 470" stroke="#f11f10" stroke-width="44" stroke-linecap="round"/>
+  <path d="M470 90L125 470" stroke="#f11f10" stroke-width="44" stroke-linecap="round"/>
+</svg>

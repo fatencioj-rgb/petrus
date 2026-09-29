@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <circle cx="120" cy="120" r="112" fill="#18A7F3"/>
+  <circle cx="120" cy="120" r="84" fill="#0E4FA2"/>
+  <path d="M120 58v72" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+  <path d="M120 128a28 28 0 1 0 0 56a28 28 0 1 0 0-56Z" fill="#18A7F3" stroke="#fff" stroke-width="12"/>
+  <path d="M120 93v44" stroke="#18A7F3" stroke-width="26" stroke-linecap="round"/>
+  <path d="M120 36c31 0 60 12 82 33" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+  <path d="M120 204c-31 0-60-12-82-33" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="28" cy="120" r="10" fill="#fff"/>
+  <circle cx="212" cy="120" r="10" fill="#fff"/>
+  <text x="120" y="33" fill="#fff" font-family="Arial, sans-serif" font-size="30" font-weight="700" text-anchor="middle">PASTEURIZED</text>
+  <text x="120" y="232" fill="#fff" font-family="Arial, sans-serif" font-size="30" font-weight="700" text-anchor="middle">PASTEURIZED</text>
+</svg>

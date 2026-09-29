@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <circle cx="120" cy="120" r="112" fill="#F39A1D"/>
+  <circle cx="120" cy="120" r="84" fill="#8C4A00"/>
+  <path d="M120 60v74" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+  <path d="M120 130a28 28 0 1 0 0 56a28 28 0 1 0 0-56Z" fill="#F39A1D" stroke="#fff" stroke-width="12"/>
+  <path d="M120 98v40" stroke="#F39A1D" stroke-width="26" stroke-linecap="round"/>
+  <path d="M120 38c30 0 58 11 79 31" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+  <path d="M120 202c-30 0-58-11-79-31" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="28" cy="120" r="10" fill="#fff"/>
+  <circle cx="212" cy="120" r="10" fill="#fff"/>
+  <text x="120" y="33" fill="#fff" font-family="Arial, sans-serif" font-size="28" font-weight="700" text-anchor="middle">THERMISED</text>
+  <text x="120" y="232" fill="#fff" font-family="Arial, sans-serif" font-size="28" font-weight="700" text-anchor="middle">THERMISED</text>
+</svg>
