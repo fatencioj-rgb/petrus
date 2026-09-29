@@ -23,45 +23,17 @@ body { font-family:var(--sans); background:var(--green-dark); color:var(--cream)
 }
 .brand { font-family:var(--serif); font-size:26px; font-weight:700; color:var(--gold); letter-spacing:3px; text-transform:uppercase; }
 .brand span { display:block; font-family:var(--sans); font-size:10px; font-weight:300; letter-spacing:3px; color:var(--gold-light); opacity:0.8; }
-.top-nav { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
-.top-nav button {
-  background:transparent; border:1px solid var(--border); border-radius:6px; color:var(--cream);
-  font-family:var(--sans); font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
-  padding:9px 16px; cursor:pointer; transition:all 0.25s ease;
-}
-.top-nav button:hover, .top-nav button.active { background:rgba(184,150,80,0.12); border-color:var(--gold); color:var(--gold); }
-.back-link { color:var(--gold-light); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; opacity:0.7; padding:9px 8px; }
+.back-link { margin-left:auto; color:var(--gold-light); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; opacity:0.7; padding:9px 8px; }
 .back-link:hover { opacity:1; }
 
 .container { max-width:1000px; margin:0 auto; padding:32px 24px 80px; }
 
-/* ── Hero ── */
-.hero { text-align:center; padding:36px 0 8px; }
-.hero-eyebrow { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--gold-light); opacity:0.85; }
-.hero-title { font-family:var(--serif); font-size:52px; font-weight:700; color:var(--gold); line-height:1.05; margin:10px 0; }
-.hero-title em { font-style:italic; font-weight:600; color:var(--gold-light); }
-.hero-sub { color:var(--cream); opacity:0.75; font-size:15px; max-width:520px; margin:0 auto; }
-.divider { width:60px; height:1px; background:var(--gold); opacity:0.5; margin:28px auto; }
-
-/* ── Stat cards ── */
-.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:8px; }
-.stat-card {
-  background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:22px;
-  cursor:pointer; text-align:left; transition:all 0.25s ease;
-}
-.stat-card:hover { border-color:var(--gold); transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,0,0,0.35); }
-.stat-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
-.stat-num { font-family:var(--serif); font-size:36px; color:var(--cream); line-height:1; }
-.stat-desc { font-size:13px; color:var(--cream); opacity:0.6; margin-top:6px; }
-
 /* ── Sections ── */
-.page { display:none; }
-.page.active { display:block; animation:fade 0.3s ease; }
-@keyframes fade { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
+.section { margin-bottom:56px; }
 .section-title { font-family:var(--serif); font-size:34px; color:var(--gold); margin-bottom:6px; }
 .section-sub { color:var(--cream); opacity:0.7; font-size:14px; margin-bottom:24px; }
 
-/* ── Menu tabs ── */
+/* ── Menu tabs (filter within the Menus section) ── */
 .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
 .tab {
   background:transparent; border:1px solid var(--border); border-radius:20px; color:var(--cream);
@@ -110,34 +82,9 @@ tr:last-child td { border-bottom:none; }
 .supplier-used { margin-top:14px; font-size:12.5px; color:var(--gold-light); }
 .supplier-used b { color:var(--gold); }
 
-/* ── Quiz ── */
-.quiz-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; max-width:620px; margin:0 auto; }
-.quiz-title { font-family:var(--serif); font-size:28px; color:var(--gold); text-align:center; }
-.quiz-sub { text-align:center; color:var(--cream); opacity:0.7; font-size:14px; margin:8px 0 20px; }
-.q-meta { display:flex; justify-content:space-between; font-size:12px; color:var(--gold-light); margin-bottom:10px; }
-.progress { height:4px; background:rgba(184,150,80,0.2); border-radius:2px; overflow:hidden; margin-bottom:20px; }
-.progress > div { height:100%; background:var(--gold); width:0; transition:width 0.3s; }
-.q-text { font-size:18px; color:var(--cream); margin-bottom:18px; line-height:1.4; }
-.options { display:flex; flex-direction:column; gap:10px; }
-.opt { text-align:left; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--cream); font-family:var(--sans); font-size:14px; padding:14px 16px; cursor:pointer; transition:all 0.2s; }
-.opt:hover:not(:disabled) { border-color:var(--gold); background:rgba(184,150,80,0.08); }
-.opt.correct { border-color:#6bbf59; background:rgba(107,191,89,0.15); color:#c9efb8; }
-.opt.wrong { border-color:#c0392b; background:rgba(192,57,43,0.15); color:#f3b6ae; }
-.opt:disabled { cursor:default; }
-.feedback { margin-top:16px; font-size:13.5px; line-height:1.5; color:var(--gold-light); min-height:20px; }
-.btn { display:inline-block; padding:12px 28px; background:var(--gold); color:var(--green-dark); border:none; border-radius:8px; font-family:var(--sans); font-size:13px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; cursor:pointer; transition:all 0.2s; }
-.btn:hover { background:var(--gold-light); }
-.btn.ghost { background:transparent; border:1px solid var(--border); color:var(--cream); }
-.btn.ghost:hover { border-color:var(--gold); color:var(--gold); }
-.quiz-actions { margin-top:22px; text-align:center; display:flex; gap:10px; justify-content:center; }
-.score-num { font-family:var(--serif); font-size:64px; color:var(--gold); text-align:center; line-height:1; }
-.score-denom { text-align:center; color:var(--cream); opacity:0.7; margin-top:4px; }
-.score-msg { text-align:center; color:var(--gold-light); margin:16px 0 24px; }
-
 @media (max-width:600px) {
-  .hero-title { font-size:38px; }
   .site-header { flex-wrap:wrap; }
-  .top-nav { margin-left:0; width:100%; }
+  .back-link { margin-left:0; }
   .section-title { font-size:26px; }
 }
 </style>
@@ -146,55 +93,21 @@ tr:last-child td { border-bottom:none; }
 
 <header class="site-header">
   <div class="brand">Petrus<span>Food Net</span></div>
-  <nav class="top-nav">
-    <button id="nav-home" class="active" onclick="showPage('home')">Home</button>
-    <button id="nav-menus" onclick="showPage('menus')">Menus</button>
-    <button id="nav-allergens" onclick="showPage('allergens')">Allergens</button>
-    <button id="nav-suppliers" onclick="showPage('suppliers')">Suppliers</button>
-    <button id="nav-test" onclick="showPage('test')">Test</button>
-    <a class="back-link" href="training.html">&larr; Training</a>
-  </nav>
+  <a class="back-link" href="training.html">&larr; Training</a>
 </header>
 
 <div class="container">
 
-  <!-- HOME -->
-  <section id="page-home" class="page active">
-    <div class="hero">
-      <p class="hero-eyebrow">Staff Training Portal</p>
-      <h1 class="hero-title">Know the <em>Food Bible</em></h1>
-      <p class="hero-sub">Master every dish, every allergen, and every story behind the ingredients.</p>
-    </div>
-    <div class="divider"></div>
-    <div class="stat-grid">
-      <div class="stat-card" onclick="showPage('menus')">
-        <div class="stat-label">Menus</div>
-        <div class="stat-num" id="stat-menus">–</div>
-        <div class="stat-desc">Menus to learn</div>
-      </div>
-      <div class="stat-card" onclick="showPage('allergens')">
-        <div class="stat-label">Allergens</div>
-        <div class="stat-num" id="stat-allergens">–</div>
-        <div class="stat-desc">Allergens tracked</div>
-      </div>
-      <div class="stat-card" onclick="showPage('suppliers')">
-        <div class="stat-label">Suppliers</div>
-        <div class="stat-num" id="stat-suppliers">4</div>
-        <div class="stat-desc">Partner producers</div>
-      </div>
-    </div>
-  </section>
-
   <!-- MENUS -->
-  <section id="page-menus" class="page">
+  <section class="section">
     <h2 class="section-title">The Menu</h2>
-    <p class="section-sub">Choose a menu or view all dishes, with descriptions and knowledge points for each item.</p>
+    <p class="section-sub">Every dish, with descriptions and knowledge points. Filter by menu below.</p>
     <div class="tabs" id="fn-menu-tabs"></div>
     <div class="dish-grid" id="fn-dish-grid"></div>
   </section>
 
   <!-- ALLERGENS -->
-  <section id="page-allergens" class="page">
+  <section class="section">
     <h2 class="section-title">Allergy Reference</h2>
     <p class="section-sub">Complete allergen listing for every dish.</p>
     <div class="table-wrap">
@@ -206,17 +119,10 @@ tr:last-child td { border-bottom:none; }
   </section>
 
   <!-- SUPPLIERS -->
-  <section id="page-suppliers" class="page">
+  <section class="section">
     <h2 class="section-title">Our Producers</h2>
     <p class="section-sub">Know who grows and catches our ingredients — these are the stories guests want to hear.</p>
     <div class="supplier-grid" id="supplier-grid"></div>
-  </section>
-
-  <!-- TEST -->
-  <section id="page-test" class="page">
-    <h2 class="section-title">Food Bible Test</h2>
-    <p class="section-sub">Auto-generated multiple-choice questions from the current dishes.</p>
-    <div class="quiz-card" id="quiz-card"></div>
   </section>
 
 </div>
@@ -225,11 +131,10 @@ tr:last-child td { border-bottom:none; }
 <script src="food-net/script.js"></script>
 <script>
 /* ============================================================
-   Food Net — custom renderer in the Petrus site style.
+   Food Net — single continuous page in the Petrus site style.
    Reuses data globals from food-net/script.js:
-   dishes, menuDefinitions, menuItems, glossary, dishImages,
-   cheeseInfoByName, getMenuDishes, isNonAllergenTag,
-   buildAutoMultipleChoiceQuiz, shuffleList (if present).
+   dishes, menuDefinitions, menuItems, dishImages,
+   getMenuDishes, getAvailableMenuDefinitions, isNonAllergenTag.
    Image paths in the data are relative to food-net/, so we
    prefix them here.
    ============================================================ */
@@ -249,30 +154,6 @@ function nonAllergen(tag){
   return typeof isNonAllergenTag === 'function'
     ? isNonAllergenTag(tag)
     : /^(vegetarian|vegan|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
-}
-
-/* Normalise allergen labels so data variants/typos collapse to one canonical
-   allergen (e.g. "fish (prestige)" -> "fish", "shulphites"/"sulphur dioxide"
-   -> "sulphites", "molluscs" -> "mollusc"). Used only for the count stat. */
-function canonAllergen(tag){
-  let t = String(tag||'').toLowerCase().trim();
-  t = t.replace(/\s*\(.*?\)\s*/g,'').trim();      // drop "(prestige)" etc.
-  if (/^sulph|^shulph|sulphur dioxide/.test(t)) return 'sulphites';
-  if (/^mollusc/.test(t)) return 'mollusc';
-  if (/^crustace/.test(t)) return 'crustacean';
-  if (/^nut/.test(t)) return 'nuts';
-  return t;
-}
-
-/* ── Navigation ── */
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
-  const nav = document.getElementById('nav-'+name);
-  if(nav) nav.classList.add('active');
-  window.scrollTo({top:0, behavior:'smooth'});
-  if(name === 'test' && !quizStarted) startQuizFN();
 }
 
 /* ── Menus / dishes ── */
@@ -380,92 +261,9 @@ function renderSuppliers(){
     </article>`).join('');
 }
 
-/* ── Test (reuse auto quiz generator, render in our style) ── */
-let quizStarted = false, qz = [], qi = 0, qScoreFN = 0, qAnsweredFN = false;
-
-function localShuffle(arr){ return [...arr].sort(() => Math.random() - 0.5); }
-
-function buildQuiz(){
-  // Prefer the generator from script.js; fall back to a simple course quiz.
-  let q = [];
-  try {
-    if(typeof buildAutoMultipleChoiceQuiz === 'function') q = buildAutoMultipleChoiceQuiz('all_menus');
-  } catch(e){ q = []; }
-  if(!q || !q.length){
-    const courses = [...new Set(dishes.map(d=>d.course).filter(Boolean))];
-    q = dishes.map(d => {
-      const opts = localShuffle([d.course, ...courses.filter(c=>c!==d.course)].slice(0,4));
-      return { q:`${d.name} belongs to which course?`, opts, ans:opts.indexOf(d.course), exp:`${d.name} is in the ${d.course} course.` };
-    });
-  }
-  return localShuffle(q).slice(0, 20);
-}
-
-function startQuizFN(){
-  quizStarted = true;
-  qz = buildQuiz(); qi = 0; qScoreFN = 0; qAnsweredFN = false;
-  renderQuestion();
-}
-
-function renderQuestion(){
-  const card = document.getElementById('quiz-card');
-  if(qi >= qz.length){ renderResult(); return; }
-  const q = qz[qi];
-  const pct = Math.round((qi / qz.length) * 100);
-  qAnsweredFN = false;
-  card.innerHTML = `
-    <div class="q-meta"><span>${qi+1} / ${qz.length}</span><span>${qScoreFN} pts</span></div>
-    <div class="progress"><div style="width:${pct}%"></div></div>
-    <div class="q-text">${esc(q.q)}</div>
-    <div class="options">
-      ${q.opts.map((o,idx) => `<button class="opt" onclick="answer(${idx})">${esc(o)}</button>`).join('')}
-    </div>
-    <div class="feedback" id="fb"></div>
-    <div class="quiz-actions" id="qa"></div>`;
-}
-
-function answer(idx){
-  if(qAnsweredFN) return;
-  qAnsweredFN = true;
-  const q = qz[qi];
-  const btns = document.querySelectorAll('#quiz-card .opt');
-  btns.forEach((b,i) => {
-    b.disabled = true;
-    if(i === q.ans) b.classList.add('correct');
-    else if(i === idx) b.classList.add('wrong');
-  });
-  if(idx === q.ans) qScoreFN++;
-  document.getElementById('fb').textContent = q.exp || (idx===q.ans ? 'Correct.' : 'Not quite.');
-  document.getElementById('qa').innerHTML =
-    `<button class="btn" onclick="nextQ()">${qi+1 >= qz.length ? 'See results' : 'Next →'}</button>`;
-}
-
-function nextQ(){ qi++; renderQuestion(); }
-
-function renderResult(){
-  const card = document.getElementById('quiz-card');
-  const total = qz.length;
-  const pct = total ? Math.round((qScoreFN/total)*100) : 0;
-  let msg = 'Keep studying the Food Bible.';
-  if(pct >= 90) msg = 'Outstanding — you know the Food Bible.';
-  else if(pct >= 70) msg = 'Good work. A little more polish.';
-  else if(pct >= 50) msg = 'Getting there. Review the dishes again.';
-  card.innerHTML = `
-    <div class="score-num">${qScoreFN}</div>
-    <div class="score-denom">out of ${total}</div>
-    <div class="score-msg">${msg}</div>
-    <div class="quiz-actions"><button class="btn" onclick="startQuizFN()">Try again</button>
-    <button class="btn ghost" onclick="showPage('menus')">Study dishes</button></div>`;
-}
-
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    document.getElementById('stat-menus').textContent = availableMenus().length - 1; // exclude "All"
-    const allergenSet = new Set();
-    dishes.forEach(d => (d.allergies||[]).forEach(a => { if(!nonAllergen(a)) allergenSet.add(canonAllergen(a)); }));
-    document.getElementById('stat-allergens').textContent = allergenSet.size;
-    document.getElementById('stat-suppliers').textContent = suppliersFN.length;
     renderMenuTabs();
     renderDishes();
     renderAllergies();
