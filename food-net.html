@@ -15,15 +15,8 @@
 }
 body { font-family:var(--sans); background:var(--green-dark); color:var(--cream); min-height:100vh; }
 
-/* ── Header ── */
-.site-header {
-  position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:20px;
-  padding:18px 24px; background:rgba(45,10,10,0.92); backdrop-filter:blur(8px);
-  border-bottom:1px solid var(--border);
-}
-.brand { font-family:var(--serif); font-size:26px; font-weight:700; color:var(--gold); letter-spacing:3px; text-transform:uppercase; }
-.brand span { display:block; font-family:var(--sans); font-size:10px; font-weight:300; letter-spacing:3px; color:var(--gold-light); opacity:0.8; }
-.back-link { margin-left:auto; color:var(--gold-light); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; opacity:0.7; padding:9px 8px; }
+/* ── Back link ── */
+.back-link { display:inline-block; color:var(--gold-light); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; opacity:0.6; }
 .back-link:hover { opacity:1; }
 
 .container { max-width:1000px; margin:0 auto; padding:32px 24px 80px; }
@@ -83,20 +76,15 @@ tr:last-child td { border-bottom:none; }
 .supplier-used b { color:var(--gold); }
 
 @media (max-width:600px) {
-  .site-header { flex-wrap:wrap; }
-  .back-link { margin-left:0; }
   .section-title { font-size:26px; }
 }
 </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="brand">Petrus<span>Food Net</span></div>
-  <a class="back-link" href="training.html">&larr; Training</a>
-</header>
-
 <div class="container">
+
+  <a class="back-link" href="training.html" style="margin-bottom:28px;">&larr; Back</a>
 
   <!-- MENUS -->
   <section class="section">
