@@ -279,24 +279,15 @@ body {
   <!-- Login prompt (shown when NOT logged in) -->
   <div id="loginPrompt" style="display:none;">
     <p style="color:var(--gold-light);font-size:13px;margin-bottom:24px;opacity:0.8;">Sign in to access the site</p>
-    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <div onclick="quickLogin('fiorella')" style="cursor:pointer;padding:20px 24px;background:transparent;border:1px solid rgba(184,150,80,0.3);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
-        <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">F</div>
-        <div style="color:var(--gold-light);font-size:11px;letter-spacing:.5px;font-weight:500">Fiorella</div>
-      </div>
-      <div onclick="quickLogin('christian')" style="cursor:pointer;padding:20px 24px;background:transparent;border:1px solid rgba(184,150,80,0.3);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
-        <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">C</div>
-        <div style="color:var(--gold-light);font-size:11px;letter-spacing:.5px;font-weight:500">Christian</div>
-      </div>
-      <div onclick="quickLogin('milena')" style="cursor:pointer;padding:20px 24px;background:transparent;border:1px solid rgba(184,150,80,0.3);border-radius:10px;text-align:center;transition:all .2s;min-width:90px">
-        <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px;font-weight:600">M</div>
-        <div style="color:var(--gold-light);font-size:11px;letter-spacing:.5px;font-weight:500">Milena</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-      <div onclick="quickLogin('liza')" style="cursor:pointer;display:inline-block;padding:10px 24px;border:1px solid rgba(184,150,80,0.3);border-radius:6px;color:var(--gold-light);font-size:12px;letter-spacing:1px;text-transform:uppercase;transition:all .2s">Liza</div>
-      <div onclick="quickLogin('guest')" style="cursor:pointer;display:inline-block;padding:10px 24px;border:1px solid rgba(184,150,80,0.3);border-radius:6px;color:var(--gold-light);font-size:12px;letter-spacing:1px;text-transform:uppercase;transition:all .2s">Guest</div>
-    </div>
+    <form id="loginForm" onsubmit="return submitDirectLogin(event)" style="max-width:320px;margin:0 auto;display:flex;flex-direction:column;gap:12px;text-align:left;">
+      <input type="text" id="directUser" placeholder="User" autocomplete="username" autocapitalize="none"
+        style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(184,150,80,0.3);border-radius:6px;color:var(--cream);font-family:var(--sans);font-size:14px;outline:none;">
+      <input type="password" id="directCode" placeholder="Password" autocomplete="current-password"
+        style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(184,150,80,0.3);border-radius:6px;color:var(--cream);font-family:var(--sans);font-size:14px;outline:none;">
+      <div id="directError" style="color:#e08a7a;font-size:12px;min-height:16px;"></div>
+      <button type="submit" id="directBtn"
+        style="width:100%;padding:14px 24px;background:var(--gold);color:var(--green-dark);border:none;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter</button>
+    </form>
   </div>
 
   <div class="footer">
@@ -414,6 +405,34 @@ async function handleLogin() {
 
 async function handleLogout() {
   await petrusLogout();
+}
+
+// ── Direct login (user + password on the intro screen) ────────────
+async function submitDirectLogin(event) {
+  if (event) event.preventDefault();
+  const user = document.getElementById('directUser').value.trim();
+  const code = document.getElementById('directCode').value;
+  const errorEl = document.getElementById('directError');
+  const btn = document.getElementById('directBtn');
+
+  if (!user || !code) {
+    errorEl.textContent = 'Enter your user and password.';
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '...';
+  errorEl.textContent = '';
+
+  const result = await petrusLogin(user, code);
+
+  btn.disabled = false;
+  btn.textContent = 'Enter';
+
+  if (!result.success) {
+    errorEl.textContent = result.error;
+  }
+  return false;
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────────
