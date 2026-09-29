@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food Editor — Petrus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --gold-light:#d4b87a;
+  --cream:#faf7f1; --surface:#3a1414; --border:rgba(184,150,80,0.3);
+  --serif:'Cormorant Garamond','Georgia',serif; --sans:'Inter','Segoe UI',sans-serif;
+}
+body { font-family:var(--sans); background:var(--green-dark); color:var(--cream); min-height:100vh; }
+.container { max-width:1100px; margin:0 auto; padding:28px 24px 80px; }
+.back-link { display:inline-block; color:var(--gold-light); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; opacity:0.6; margin-bottom:22px; }
+.back-link:hover { opacity:1; }
+.page-title { font-family:var(--serif); font-size:38px; color:var(--gold); margin-bottom:4px; }
+.page-sub { color:var(--cream); opacity:0.7; font-size:14px; margin-bottom:28px; }
+
+.layout { display:grid; grid-template-columns:1fr 340px; gap:28px; align-items:start; }
+@media (max-width:860px){ .layout { grid-template-columns:1fr; } }
+
+/* Form */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; }
+.card h3 { font-family:var(--serif); font-size:22px; color:var(--gold); margin-bottom:16px; }
+label { display:block; font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--gold-light); margin:14px 0 6px; }
+input, textarea, select {
+  width:100%; padding:11px 13px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:6px;
+  color:var(--cream); font-family:var(--sans); font-size:14px; outline:none;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--gold); }
+textarea { resize:vertical; min-height:70px; line-height:1.5; }
+.hint { font-size:11px; color:var(--cream); opacity:0.55; margin-top:4px; }
+.row { display:flex; gap:12px; flex-wrap:wrap; }
+.row > div { flex:1; min-width:140px; }
+
+.check-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.check { display:flex; align-items:center; gap:6px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:16px; padding:6px 12px; font-size:12px; cursor:pointer; }
+.check input { width:auto; }
+
+.k-row { display:flex; gap:8px; margin-bottom:8px; align-items:flex-start; }
+.k-row input { flex:0 0 32%; }
+.k-row textarea { flex:1; min-height:44px; }
+.k-row button { flex:0 0 auto; background:transparent; border:1px solid var(--border); color:#e08a7a; border-radius:6px; padding:8px 10px; cursor:pointer; }
+
+.btn { padding:12px 24px; background:var(--gold); color:var(--green-dark); border:none; border-radius:8px; font-family:var(--sans); font-size:13px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn:hover { background:var(--gold-light); }
+.btn.ghost { background:transparent; border:1px solid var(--border); color:var(--cream); }
+.btn.ghost:hover { border-color:var(--gold); color:var(--gold); }
+.btn.danger { background:transparent; border:1px solid rgba(192,57,43,0.6); color:#f3b6ae; }
+.btn.danger:hover { background:rgba(192,57,43,0.15); }
+.btn.small { padding:7px 12px; font-size:11px; }
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+.msg { margin-top:12px; font-size:13px; min-height:18px; }
+.msg.ok { color:#bfe0a0; }
+.msg.err { color:#e08a7a; }
+
+/* Existing list */
+.list-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; }
+.list-item .n { font-family:var(--serif); font-size:16px; color:var(--gold-light); }
+.list-item .c { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--cream); opacity:0.55; }
+.list-actions { display:flex; gap:6px; }
+.search { margin-bottom:12px; }
+
+/* Live preview — mirrors food-net dish card exactly */
+.preview-wrap { position:sticky; top:20px; }
+.preview-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+.dish-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+.dish-media { width:100%; height:180px; background:#241010 center/cover no-repeat; position:relative; }
+.dish-media.empty { display:flex; align-items:center; justify-content:center; }
+.dish-media.empty::after { content:'PETRUS'; font-family:var(--serif); letter-spacing:4px; color:rgba(184,150,80,0.35); font-size:18px; }
+.dish-course { position:absolute; top:10px; left:10px; background:rgba(45,10,10,0.8); border:1px solid var(--border); color:var(--gold-light); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; padding:4px 10px; border-radius:12px; }
+.dish-body { padding:18px; display:flex; flex-direction:column; gap:10px; }
+.dish-name { font-family:var(--serif); font-size:22px; color:var(--gold); }
+.dish-desc { font-size:13.5px; line-height:1.5; color:var(--cream); opacity:0.85; }
+.chips { display:flex; gap:6px; flex-wrap:wrap; }
+.chip { font-size:11px; letter-spacing:0.5px; padding:4px 10px; border-radius:12px; background:rgba(184,150,80,0.12); border:1px solid var(--border); color:var(--gold-light); text-transform:capitalize; }
+.chip.diet { background:rgba(120,170,90,0.15); border-color:rgba(120,170,90,0.4); color:#bfe0a0; }
+.knowledge { margin-top:4px; border-top:1px solid var(--border); }
+.k-toggle { width:100%; text-align:left; background:transparent; border:none; color:var(--gold-light); font-family:var(--sans); font-size:12px; letter-spacing:1px; text-transform:uppercase; padding:12px 0 4px; display:flex; justify-content:space-between; }
+.k-list { display:flex; flex-direction:column; gap:8px; padding:6px 0 4px; }
+.k-item { font-size:13px; line-height:1.45; color:var(--cream); opacity:0.9; }
+.k-item b { color:var(--gold-light); font-weight:600; }
+.setup-line { font-size:12px; color:var(--cream); opacity:0.6; }
+.setup-line b { color:var(--gold-light); font-weight:500; }
+
+.gate { text-align:center; padding:80px 20px; }
+.gate h1 { font-family:var(--serif); color:var(--gold); font-size:32px; margin-bottom:10px; }
+.gate p { color:var(--cream); opacity:0.7; }
+.gate a { color:var(--gold-light); }
+#app { display:none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <a class="back-link" href="food-net.html">&larr; Food Net</a>
+
+  <!-- Access gate -->
+  <div id="gate" class="gate">
+    <h1>Checking access…</h1>
+    <p>One moment.</p>
+  </div>
+
+  <!-- Editor app -->
+  <div id="app">
+    <h1 class="page-title">Food Editor</h1>
+    <p class="page-sub">Create, edit or remove dishes. Changes appear in Food Net immediately.</p>
+
+    <div class="layout">
+      <!-- LEFT: form + existing list -->
+      <div>
+        <div class="card">
+          <h3 id="form-title">New dish</h3>
+          <input type="hidden" id="docId">
+
+          <label>Name</label>
+          <input id="f-name" placeholder="e.g. Canapé Tartlet" oninput="renderPreview()">
+
+          <div class="row">
+            <div>
+              <label>Course</label>
+              <input id="f-course" list="course-list" placeholder="e.g. Canapé" oninput="renderPreview()">
+              <datalist id="course-list"></datalist>
+            </div>
+          </div>
+
+          <label>Description</label>
+          <textarea id="f-desc" placeholder="Short description of the dish" oninput="renderPreview()"></textarea>
+
+          <label>Allergens & dietary tags</label>
+          <div class="check-grid" id="allergen-grid"></div>
+          <input id="f-allergens-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
+          <div class="hint">Tick the standard ones, or add extras separated by commas.</div>
+
+          <label>Set up (cutlery)</label>
+          <input id="f-setup" placeholder="e.g. Starter Fork, Fish Knife, Fish Spoon" oninput="renderPreview()">
+          <div class="hint">Comma-separated. Leave empty for "No Set Up".</div>
+
+          <label>Menus</label>
+          <div class="check-grid" id="menu-grid"></div>
+          <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
+
+          <label>Image</label>
+          <input id="f-image" placeholder="URL or file name in food-net/images/" oninput="renderPreview()">
+          <div class="hint">Paste an image URL, or a file name already in food-net/images/ (e.g. tartlet.png). Upload from computer coming soon.</div>
+
+          <label>Knowledge points</label>
+          <div id="k-rows"></div>
+          <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
+
+          <div class="actions">
+            <button type="button" class="btn" id="save-btn" onclick="saveDish()">Save dish</button>
+            <button type="button" class="btn ghost" onclick="resetForm()">Clear / New</button>
+          </div>
+          <div class="msg" id="msg"></div>
+        </div>
+
+        <div class="card" style="margin-top:22px;">
+          <h3>Existing dishes (<span id="count">0</span>)</h3>
+          <input class="search" id="search" placeholder="Search…" oninput="renderList()">
+          <div id="list"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: live preview -->
+      <div class="preview-wrap">
+        <div class="preview-label">Live preview</div>
+        <div id="preview"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+const EDITOR_ALLOWED = ['fiorella@petrus.local']; // only Fiorella for now
+const STANDARD_ALLERGENS = ['Celery','Crustacean','Egg','Fish','Gluten','Milk','Mollusc','Mustard','Nuts','Sesame','Soya','Sulphites'];
+const DIET_TAGS = ['Vegetarian','Vegan','Pasteurised','Unpasteurised','Thermised'];
+const MENUS = [
+  {id:'a_la_carte', label:'A la carte'},
+  {id:'lunch', label:'Lunch'},
+  {id:'prestige', label:'Prestige'},
+  {id:'discovery', label:'Discovery'},
+  {id:'cheese', label:'Cheese'},
+  {id:'new_dishes', label:'New Dishes'},
+];
+const COURSES = ['Canapé','Amuse-Bouche','Starter Fish','Starter Meat','Shellfish','Fish','Meat','Vegetarian','Cheese','Pre-Dessert','Dessert','End of Service'];
+
+let allDishes = []; // {id, ...data}
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function nonAllergen(t){ return /^(vegetarian|vegan|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
+function fixImg(path){
+  if(!path) return '';
+  if(/^https?:\/\//i.test(path)) return path;         // full URL
+  let p = path.replace(/^\.?\//,'');
+  if(!/^food-net\//.test(p)) p = 'food-net/' + (/^images\//.test(p) ? p : 'images/' + p);
+  return p;
+}
+
+/* ── Access gate ── */
+auth.onAuthStateChanged((user) => {
+  const gate = document.getElementById('gate');
+  const app = document.getElementById('app');
+  if (!user) { window.location.href = 'index.html'; return; }
+  if (EDITOR_ALLOWED.indexOf(user.email) < 0) {
+    gate.innerHTML = '<h1>No access</h1><p>This editor is restricted. <a href="food-net.html">Back to Food Net</a></p>';
+    return;
+  }
+  if (typeof logAccess === 'function') logAccess(user, 'page_view', 'food-editor.html');
+  gate.style.display = 'none';
+  app.style.display = 'block';
+  initEditor();
+});
+
+function initEditor(){
+  // Datalist for courses
+  document.getElementById('course-list').innerHTML = COURSES.map(c=>`<option value="${esc(c)}">`).join('');
+  // Allergen checkboxes
+  const ag = document.getElementById('allergen-grid');
+  ag.innerHTML = STANDARD_ALLERGENS.concat(DIET_TAGS).map(a =>
+    `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="renderPreview()"> ${esc(a)}</label>`
+  ).join('');
+  // Menu checkboxes
+  document.getElementById('menu-grid').innerHTML = MENUS.map(m =>
+    `<label class="check"><input type="checkbox" value="${esc(m.id)}"> ${esc(m.label)}</label>`
+  ).join('');
+  addKRow();
+  loadDishes();
+  renderPreview();
+}
+
+/* ── Load dishes from Firestore ── */
+function loadDishes(){
+  db.collection('dishes').orderBy('order').get().then(snap => {
+    allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
+    document.getElementById('count').textContent = allDishes.length;
+    renderList();
+  }).catch(err => {
+    // ordering may fail if some docs lack 'order'; fall back to unordered
+    db.collection('dishes').get().then(snap => {
+      allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
+      document.getElementById('count').textContent = allDishes.length;
+      renderList();
+    });
+  });
+}
+
+function renderList(){
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const list = document.getElementById('list');
+  const items = allDishes
+    .filter(d => !q || (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q))
+    .sort((a,b) => (a.order||0)-(b.order||0));
+  list.innerHTML = items.map(d => `
+    <div class="list-item">
+      <div><div class="n">${esc(d.name||'(no name)')}</div><div class="c">${esc(d.course||'')}</div></div>
+      <div class="list-actions">
+        <button class="btn ghost small" onclick="editDish('${d.id}')">Edit</button>
+        <button class="btn danger small" onclick="deleteDish('${d.id}','${esc((d.name||'').replace(/'/g,''))}')">Delete</button>
+      </div>
+    </div>`).join('') || '<p style="opacity:.6">No dishes.</p>';
+}
+
+/* ── Knowledge rows ── */
+function addKRow(title, text){
+  const wrap = document.getElementById('k-rows');
+  const div = document.createElement('div');
+  div.className = 'k-row';
+  div.innerHTML = `
+    <input placeholder="Title" value="${esc(title||'')}" oninput="renderPreview()">
+    <textarea placeholder="Text" oninput="renderPreview()">${esc(text||'')}</textarea>
+    <button type="button" onclick="this.parentNode.remove(); renderPreview();">✕</button>`;
+  wrap.appendChild(div);
+}
+function readKRows(){
+  return [...document.querySelectorAll('#k-rows .k-row')].map(r => ({
+    title: r.querySelector('input').value.trim(),
+    text: r.querySelector('textarea').value.trim(),
+    images: []
+  })).filter(k => k.title || k.text);
+}
+
+/* ── Read / write form ── */
+function readForm(){
+  const checkedAllergens = [...document.querySelectorAll('#allergen-grid input:checked')].map(c=>c.value);
+  const extra = (document.getElementById('f-allergens-extra').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const setup = (document.getElementById('f-setup').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const menus = [...document.querySelectorAll('#menu-grid input:checked')].map(c=>c.value);
+  const img = (document.getElementById('f-image').value||'').trim();
+  return {
+    name: document.getElementById('f-name').value.trim(),
+    course: document.getElementById('f-course').value.trim(),
+    desc: document.getElementById('f-desc').value.trim(),
+    allergies: checkedAllergens.concat(extra),
+    setup: setup.length ? setup : ['No Set Up'],
+    menus: menus,
+    images: img ? [img] : [],
+    knowledge: readKRows(),
+  };
+}
+
+function resetForm(){
+  document.getElementById('docId').value = '';
+  document.getElementById('form-title').textContent = 'New dish';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-course').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-allergens-extra').value = '';
+  document.getElementById('f-setup').value = '';
+  document.getElementById('f-image').value = '';
+  document.querySelectorAll('#allergen-grid input:checked, #menu-grid input:checked').forEach(c=>c.checked=false);
+  document.getElementById('k-rows').innerHTML = '';
+  addKRow();
+  setMsg('');
+  renderPreview();
+}
+
+function editDish(id){
+  const d = allDishes.find(x => x.id === id);
+  if(!d) return;
+  document.getElementById('docId').value = id;
+  document.getElementById('form-title').textContent = 'Edit: ' + (d.name||'');
+  document.getElementById('f-name').value = d.name||'';
+  document.getElementById('f-course').value = d.course||'';
+  document.getElementById('f-desc').value = d.desc||'';
+  // Allergens: tick knowns, put unknowns in extra
+  const known = STANDARD_ALLERGENS.concat(DIET_TAGS).map(a=>a.toLowerCase());
+  const extras = [];
+  document.querySelectorAll('#allergen-grid input').forEach(c=>c.checked=false);
+  (d.allergies||[]).forEach(a => {
+    const idx = known.indexOf((a||'').toLowerCase());
+    if(idx>=0){ const box=[...document.querySelectorAll('#allergen-grid input')].find(c=>c.value.toLowerCase()===a.toLowerCase()); if(box) box.checked=true; }
+    else extras.push(a);
+  });
+  document.getElementById('f-allergens-extra').value = extras.join(', ');
+  const setup = (d.setup||[]).filter(s=>s && s!=='No Set Up');
+  document.getElementById('f-setup').value = setup.join(', ');
+  document.querySelectorAll('#menu-grid input').forEach(c=>c.checked = (d.menus||[]).indexOf(c.value)>=0);
+  document.getElementById('f-image').value = (d.images && d.images[0]) || '';
+  document.getElementById('k-rows').innerHTML = '';
+  (d.knowledge||[]).forEach(k => addKRow(k.title, k.text));
+  if(!(d.knowledge||[]).length) addKRow();
+  setMsg('');
+  renderPreview();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function saveDish(){
+  const data = readForm();
+  if(!data.name){ setMsg('Please enter a name.', 'err'); return; }
+  const id = document.getElementById('docId').value;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  const payload = Object.assign({}, data, { updatedAt: now });
+
+  let op;
+  if(id){
+    op = db.collection('dishes').doc(id).update(payload);
+  } else {
+    const maxOrder = allDishes.reduce((m,d)=>Math.max(m, d.order||0), 0);
+    payload.order = maxOrder + 1;
+    payload.source = 'editor';
+    payload.createdAt = now;
+    op = db.collection('dishes').add(payload);
+  }
+  op.then(() => {
+    btn.disabled = false; btn.textContent = 'Save dish';
+    setMsg(id ? 'Dish updated.' : 'Dish created.', 'ok');
+    resetForm();
+    loadDishes();
+  }).catch(err => {
+    btn.disabled = false; btn.textContent = 'Save dish';
+    setMsg('Error: ' + err.message, 'err');
+  });
+}
+
+function deleteDish(id, name){
+  if(!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+  db.collection('dishes').doc(id).delete().then(() => {
+    setMsg('Dish deleted.', 'ok');
+    loadDishes();
+    if(document.getElementById('docId').value === id) resetForm();
+  }).catch(err => setMsg('Error: ' + err.message, 'err'));
+}
+
+function setMsg(text, cls){
+  const el = document.getElementById('msg');
+  el.textContent = text; el.className = 'msg ' + (cls||'');
+}
+
+/* ── Live preview (mirrors food-net card) ── */
+function renderPreview(){
+  const d = readForm();
+  const img = fixImg(d.images[0]);
+  const media = img
+    ? `<div class="dish-media" style="background-image:url('${encodeURI(img)}')"><span class="dish-course">${esc(d.course)}</span></div>`
+    : `<div class="dish-media empty"><span class="dish-course">${esc(d.course)}</span></div>`;
+  const chips = d.allergies.map(a => `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
+  const setup = d.setup.filter(s=>s && s!=='No Set Up');
+  const setupLine = setup.length ? `<div class="setup-line"><b>Set up:</b> ${esc(setup.join(', '))}</div>` : '';
+  const know = d.knowledge.map(k => `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}</div>`).join('');
+  const knowBlock = know ? `<div class="knowledge"><div class="k-toggle">Knowledge points <span>−</span></div><div class="k-list">${know}</div></div>` : '';
+  document.getElementById('preview').innerHTML = `
+    <article class="dish-card">
+      ${media}
+      <div class="dish-body">
+        <div class="dish-name">${esc(d.name)||'Dish name'}</div>
+        <div class="dish-desc">${esc(d.desc)||'Description will appear here.'}</div>
+        ${chips ? `<div class="chips">${chips}</div>` : ''}
+        ${setupLine}
+        ${knowBlock}
+      </div>
+    </article>`;
+}
+</script>
+</body>
+</html>

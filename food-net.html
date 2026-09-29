@@ -115,7 +115,12 @@ tr:last-child td { border-bottom:none; }
 
 </div>
 
-<!-- Reuse the mirrored data + generators -->
+<!-- Firebase (for live dishes from Firestore) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<!-- Local data fallback + shared helpers -->
 <script src="food-net/script.js"></script>
 <script>
 /* ============================================================
@@ -128,13 +133,27 @@ tr:last-child td { border-bottom:none; }
    ============================================================ */
 const IMG_BASE = 'food-net/';
 
+/* FN_DISHES holds the dishes actually rendered. It is populated from
+   Firestore on load; if Firestore is unavailable we fall back to the
+   local data bundled in food-net/script.js. Firestore docs carry their
+   own `images` (array) and `menus` (array). */
+let FN_DISHES = [];
+let usingFirestore = false;
+
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fixImg(path){
   if(!path) return '';
-  return IMG_BASE + path.replace(/^\.?\//,'');
+  if(/^https?:\/\//i.test(path)) return path;              // full URL as-is
+  let p = path.replace(/^\.?\//,'');
+  if(/^food-net\//.test(p)) return p;                      // already prefixed
+  if(/^images\//.test(p)) return IMG_BASE + p;             // images/foo.png
+  return IMG_BASE + 'images/' + p;                         // bare file name
 }
-function firstImage(name){
-  const v = (typeof dishImages !== 'undefined') ? dishImages[name] : null;
+/* First image for a dish object (Firestore has d.images; local uses dishImages map). */
+function firstImage(d){
+  if(d && Array.isArray(d.images) && d.images.length) return fixImg(d.images[0]);
+  const name = d && d.name;
+  const v = (typeof dishImages !== 'undefined' && name) ? dishImages[name] : null;
   if(!v) return '';
   return fixImg(Array.isArray(v) ? v[0] : v);
 }
@@ -155,10 +174,12 @@ function availableMenus(){
 }
 
 function dishesForMenu(menuId){
-  if(typeof getMenuDishes === 'function') return getMenuDishes(menuId);
-  if(menuId === 'all') return dishes;
-  const names = (menuItems||{})[menuId] || [];
-  return names.map(n => dishes.find(d => d.name === n)).filter(Boolean);
+  if(menuId === 'all') return FN_DISHES;
+  // Prefer each dish's own menus[] (Firestore). Fall back to menuItems map (local).
+  const byOwnMenus = FN_DISHES.filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0);
+  if(byOwnMenus.length) return byOwnMenus;
+  const names = (typeof menuItems !== 'undefined' ? menuItems : {})[menuId] || [];
+  return names.map(n => FN_DISHES.find(d => d.name === n)).filter(Boolean);
 }
 
 function renderMenuTabs(){
@@ -175,7 +196,7 @@ function renderDishes(){
   const list = dishesForMenu(selectedFN);
   if(!list.length){ grid.innerHTML = '<p style="opacity:.6">No dishes in this menu yet.</p>'; return; }
   grid.innerHTML = list.map((d, i) => {
-    const img = firstImage(d.name);
+    const img = firstImage(d);
     const media = img
       ? `<div class="dish-media" style="background-image:url('${encodeURI(img)}')"><span class="dish-course">${esc(d.course||'')}</span></div>`
       : `<div class="dish-media empty"><span class="dish-course">${esc(d.course||'')}</span></div>`;
@@ -216,7 +237,7 @@ function toggleK(i){
 /* ── Allergens ── */
 function renderAllergies(){
   const tbody = document.getElementById('fn-allergy-tbody');
-  tbody.innerHTML = dishes.map(d => {
+  tbody.innerHTML = FN_DISHES.map(d => {
     const chips = (d.allergies||[]).map(a =>
       `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join(' ');
     return `<tr><td>${esc(d.name)}</td><td><div class="chips">${chips || '<span style="opacity:.5">—</span>'}</div></td></tr>`;
@@ -249,15 +270,55 @@ function renderSuppliers(){
     </article>`).join('');
 }
 
-/* ── Init ── */
+/* ── Data loading: Firestore first, local fallback ── */
+function localDishes(){
+  // Build FN_DISHES from the bundled data (script.js), attaching images[] and menus[].
+  if(typeof dishes === 'undefined') return [];
+  const menuItemsLocal = (typeof menuItems !== 'undefined') ? menuItems : {};
+  const nameToMenus = {};
+  Object.keys(menuItemsLocal).forEach(mid => (menuItemsLocal[mid]||[]).forEach(n => {
+    (nameToMenus[n] = nameToMenus[n] || []).push(mid);
+  }));
+  return dishes.map((d, i) => {
+    let imgs = [];
+    if(typeof dishImages !== 'undefined' && dishImages[d.name]){
+      const v = dishImages[d.name]; imgs = Array.isArray(v) ? v.slice() : [v];
+    }
+    return Object.assign({}, d, { images: imgs, menus: nameToMenus[d.name] || [], order: i });
+  });
+}
+
+function renderAll(){
+  renderMenuTabs();
+  renderDishes();
+  renderAllergies();
+  renderSuppliers();
+}
+
+function loadFromFirestore(){
+  return new Promise((resolve) => {
+    if(typeof db === 'undefined'){ resolve(false); return; }
+    db.collection('dishes').get()
+      .then(snap => {
+        if(snap.empty){ resolve(false); return; }
+        FN_DISHES = snap.docs.map(doc => doc.data())
+          .sort((a,b) => (a.order||0) - (b.order||0));
+        usingFirestore = true;
+        resolve(true);
+      })
+      .catch(err => { console.warn('Firestore load failed, using local data:', err && err.message); resolve(false); });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  try {
-    renderMenuTabs();
-    renderDishes();
-    renderAllergies();
-    renderSuppliers();
-  } catch(e){
-    console.error('Food Net render error', e);
+  // Render immediately with local data so the page never looks empty…
+  try { FN_DISHES = localDishes(); renderAll(); } catch(e){ console.error('local render error', e); }
+  // …then upgrade to Firestore data when it arrives (needs auth to be signed in).
+  const tryLoad = () => loadFromFirestore().then(ok => { if(ok) renderAll(); });
+  if(typeof auth !== 'undefined'){
+    auth.onAuthStateChanged(() => tryLoad());
+  } else {
+    tryLoad();
   }
 });
 </script>

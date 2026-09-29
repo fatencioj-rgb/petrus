@@ -29,6 +29,7 @@ body { font-family:var(--sans); background:var(--green-dark); color:#fff; min-he
   <nav class="nav-buttons">
     <a href="https://petrustrainingportal.netlify.app/" target="_blank" class="nav-btn">Food</a>
     <a href="food-net.html" class="nav-btn">Food Net</a>
+    <a href="food-editor.html" id="editFoodBtn" class="nav-btn" style="display:none;border-style:dashed;">Edit Food</a>
     <a href="winelist.html" class="nav-btn">Wine</a>
   </nav>
   <div class="back-link"><a href="index.html">&larr; Back</a></div>
@@ -41,8 +42,13 @@ body { font-family:var(--sans); background:var(--green-dark); color:#fff; min-he
 <script src="auth.js"></script>
 <script>
 auth.onAuthStateChanged((user) => {
-  if (!user) { window.location.href = 'index.html'; }
-  else { logAccess(user, 'page_view', 'training.html'); }
+  if (!user) { window.location.href = 'index.html'; return; }
+  logAccess(user, 'page_view', 'training.html');
+  // Show the Food editor link only to Fiorella.
+  if (user.email === 'fiorella@petrus.local') {
+    var eb = document.getElementById('editFoodBtn');
+    if (eb) eb.style.display = 'block';
+  }
 });
 </script>
 </body>
