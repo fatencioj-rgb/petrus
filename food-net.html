@@ -251,6 +251,19 @@ function nonAllergen(tag){
     : /^(vegetarian|vegan|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
 }
 
+/* Normalise allergen labels so data variants/typos collapse to one canonical
+   allergen (e.g. "fish (prestige)" -> "fish", "shulphites"/"sulphur dioxide"
+   -> "sulphites", "molluscs" -> "mollusc"). Used only for the count stat. */
+function canonAllergen(tag){
+  let t = String(tag||'').toLowerCase().trim();
+  t = t.replace(/\s*\(.*?\)\s*/g,'').trim();      // drop "(prestige)" etc.
+  if (/^sulph|^shulph|sulphur dioxide/.test(t)) return 'sulphites';
+  if (/^mollusc/.test(t)) return 'mollusc';
+  if (/^crustace/.test(t)) return 'crustacean';
+  if (/^nut/.test(t)) return 'nuts';
+  return t;
+}
+
 /* ── Navigation ── */
 function showPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -450,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     document.getElementById('stat-menus').textContent = availableMenus().length - 1; // exclude "All"
     const allergenSet = new Set();
-    dishes.forEach(d => (d.allergies||[]).forEach(a => { if(!nonAllergen(a)) allergenSet.add(a.toLowerCase().trim()); }));
+    dishes.forEach(d => (d.allergies||[]).forEach(a => { if(!nonAllergen(a)) allergenSet.add(canonAllergen(a)); }));
     document.getElementById('stat-allergens').textContent = allergenSet.size;
     document.getElementById('stat-suppliers').textContent = suppliersFN.length;
     renderMenuTabs();

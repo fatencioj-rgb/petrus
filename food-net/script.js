@@ -622,7 +622,6 @@ const dishes = [
   },
 
   /* **************************** Cheese's ****************************** */
-  /*
   {
     course: "Cheese",
     name: "Brightwell Ash",
@@ -637,8 +636,7 @@ const dishes = [
       { title: "Texture", text: "Crumbly, compact texture." },
       { title: "Taste", text: "Tangy and fresh." },
     ]
-  },*/
-  /*
+  },
   {
     course: "Cheese",
     name: "St Jude",
@@ -653,8 +651,7 @@ const dishes = [
       { title: "Texture", text: "Soft, creamy texture." },
       { title: "Taste", text: "Earthy richness, becoming more evident as it ages." },
     ]
-  },*/
-  /*
+  },
   {
     course: "Cheese",
     name: "Comté",
@@ -669,8 +666,7 @@ const dishes = [
       { title: "Texture", text: "Firm, smooth texture." },
       { title: "Taste", text: "Rich, nutty flavour with a hint of caramel sweetness." },
     ]
-  },*/
-  /*
+  },
   {
     course: "Cheese",
     name: "RollRight",
@@ -685,8 +681,7 @@ const dishes = [
       { title: "Texture", text: "Tender pink to apricot rind with a soft, gooey interior." },
       { title: "Taste", text: "Gentle, gamey aroma with a rich and buttery interior, offering a nutty, bosky character reminiscent of styles such as Reblochon or a mild Munster." },
     ]
-  },*/
-  /*
+  },
   {
     course: "Cheese",
     name: "Cashel Blue",
@@ -701,7 +696,7 @@ const dishes = [
       { title: "Texture", text: "Creamy rich texture, well marbled with nutty blue moulds." },
       { title: "Taste", text: "Satisfying and enjoyable taste, with gentle oozing and melting of the blue moulds." },
     ]
-  },*/
+  },
 
   // New cheeses to be added
   {
