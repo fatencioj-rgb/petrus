@@ -81,6 +81,7 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
 .dish-course { position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.92); border:1px solid var(--border); color:var(--wine); font-size:10px; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:12px; }
 .dish-body { padding:18px; display:flex; flex-direction:column; gap:10px; }
 .dish-name { font-family:var(--serif); font-size:22px; color:var(--wine); }
+.dish-announce { font-family:var(--serif); font-size:15px; font-style:italic; line-height:1.45; color:var(--wine-soft); border-left:2px solid var(--border); padding-left:10px; }
 .dish-desc { font-size:13.5px; line-height:1.5; color:var(--text); opacity:0.9; }
 .chips { display:flex; gap:6px; flex-wrap:wrap; }
 .chip { font-size:11px; letter-spacing:0.3px; padding:4px 10px; border-radius:12px; background:var(--bg-soft); border:1px solid var(--border); color:var(--wine-soft); text-transform:capitalize; }
@@ -97,6 +98,33 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
 .gate h1 { font-family:var(--serif); color:var(--wine); font-size:32px; margin-bottom:10px; }
 .gate p { color:var(--wine-soft); opacity:0.85; }
 .gate a { color:var(--wine); }
+
+/* Topbar (New dish) */
+.topbar { display:flex; justify-content:flex-end; margin-bottom:16px; }
+
+/* Announcement (2 lines, grows) + big description */
+textarea.announce { min-height:44px; }
+textarea.desc-big { min-height:120px; }
+
+/* Grouped-by-menu list */
+.menu-group { margin-bottom:16px; }
+.menu-group-title { font-family:var(--serif); font-size:16px; color:var(--wine); margin:0 0 6px; display:flex; align-items:center; gap:6px; }
+.menu-group-title .count { font-family:var(--sans); font-size:10px; color:var(--wine-soft); opacity:0.7; }
+.drag-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 10px; border:1px solid var(--border); border-radius:8px; margin-bottom:5px; background:#fff; cursor:grab; }
+.drag-item:active { cursor:grabbing; }
+.drag-item.dragging { opacity:0.4; }
+.drag-item.dragover { border-color:var(--wine); box-shadow:0 0 0 2px rgba(92,26,26,0.15); }
+.drag-item .n { font-family:var(--serif); font-size:14px; color:var(--wine); display:flex; align-items:center; gap:6px; }
+.drag-handle { color:var(--wine-soft); opacity:0.5; font-size:13px; cursor:grab; user-select:none; }
+.star { color:#e0a53a; font-size:13px; }              /* master menu marker */
+.from-tag { font-size:9px; color:var(--wine-soft); opacity:0.7; }
+.mini { display:flex; gap:4px; align-items:center; }
+.mini button { background:transparent; border:1px solid var(--border); color:var(--wine); border-radius:6px; padding:2px 7px; cursor:pointer; font-size:11px; line-height:1; }
+.mini button:hover { border-color:var(--wine); }
+.mini button.hiddenbtn { color:var(--wine-soft); }
+.mini button.delbtn { color:#b23b2e; border-color:rgba(178,59,46,0.5); }
+.mini button:disabled { opacity:0.3; cursor:default; }
+
 #app { display:none; }
 </style>
 </head>
@@ -116,10 +144,14 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
     <h1 class="page-title">Food Editor</h1>
     <p class="page-sub">Create, edit, hide or reorder dishes. Changes appear in Food immediately.</p>
 
+    <div class="topbar">
+      <button type="button" class="btn" id="new-dish-btn" onclick="startNewDish()">+ New dish</button>
+    </div>
+
     <div class="layout">
-      <!-- LEFT: form + existing list -->
+      <!-- LEFT: form (hidden until New dish / Edit) + grouped list -->
       <div>
-        <div class="card">
+        <div class="card" id="form-card" style="display:none;">
           <h3 id="form-title">New dish</h3>
           <input type="hidden" id="docId">
 
@@ -134,8 +166,13 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
             </div>
           </div>
 
+          <label>Announcement</label>
+          <textarea id="f-announce" class="announce" placeholder="What you say to the guest when presenting the dish (the speech)." oninput="renderPreview()"></textarea>
+          <div class="hint">Presented to the guest. Two lines shown; it grows if there's more. Press Enter for new lines.</div>
+
           <label>Description</label>
-          <textarea id="f-desc" placeholder="Short description of the dish" oninput="renderPreview()"></textarea>
+          <textarea id="f-desc" class="desc-big" placeholder="Full details of the dish." oninput="renderPreview()"></textarea>
+          <div class="hint">The dish details. Press Enter for new lines.</div>
 
           <label>Allergens</label>
           <div class="check-grid" id="allergen-grid"></div>
@@ -177,23 +214,16 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
 
           <div class="actions">
             <button type="button" class="btn" id="save-btn" onclick="saveDish()">Save dish</button>
-            <button type="button" class="btn ghost" onclick="resetForm()">Clear / New</button>
+            <button type="button" class="btn ghost" onclick="closeForm()">Cancel</button>
           </div>
           <div class="msg" id="msg"></div>
         </div>
 
         <div class="card" style="margin-top:22px;">
-          <h3>Reorder within a menu</h3>
-          <label>Menu</label>
-          <select id="reorder-menu" onchange="renderReorder()"></select>
-          <div class="hint">Move dishes up/down to set the order they appear in this menu in Food.</div>
-          <div id="reorder-list" style="margin-top:12px;"></div>
-        </div>
-
-        <div class="card" style="margin-top:22px;">
-          <h3>Existing dishes (<span id="count">0</span>)</h3>
-          <input class="search" id="search" placeholder="Search…" oninput="renderList()">
-          <div id="list"></div>
+          <h3>Dishes by menu (<span id="count">0</span>)</h3>
+          <input class="search" id="search" placeholder="Search…" oninput="renderGroups()">
+          <div class="hint">Drag a dish (or use ↑/↓) to reorder it within its menu. ★ = the menu that owns this dish; edits there apply everywhere.</div>
+          <div id="groups" style="margin-top:12px;"></div>
         </div>
       </div>
 
@@ -229,6 +259,14 @@ const MENUS = [
 const COURSES = ['Canapé','Amuse-Bouche','Starter Fish','Starter Meat','Shellfish','Fish','Meat','Vegetarian','Cheese','Pre-Dessert','Dessert','End of Service'];
 // Cutlery types derived from all existing dishes.
 const CUTLERY = ['Starter Fork','Starter Knife','Main Fork','Steak Knife','Fish Knife','Fish Spoon','Sauce Spoon','Soup Spoon','Dessert Spoon','Teaspoon','Butter Knife','Side plate'];
+// Master-menu priority: the highest one a dish belongs to "owns" it (★).
+const MASTER_PRIORITY = ['prestige','discovery','lunch','cheese','new_dishes','a_la_carte'];
+const MENU_LABEL = MENUS.reduce((o,m)=>{o[m.id]=m.label;return o;},{});
+function computeMaster(menus){
+  const list = Array.isArray(menus) ? menus : [];
+  for(const m of MASTER_PRIORITY){ if(list.indexOf(m)>=0) return m; }
+  return list[0] || '';
+}
 
 let allDishes = []; // {id, ...data}
 
@@ -281,13 +319,22 @@ function initEditor(){
   document.getElementById('setup-grid').innerHTML = CUTLERY.map(c =>
     `<label class="check"><input type="checkbox" value="${esc(c)}" onchange="renderPreview()"> ${esc(c)}</label>`
   ).join('');
-  // Reorder menu selector
-  document.getElementById('reorder-menu').innerHTML =
-    '<option value="">— choose a menu —</option>' +
-    MENUS.map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
   addKRow();
   loadDishes();
   renderPreview();
+}
+
+/* ── New dish / show-hide form ── */
+function startNewDish(){
+  resetForm();
+  document.getElementById('form-card').style.display = 'block';
+  document.getElementById('form-title').textContent = 'New dish';
+  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(()=>document.getElementById('f-name').focus(), 100);
+}
+function closeForm(){
+  document.getElementById('form-card').style.display = 'none';
+  resetForm();
 }
 
 /* ── Load dishes from Firestore ── */
@@ -295,90 +342,122 @@ function loadDishes(){
   const done = (snap) => {
     allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
     document.getElementById('count').textContent = allDishes.length;
-    renderList();
-    renderReorder();
+    renderGroups();
   };
   db.collection('dishes').orderBy('order').get().then(done).catch(() => {
     db.collection('dishes').get().then(done);
   });
 }
 
-function renderList(){
+function menuPos(d, menuId){
+  if(d.menuOrder && typeof d.menuOrder[menuId] === 'number') return d.menuOrder[menuId];
+  return 9999;
+}
+function masterOf(d){ return d.masterMenu || computeMaster(d.menus); }
+
+/* ── Grouped-by-menu list with drag & drop + arrow fallback ── */
+function renderGroups(){
   const q = (document.getElementById('search').value||'').toLowerCase();
-  const list = document.getElementById('list');
-  const items = allDishes
-    .filter(d => !q || (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q))
-    .sort((a,b) => (a.order||0)-(b.order||0));
-  list.innerHTML = items.map(d => {
-    const nameSafe = esc((d.name||'').replace(/'/g,''));
-    const hiddenBadge = d.hidden ? ' <span style="font-size:8px;color:#e0a06a;border:1px solid #e0a06a;border-radius:8px;padding:1px 6px;letter-spacing:1px;">HIDDEN</span>' : '';
-    return `
-    <div class="list-item"${d.hidden?' style="opacity:0.6;"':''}>
-      <div><div class="n">${esc(d.name||'(no name)')}${hiddenBadge}</div><div class="c">${esc(d.course||'')}</div></div>
-      <div class="list-actions">
-        <button class="btn ghost small" onclick="toggleHidden('${d.id}')">${d.hidden?'Show':'Hide'}</button>
-        <button class="btn ghost small" onclick="editDish('${d.id}')">Edit</button>
-        <button class="btn danger small" onclick="deleteDish('${d.id}','${nameSafe}')">Delete</button>
-      </div>
+  const box = document.getElementById('groups');
+  let html = '';
+  MENUS.forEach(m => {
+    let items = allDishes
+      .filter(d => Array.isArray(d.menus) && d.menus.indexOf(m.id) >= 0)
+      .sort((a,b) => menuPos(a,m.id) - menuPos(b,m.id));
+    if(q) items = items.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
+    if(!items.length) return;
+    html += `<div class="menu-group" data-menu="${m.id}">
+      <div class="menu-group-title">${esc(m.label)} <span class="count">${items.length}</span></div>
+      ${items.map((d,i) => dragItem(d, m.id, i, items.length)).join('')}
     </div>`;
-  }).join('') || '<p style="opacity:.6">No dishes.</p>';
+  });
+  box.innerHTML = html || '<p style="opacity:.6">No dishes yet. Use “+ New dish”.</p>';
+  wireDrag();
 }
 
-/* ── Hide / show (toggle without deleting) ── */
+function dragItem(d, menuId, i, total){
+  const isMaster = masterOf(d) === menuId;
+  const star = isMaster ? '<span class="star" title="This menu owns the dish">★</span>' : `<span class="from-tag">↳ from ${esc(MENU_LABEL[masterOf(d)]||masterOf(d))}</span>`;
+  const nameSafe = esc((d.name||'').replace(/'/g,''));
+  return `
+    <div class="drag-item${d.hidden?'':''}" draggable="true" data-id="${d.id}" data-menu="${menuId}"${d.hidden?' style="opacity:0.55;"':''}>
+      <div class="n"><span class="drag-handle" title="Drag to reorder">⠿</span> ${esc(d.name||'')} ${star}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
+      <div class="mini">
+        <button title="Move up" onclick="moveInMenu('${d.id}','${menuId}',-1)" ${i===0?'disabled':''}>↑</button>
+        <button title="Move down" onclick="moveInMenu('${d.id}','${menuId}',1)" ${i===total-1?'disabled':''}>↓</button>
+        <button class="hiddenbtn" title="${d.hidden?'Show':'Hide'}" onclick="toggleHidden('${d.id}')">${d.hidden?'Show':'Hide'}</button>
+        <button title="Edit" onclick="editDish('${d.id}')">Edit</button>
+        <button class="delbtn" title="Delete" onclick="deleteDish('${d.id}','${nameSafe}')">✕</button>
+      </div>
+    </div>`;
+}
+
+/* Hide / show */
 function toggleHidden(id){
   const d = allDishes.find(x => x.id === id);
   if(!d) return;
   const newVal = !d.hidden;
   db.collection('dishes').doc(id).update({ hidden: newVal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
-    .then(() => { d.hidden = newVal; setMsg(newVal ? 'Dish hidden.' : 'Dish shown.', 'ok'); renderList(); renderReorder(); })
+    .then(() => { d.hidden = newVal; setMsg(newVal ? 'Dish hidden.' : 'Dish shown.', 'ok'); renderGroups(); })
     .catch(err => setMsg('Error: ' + err.message, 'err'));
 }
 
-/* ── Reorder within a menu ── */
-function renderReorder(){
-  const menuId = document.getElementById('reorder-menu').value;
-  const box = document.getElementById('reorder-list');
-  if(!menuId){ box.innerHTML = '<p style="opacity:.6">Choose a menu to reorder its dishes.</p>'; return; }
-  const items = allDishes
-    .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
-    .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
-  if(!items.length){ box.innerHTML = '<p style="opacity:.6">No dishes in this menu.</p>'; return; }
-  box.innerHTML = items.map((d,i) => `
-    <div class="list-item"${d.hidden?' style="opacity:0.55;"':''}>
-      <div><div class="n">${i+1}. ${esc(d.name||'')}${d.hidden?' <span style="font-size:8px;color:#e0a06a;">(hidden)</span>':''}</div></div>
-      <div class="list-actions">
-        <button class="btn ghost small" onclick="moveInMenu('${d.id}','${menuId}',-1)" ${i===0?'disabled style=\"opacity:.3\"':''}>↑</button>
-        <button class="btn ghost small" onclick="moveInMenu('${d.id}','${menuId}',1)" ${i===items.length-1?'disabled style=\"opacity:.3\"':''}>↓</button>
-      </div>
-    </div>`).join('');
-}
-
-function menuPos(d, menuId){
-  if(d.menuOrder && typeof d.menuOrder[menuId] === 'number') return d.menuOrder[menuId];
-  return 9999;
-}
-
+/* Arrow reorder — renumber the whole menu so moves always apply */
 function moveInMenu(id, menuId, dir){
-  // Work on the current visual order for this menu.
   const items = allDishes
     .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
     .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
   const idx = items.findIndex(d => d.id === id);
   const target = idx + dir;
   if(idx < 0 || target < 0 || target >= items.length) return;
-
-  // Swap the two items in the array…
   const tmp = items[idx]; items[idx] = items[target]; items[target] = tmp;
+  persistMenuOrder(items, menuId);
+}
 
-  // …then renumber EVERY dish in this menu to 0,1,2,… so positions are always
-  // distinct and consecutive (this is what makes the reorder actually stick).
+/* Drag & drop reorder within a menu group */
+let dragId = null, dragMenu = null;
+function wireDrag(){
+  document.querySelectorAll('.drag-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragId = el.dataset.id; dragMenu = el.dataset.menu;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('.dragover').forEach(x=>x.classList.remove('dragover')); });
+    el.addEventListener('dragover', e => {
+      if(el.dataset.menu !== dragMenu) return; // only within the same menu
+      e.preventDefault();
+      el.classList.add('dragover');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('dragover');
+      if(el.dataset.menu !== dragMenu || el.dataset.id === dragId) return;
+      dropReorder(dragId, el.dataset.id, dragMenu);
+    });
+  });
+}
+
+function dropReorder(fromId, toId, menuId){
+  const items = allDishes
+    .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
+    .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
+  const from = items.findIndex(d => d.id === fromId);
+  const to = items.findIndex(d => d.id === toId);
+  if(from < 0 || to < 0) return;
+  const [moved] = items.splice(from, 1);
+  items.splice(to, 0, moved);
+  persistMenuOrder(items, menuId);
+}
+
+function persistMenuOrder(items, menuId){
   const now = firebase.firestore.FieldValue.serverTimestamp();
   const writes = items.map((d, i) => {
-    d.menuOrder = Object.assign({}, d.menuOrder, { [menuId]: i }); // update local copy
+    d.menuOrder = Object.assign({}, d.menuOrder, { [menuId]: i });
     return db.collection('dishes').doc(d.id).update({ ['menuOrder.'+menuId]: i, updatedAt: now });
   });
-
-  renderReorder(); // reflect immediately (optimistic)
+  renderGroups(); // optimistic
   Promise.all(writes)
     .then(() => setMsg('Order updated.', 'ok'))
     .catch(err => { setMsg('Error: ' + err.message, 'err'); loadDishes(); });
@@ -417,6 +496,7 @@ function readForm(){
   return {
     name: document.getElementById('f-name').value.trim(),
     course: document.getElementById('f-course').value.trim(),
+    announcement: document.getElementById('f-announce').value,
     desc: document.getElementById('f-desc').value.trim(),
     allergies: checkedAllergens.concat(checkedDiet, checkedCheese, extra),
     setup: setup.length ? setup : ['No Set Up'],
@@ -432,6 +512,7 @@ function resetForm(){
   document.getElementById('form-title').textContent = 'New dish';
   document.getElementById('f-name').value = '';
   document.getElementById('f-course').value = '';
+  document.getElementById('f-announce').value = '';
   document.getElementById('f-desc').value = '';
   document.getElementById('f-allergens-extra').value = '';
   document.getElementById('f-setup-extra').value = '';
@@ -450,10 +531,12 @@ function resetForm(){
 function editDish(id){
   const d = allDishes.find(x => x.id === id);
   if(!d) return;
+  document.getElementById('form-card').style.display = 'block';
   document.getElementById('docId').value = id;
   document.getElementById('form-title').textContent = 'Edit: ' + (d.name||'');
   document.getElementById('f-name').value = d.name||'';
   document.getElementById('f-course').value = d.course||'';
+  document.getElementById('f-announce').value = d.announcement||'';
   document.getElementById('f-desc').value = d.desc||'';
   // Route existing tags into allergens / diet / cheese; unknowns go to extra.
   const extras = [];
@@ -521,6 +604,12 @@ function saveDish(){
   });
   payload.menuOrder = menuOrder;
 
+  // Master menu: keep a manually-set one if it still applies, else derive by hierarchy.
+  const prevMaster = existing.masterMenu;
+  payload.masterMenu = (prevMaster && data.menus.indexOf(prevMaster) >= 0)
+    ? prevMaster
+    : computeMaster(data.menus);
+
   let op;
   if(id){
     op = db.collection('dishes').doc(id).update(payload);
@@ -534,7 +623,7 @@ function saveDish(){
   op.then(() => {
     btn.disabled = false; btn.textContent = 'Save dish';
     setMsg(id ? 'Dish updated.' : 'Dish created.', 'ok');
-    resetForm();
+    closeForm();
     loadDishes();
   }).catch(err => {
     btn.disabled = false; btn.textContent = 'Save dish';
@@ -612,12 +701,15 @@ function renderPreview(){
   const setupLine = setup.length ? `<div class="setup-line"><b>Set up:</b> ${esc(setup.join(', '))}</div>` : '';
   const know = d.knowledge.map(k => `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}</div>`).join('');
   const knowBlock = know ? `<div class="knowledge"><div class="k-toggle">Knowledge points <span>−</span></div><div class="k-list">${know}</div></div>` : '';
+  const announce = (d.announcement||'').trim();
+  const announceBlock = announce ? `<div class="dish-announce">${esc(announce).replace(/\n/g,'<br>')}</div>` : '';
   document.getElementById('preview').innerHTML = `
     <article class="dish-card">
       ${media}
       <div class="dish-body">
         <div class="dish-name">${esc(d.name)||'Dish name'}</div>
-        <div class="dish-desc">${esc(d.desc)||'Description will appear here.'}</div>
+        ${announceBlock}
+        <div class="dish-desc">${(esc(d.desc)||'Description will appear here.').replace(/\n/g,'<br>')}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ''}
         ${setupLine}
         ${knowBlock}
