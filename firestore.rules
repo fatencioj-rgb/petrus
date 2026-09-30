@@ -2,18 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper: any authenticated Petrus user.
+    function signedIn() {
+      return request.auth != null;
+    }
+
     // Dishes: any signed-in user can read; only Fiorella can write.
     match /dishes/{dishId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
+      allow read: if signedIn();
+      allow write: if signedIn()
                    && request.auth.token.email == 'fiorella@petrus.local';
     }
 
     // Access logs: signed-in users may create their own log entries; no edits.
     match /access_logs/{logId} {
-      allow create: if request.auth != null;
+      allow create: if signedIn();
       allow read, update, delete: if false;
     }
+
+    // Bookings: any signed-in user can read and write.
+    match /bookings/{bookingId} {
+      allow read, write: if signedIn();
+    }
+
+    // Rota: any signed-in user can read and write.
+    match /rota_weeks/{weekId} {
+      allow read, write: if signedIn();
+    }
+
+    // Sommelier operations collections: any signed-in user can read and write.
+    match /somm_stock/{docId}            { allow read, write: if signedIn(); }
+    match /somm_deliveries/{docId}       { allow read, write: if signedIn(); }
+    match /somm_wastages/{docId}         { allow read, write: if signedIn(); }
+    match /somm_transfers/{docId}        { allow read, write: if signedIn(); }
+    match /somm_duties/{docId}           { allow read, write: if signedIn(); }
+    match /somm_messages/{docId}         { allow read, write: if signedIn(); }
+    match /somm_holidays/{docId}         { allow read, write: if signedIn(); }
+    match /somm_holiday_entries/{docId}  { allow read, write: if signedIn(); }
+    match /somm_daily_notes/{docId}      { allow read, write: if signedIn(); }
+    match /somm_recipes/{docId}          { allow read, write: if signedIn(); }
+    match /somm_pairings/{docId}         { allow read, write: if signedIn(); }
+    match /somm_stocktake/{docId}        { allow read, write: if signedIn(); }
+    match /product_catalog/{docId}       { allow read, write: if signedIn(); }
+    match /viniv_reports/{docId}         { allow read, write: if signedIn(); }
 
     // Everything else stays locked unless explicitly allowed above.
     match /{document=**} {

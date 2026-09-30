@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food Net — Petrus</title>
+<title>Food — Petrus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -135,7 +135,7 @@ tr:last-child td { border-bottom:none; }
 <script src="food-net/script.js"></script>
 <script>
 /* ============================================================
-   Food Net — single continuous page in the Petrus site style.
+   Food — single continuous page in the Petrus site style.
    Reuses data globals from food-net/script.js:
    dishes, menuDefinitions, menuItems, dishImages,
    getMenuDishes, getAvailableMenuDefinitions, isNonAllergenTag.
@@ -186,12 +186,20 @@ function availableMenus(){
 }
 
 function dishesForMenu(menuId){
-  if(menuId === 'all') return FN_DISHES;
-  // Prefer each dish's own menus[] (Firestore). Fall back to menuItems map (local).
-  const byOwnMenus = FN_DISHES.filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0);
-  if(byOwnMenus.length) return byOwnMenus;
+  // Never show hidden dishes in Food.
+  const visible = FN_DISHES.filter(d => !d.hidden);
+  if(menuId === 'all'){
+    return visible.slice().sort((a,b) => (a.order||0) - (b.order||0));
+  }
+  const menuPos = (d) => (d.menuOrder && typeof d.menuOrder[menuId] === 'number') ? d.menuOrder[menuId] : 9999;
+  // Prefer each dish's own menus[] (Firestore), ordered by menuOrder for this menu.
+  const byOwnMenus = visible.filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0);
+  if(byOwnMenus.length){
+    return byOwnMenus.sort((a,b) => menuPos(a) - menuPos(b));
+  }
+  // Fallback to the local menuItems map (used only if Firestore data is unavailable).
   const names = (typeof menuItems !== 'undefined' ? menuItems : {})[menuId] || [];
-  return names.map(n => FN_DISHES.find(d => d.name === n)).filter(Boolean);
+  return names.map(n => visible.find(d => d.name === n)).filter(Boolean);
 }
 
 function renderMenuTabs(){
@@ -250,7 +258,7 @@ function toggleK(i){
 /* ── Allergens ── */
 function renderAllergies(){
   const tbody = document.getElementById('fn-allergy-tbody');
-  tbody.innerHTML = FN_DISHES.map(d => {
+  tbody.innerHTML = FN_DISHES.filter(d => !d.hidden).map(d => {
     const chips = (d.allergies||[]).map(a =>
       `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join(' ');
     return `<tr><td>${esc(d.name)}</td><td><div class="chips">${chips || '<span style="opacity:.5">—</span>'}</div></td></tr>`;

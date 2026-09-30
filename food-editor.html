@@ -99,7 +99,7 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
 <body>
 
 <div class="container">
-  <a class="back-link" href="food-net.html">&larr; Food Net</a>
+  <a class="back-link" href="food-net.html">&larr; Food</a>
 
   <!-- Access gate -->
   <div id="gate" class="gate">
@@ -110,7 +110,7 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
   <!-- Editor app -->
   <div id="app">
     <h1 class="page-title">Food Editor</h1>
-    <p class="page-sub">Create, edit or remove dishes. Changes appear in Food Net immediately.</p>
+    <p class="page-sub">Create, edit, hide or reorder dishes. Changes appear in Food immediately.</p>
 
     <div class="layout">
       <!-- LEFT: form + existing list -->
@@ -147,6 +147,9 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
           <div class="check-grid" id="menu-grid"></div>
           <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
 
+          <label>Visibility</label>
+          <label class="check" style="width:fit-content;"><input type="checkbox" id="f-hidden" onchange="renderPreview()"> Hidden (kept but not shown in Food)</label>
+
           <label>Image</label>
           <input type="file" id="f-image-file" accept="image/*" onchange="handleImageFile(event)" style="padding:9px 0;border:none;background:transparent;">
           <div class="hint">Choose a photo from your device. It's resized automatically and saved with the dish.</div>
@@ -166,6 +169,14 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
             <button type="button" class="btn ghost" onclick="resetForm()">Clear / New</button>
           </div>
           <div class="msg" id="msg"></div>
+        </div>
+
+        <div class="card" style="margin-top:22px;">
+          <h3>Reorder within a menu</h3>
+          <label>Menu</label>
+          <select id="reorder-menu" onchange="renderReorder()"></select>
+          <div class="hint">Move dishes up/down to set the order they appear in this menu in Food.</div>
+          <div id="reorder-list" style="margin-top:12px;"></div>
         </div>
 
         <div class="card" style="margin-top:22px;">
@@ -224,7 +235,7 @@ auth.onAuthStateChanged((user) => {
   const app = document.getElementById('app');
   if (!user) { window.location.href = 'index.html'; return; }
   if (EDITOR_ALLOWED.indexOf(user.email) < 0) {
-    gate.innerHTML = '<h1>No access</h1><p>This editor is restricted. <a href="food-net.html">Back to Food Net</a></p>';
+    gate.innerHTML = '<h1>No access</h1><p>This editor is restricted. <a href="food-net.html">Back to Food</a></p>';
     return;
   }
   if (typeof logAccess === 'function') logAccess(user, 'page_view', 'food-editor.html');
@@ -249,6 +260,10 @@ function initEditor(){
   document.getElementById('setup-grid').innerHTML = CUTLERY.map(c =>
     `<label class="check"><input type="checkbox" value="${esc(c)}" onchange="renderPreview()"> ${esc(c)}</label>`
   ).join('');
+  // Reorder menu selector
+  document.getElementById('reorder-menu').innerHTML =
+    '<option value="">— choose a menu —</option>' +
+    MENUS.map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
   addKRow();
   loadDishes();
   renderPreview();
@@ -256,17 +271,14 @@ function initEditor(){
 
 /* ── Load dishes from Firestore ── */
 function loadDishes(){
-  db.collection('dishes').orderBy('order').get().then(snap => {
+  const done = (snap) => {
     allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
     document.getElementById('count').textContent = allDishes.length;
     renderList();
-  }).catch(err => {
-    // ordering may fail if some docs lack 'order'; fall back to unordered
-    db.collection('dishes').get().then(snap => {
-      allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
-      document.getElementById('count').textContent = allDishes.length;
-      renderList();
-    });
+    renderReorder();
+  };
+  db.collection('dishes').orderBy('order').get().then(done).catch(() => {
+    db.collection('dishes').get().then(done);
   });
 }
 
@@ -276,14 +288,75 @@ function renderList(){
   const items = allDishes
     .filter(d => !q || (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q))
     .sort((a,b) => (a.order||0)-(b.order||0));
-  list.innerHTML = items.map(d => `
-    <div class="list-item">
-      <div><div class="n">${esc(d.name||'(no name)')}</div><div class="c">${esc(d.course||'')}</div></div>
+  list.innerHTML = items.map(d => {
+    const nameSafe = esc((d.name||'').replace(/'/g,''));
+    const hiddenBadge = d.hidden ? ' <span style="font-size:8px;color:#e0a06a;border:1px solid #e0a06a;border-radius:8px;padding:1px 6px;letter-spacing:1px;">HIDDEN</span>' : '';
+    return `
+    <div class="list-item"${d.hidden?' style="opacity:0.6;"':''}>
+      <div><div class="n">${esc(d.name||'(no name)')}${hiddenBadge}</div><div class="c">${esc(d.course||'')}</div></div>
       <div class="list-actions">
+        <button class="btn ghost small" onclick="toggleHidden('${d.id}')">${d.hidden?'Show':'Hide'}</button>
         <button class="btn ghost small" onclick="editDish('${d.id}')">Edit</button>
-        <button class="btn danger small" onclick="deleteDish('${d.id}','${esc((d.name||'').replace(/'/g,''))}')">Delete</button>
+        <button class="btn danger small" onclick="deleteDish('${d.id}','${nameSafe}')">Delete</button>
       </div>
-    </div>`).join('') || '<p style="opacity:.6">No dishes.</p>';
+    </div>`;
+  }).join('') || '<p style="opacity:.6">No dishes.</p>';
+}
+
+/* ── Hide / show (toggle without deleting) ── */
+function toggleHidden(id){
+  const d = allDishes.find(x => x.id === id);
+  if(!d) return;
+  const newVal = !d.hidden;
+  db.collection('dishes').doc(id).update({ hidden: newVal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .then(() => { d.hidden = newVal; setMsg(newVal ? 'Dish hidden.' : 'Dish shown.', 'ok'); renderList(); renderReorder(); })
+    .catch(err => setMsg('Error: ' + err.message, 'err'));
+}
+
+/* ── Reorder within a menu ── */
+function renderReorder(){
+  const menuId = document.getElementById('reorder-menu').value;
+  const box = document.getElementById('reorder-list');
+  if(!menuId){ box.innerHTML = '<p style="opacity:.6">Choose a menu to reorder its dishes.</p>'; return; }
+  const items = allDishes
+    .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
+    .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
+  if(!items.length){ box.innerHTML = '<p style="opacity:.6">No dishes in this menu.</p>'; return; }
+  box.innerHTML = items.map((d,i) => `
+    <div class="list-item"${d.hidden?' style="opacity:0.55;"':''}>
+      <div><div class="n">${i+1}. ${esc(d.name||'')}${d.hidden?' <span style="font-size:8px;color:#e0a06a;">(hidden)</span>':''}</div></div>
+      <div class="list-actions">
+        <button class="btn ghost small" onclick="moveInMenu('${d.id}','${menuId}',-1)" ${i===0?'disabled style=\"opacity:.3\"':''}>↑</button>
+        <button class="btn ghost small" onclick="moveInMenu('${d.id}','${menuId}',1)" ${i===items.length-1?'disabled style=\"opacity:.3\"':''}>↓</button>
+      </div>
+    </div>`).join('');
+}
+
+function menuPos(d, menuId){
+  if(d.menuOrder && typeof d.menuOrder[menuId] === 'number') return d.menuOrder[menuId];
+  return 9999;
+}
+
+function moveInMenu(id, menuId, dir){
+  const items = allDishes
+    .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
+    .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
+  const idx = items.findIndex(d => d.id === id);
+  const swap = idx + dir;
+  if(idx < 0 || swap < 0 || swap >= items.length) return;
+  // Swap positions of the two dishes for this menu.
+  const a = items[idx], b = items[swap];
+  const posA = menuPos(a, menuId), posB = menuPos(b, menuId);
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  Promise.all([
+    db.collection('dishes').doc(a.id).update({ ['menuOrder.'+menuId]: posB, updatedAt: now }),
+    db.collection('dishes').doc(b.id).update({ ['menuOrder.'+menuId]: posA, updatedAt: now }),
+  ]).then(() => {
+    a.menuOrder = Object.assign({}, a.menuOrder, {[menuId]: posB});
+    b.menuOrder = Object.assign({}, b.menuOrder, {[menuId]: posA});
+    renderReorder();
+    setMsg('Order updated.', 'ok');
+  }).catch(err => setMsg('Error: ' + err.message, 'err'));
 }
 
 /* ── Knowledge rows ── */
@@ -323,6 +396,7 @@ function readForm(){
     menus: menus,
     images: img ? [img] : [],
     knowledge: readKRows(),
+    hidden: document.getElementById('f-hidden').checked,
   };
 }
 
@@ -335,7 +409,11 @@ function resetForm(){
   document.getElementById('f-allergens-extra').value = '';
   document.getElementById('f-setup-extra').value = '';
   document.getElementById('f-image').value = '';
+  document.getElementById('f-hidden').checked = false;
   document.querySelectorAll('#allergen-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
+  document.getElementById('image-status').textContent = '';
+  document.getElementById('image-actions').style.display = 'none';
+  document.getElementById('f-image-file').value = '';
   document.getElementById('k-rows').innerHTML = '';
   addKRow();
   setMsg('');
@@ -377,6 +455,7 @@ function editDish(id){
   document.getElementById('f-image-file').value = '';
   document.getElementById('image-status').textContent = existingImg ? 'Current image kept. Choose a file to replace it.' : '';
   document.getElementById('image-actions').style.display = existingImg ? 'block' : 'none';
+  document.getElementById('f-hidden').checked = !!d.hidden;
   document.getElementById('k-rows').innerHTML = '';
   (d.knowledge||[]).forEach(k => addKRow(k.title, k.text));
   if(!(d.knowledge||[]).length) addKRow();
@@ -393,6 +472,21 @@ function saveDish(){
   btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp();
   const payload = Object.assign({}, data, { updatedAt: now });
+
+  // Build menuOrder: keep existing positions where set, append new menus to the end.
+  const existing = id ? (allDishes.find(x=>x.id===id) || {}) : {};
+  const prevOrder = (existing.menuOrder && typeof existing.menuOrder==='object') ? existing.menuOrder : {};
+  const menuOrder = {};
+  data.menus.forEach(menuId => {
+    if(typeof prevOrder[menuId] === 'number'){
+      menuOrder[menuId] = prevOrder[menuId];
+    } else {
+      // position = current count of dishes already in that menu (append at end)
+      const count = allDishes.filter(x => x.id!==id && Array.isArray(x.menus) && x.menus.indexOf(menuId)>=0).length;
+      menuOrder[menuId] = count;
+    }
+  });
+  payload.menuOrder = menuOrder;
 
   let op;
   if(id){
