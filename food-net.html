@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food — Petrus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Julius+Sans+One&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -17,9 +18,12 @@
   --surface:#ffffff;       /* cards */
   --text:#3a2226;          /* body text — dark plum, readable on rosé */
   --border:rgba(92,26,26,0.18);
-  --serif:'Cormorant Garamond','Georgia',serif; --sans:'Inter','Segoe UI',sans-serif;
+  /* Single typeface across everything inside Training. */
+  --serif:'Julius Sans One','Segoe UI',sans-serif; --sans:'Julius Sans One','Segoe UI',sans-serif;
 }
-body { font-family:var(--sans); background:var(--bg); color:var(--text); min-height:100vh; }
+body { font-family:'Julius Sans One','Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+/* One typeface everywhere on this page. */
+body, input, textarea, select, button, .dish-name, .section-title, .dish-announce, .supplier-name, td:first-child { font-family:'Julius Sans One','Segoe UI',sans-serif; }
 
 /* ── Back link ── */
 .back-link { display:inline-block; color:var(--wine-soft); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; opacity:0.7; }
