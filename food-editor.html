@@ -359,25 +359,29 @@ function menuPos(d, menuId){
 }
 
 function moveInMenu(id, menuId, dir){
+  // Work on the current visual order for this menu.
   const items = allDishes
     .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
     .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
   const idx = items.findIndex(d => d.id === id);
-  const swap = idx + dir;
-  if(idx < 0 || swap < 0 || swap >= items.length) return;
-  // Swap positions of the two dishes for this menu.
-  const a = items[idx], b = items[swap];
-  const posA = menuPos(a, menuId), posB = menuPos(b, menuId);
+  const target = idx + dir;
+  if(idx < 0 || target < 0 || target >= items.length) return;
+
+  // Swap the two items in the array…
+  const tmp = items[idx]; items[idx] = items[target]; items[target] = tmp;
+
+  // …then renumber EVERY dish in this menu to 0,1,2,… so positions are always
+  // distinct and consecutive (this is what makes the reorder actually stick).
   const now = firebase.firestore.FieldValue.serverTimestamp();
-  Promise.all([
-    db.collection('dishes').doc(a.id).update({ ['menuOrder.'+menuId]: posB, updatedAt: now }),
-    db.collection('dishes').doc(b.id).update({ ['menuOrder.'+menuId]: posA, updatedAt: now }),
-  ]).then(() => {
-    a.menuOrder = Object.assign({}, a.menuOrder, {[menuId]: posB});
-    b.menuOrder = Object.assign({}, b.menuOrder, {[menuId]: posA});
-    renderReorder();
-    setMsg('Order updated.', 'ok');
-  }).catch(err => setMsg('Error: ' + err.message, 'err'));
+  const writes = items.map((d, i) => {
+    d.menuOrder = Object.assign({}, d.menuOrder, { [menuId]: i }); // update local copy
+    return db.collection('dishes').doc(d.id).update({ ['menuOrder.'+menuId]: i, updatedAt: now });
+  });
+
+  renderReorder(); // reflect immediately (optimistic)
+  Promise.all(writes)
+    .then(() => setMsg('Order updated.', 'ok'))
+    .catch(err => { setMsg('Error: ' + err.message, 'err'); loadDishes(); });
 }
 
 /* ── Knowledge rows ── */
