@@ -170,9 +170,8 @@ function firstImage(d){
   return fixImg(Array.isArray(v) ? v[0] : v);
 }
 function nonAllergen(tag){
-  return typeof isNonAllergenTag === 'function'
-    ? isNonAllergenTag(tag)
-    : /^(vegetarian|vegan|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
+  // Diet + cheese/dairy tags are not allergens.
+  return /^(vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
 }
 
 /* ── Menus / dishes ── */
