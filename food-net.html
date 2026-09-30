@@ -113,6 +113,11 @@ tr:last-child td { border-bottom:none; }
     <div class="supplier-grid" id="supplier-grid"></div>
   </section>
 
+  <!-- Editor link (only visible to Fiorella) -->
+  <div id="editorLinkWrap" style="display:none;text-align:center;margin-top:20px;">
+    <a href="food-editor.html" style="display:inline-block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-light);opacity:0.55;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:8px 16px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--gold)'" onmouseout="this.style.opacity=0.55;this.style.borderColor='var(--border)'">✎ Edit dishes</a>
+  </div>
+
 </div>
 
 <!-- Firebase (for live dishes from Firestore) -->
@@ -143,6 +148,7 @@ let usingFirestore = false;
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fixImg(path){
   if(!path) return '';
+  if(/^data:/i.test(path)) return path;                    // uploaded image (data URL)
   if(/^https?:\/\//i.test(path)) return path;              // full URL as-is
   let p = path.replace(/^\.?\//,'');
   if(/^food-net\//.test(p)) return p;                      // already prefixed
@@ -197,8 +203,9 @@ function renderDishes(){
   if(!list.length){ grid.innerHTML = '<p style="opacity:.6">No dishes in this menu yet.</p>'; return; }
   grid.innerHTML = list.map((d, i) => {
     const img = firstImage(d);
+    const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
     const media = img
-      ? `<div class="dish-media" style="background-image:url('${encodeURI(img)}')"><span class="dish-course">${esc(d.course||'')}</span></div>`
+      ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">${esc(d.course||'')}</span></div>`
       : `<div class="dish-media empty"><span class="dish-course">${esc(d.course||'')}</span></div>`;
     const chips = (d.allergies||[]).map(a =>
       `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
@@ -316,7 +323,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // …then upgrade to Firestore data when it arrives (needs auth to be signed in).
   const tryLoad = () => loadFromFirestore().then(ok => { if(ok) renderAll(); });
   if(typeof auth !== 'undefined'){
-    auth.onAuthStateChanged(() => tryLoad());
+    auth.onAuthStateChanged((user) => {
+      // Show the small editor link only to Fiorella.
+      var w = document.getElementById('editorLinkWrap');
+      if(w) w.style.display = (user && user.email === 'fiorella@petrus.local') ? 'block' : 'none';
+      tryLoad();
+    });
   } else {
     tryLoad();
   }

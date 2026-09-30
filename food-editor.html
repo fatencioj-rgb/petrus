@@ -137,16 +137,23 @@ textarea { resize:vertical; min-height:70px; line-height:1.5; }
           <div class="hint">Tick the standard ones, or add extras separated by commas.</div>
 
           <label>Set up (cutlery)</label>
-          <input id="f-setup" placeholder="e.g. Starter Fork, Fish Knife, Fish Spoon" oninput="renderPreview()">
-          <div class="hint">Comma-separated. Leave empty for "No Set Up".</div>
+          <div class="check-grid" id="setup-grid"></div>
+          <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
+          <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
 
           <label>Menus</label>
           <div class="check-grid" id="menu-grid"></div>
           <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
 
           <label>Image</label>
-          <input id="f-image" placeholder="URL or file name in food-net/images/" oninput="renderPreview()">
-          <div class="hint">Paste an image URL, or a file name already in food-net/images/ (e.g. tartlet.png). Upload from computer coming soon.</div>
+          <input type="file" id="f-image-file" accept="image/*" onchange="handleImageFile(event)" style="padding:9px 0;border:none;background:transparent;">
+          <div class="hint">Choose a photo from your device. It's resized automatically and saved with the dish.</div>
+          <div id="image-status" class="hint" style="margin-top:2px;"></div>
+          <!-- Holds the compressed image (data URL) that gets saved to Firestore. -->
+          <input type="hidden" id="f-image">
+          <div id="image-actions" style="display:none;margin-top:8px;">
+            <button type="button" class="btn ghost small" onclick="clearImage()">Remove image</button>
+          </div>
 
           <label>Knowledge points</label>
           <div id="k-rows"></div>
@@ -193,6 +200,8 @@ const MENUS = [
   {id:'new_dishes', label:'New Dishes'},
 ];
 const COURSES = ['Canapé','Amuse-Bouche','Starter Fish','Starter Meat','Shellfish','Fish','Meat','Vegetarian','Cheese','Pre-Dessert','Dessert','End of Service'];
+// Cutlery types derived from all existing dishes.
+const CUTLERY = ['Starter Fork','Starter Knife','Main Fork','Steak Knife','Fish Knife','Fish Spoon','Sauce Spoon','Soup Spoon','Dessert Spoon','Teaspoon','Butter Knife','Side plate'];
 
 let allDishes = []; // {id, ...data}
 
@@ -200,6 +209,7 @@ function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,
 function nonAllergen(t){ return /^(vegetarian|vegan|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
 function fixImg(path){
   if(!path) return '';
+  if(/^data:/i.test(path)) return path;               // uploaded image (data URL)
   if(/^https?:\/\//i.test(path)) return path;         // full URL
   let p = path.replace(/^\.?\//,'');
   if(!/^food-net\//.test(p)) p = 'food-net/' + (/^images\//.test(p) ? p : 'images/' + p);
@@ -232,6 +242,10 @@ function initEditor(){
   // Menu checkboxes
   document.getElementById('menu-grid').innerHTML = MENUS.map(m =>
     `<label class="check"><input type="checkbox" value="${esc(m.id)}"> ${esc(m.label)}</label>`
+  ).join('');
+  // Cutlery checkboxes
+  document.getElementById('setup-grid').innerHTML = CUTLERY.map(c =>
+    `<label class="check"><input type="checkbox" value="${esc(c)}" onchange="renderPreview()"> ${esc(c)}</label>`
   ).join('');
   addKRow();
   loadDishes();
@@ -293,7 +307,9 @@ function readKRows(){
 function readForm(){
   const checkedAllergens = [...document.querySelectorAll('#allergen-grid input:checked')].map(c=>c.value);
   const extra = (document.getElementById('f-allergens-extra').value||'').split(',').map(s=>s.trim()).filter(Boolean);
-  const setup = (document.getElementById('f-setup').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const setupChecked = [...document.querySelectorAll('#setup-grid input:checked')].map(c=>c.value);
+  const setupExtra = (document.getElementById('f-setup-extra').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const setup = setupChecked.concat(setupExtra);
   const menus = [...document.querySelectorAll('#menu-grid input:checked')].map(c=>c.value);
   const img = (document.getElementById('f-image').value||'').trim();
   return {
@@ -315,9 +331,9 @@ function resetForm(){
   document.getElementById('f-course').value = '';
   document.getElementById('f-desc').value = '';
   document.getElementById('f-allergens-extra').value = '';
-  document.getElementById('f-setup').value = '';
+  document.getElementById('f-setup-extra').value = '';
   document.getElementById('f-image').value = '';
-  document.querySelectorAll('#allergen-grid input:checked, #menu-grid input:checked').forEach(c=>c.checked=false);
+  document.querySelectorAll('#allergen-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
   document.getElementById('k-rows').innerHTML = '';
   addKRow();
   setMsg('');
@@ -342,10 +358,23 @@ function editDish(id){
     else extras.push(a);
   });
   document.getElementById('f-allergens-extra').value = extras.join(', ');
+  // Set up: tick known cutlery, put unknown pieces in the extra field
   const setup = (d.setup||[]).filter(s=>s && s!=='No Set Up');
-  document.getElementById('f-setup').value = setup.join(', ');
+  const cutleryLower = CUTLERY.map(c=>c.toLowerCase());
+  const setupExtras = [];
+  document.querySelectorAll('#setup-grid input').forEach(c=>c.checked=false);
+  setup.forEach(s => {
+    const idx = cutleryLower.indexOf((s||'').toLowerCase());
+    if(idx>=0){ const box=[...document.querySelectorAll('#setup-grid input')].find(c=>c.value.toLowerCase()===s.toLowerCase()); if(box) box.checked=true; }
+    else setupExtras.push(s);
+  });
+  document.getElementById('f-setup-extra').value = setupExtras.join(', ');
   document.querySelectorAll('#menu-grid input').forEach(c=>c.checked = (d.menus||[]).indexOf(c.value)>=0);
-  document.getElementById('f-image').value = (d.images && d.images[0]) || '';
+  const existingImg = (d.images && d.images[0]) || '';
+  document.getElementById('f-image').value = existingImg;
+  document.getElementById('f-image-file').value = '';
+  document.getElementById('image-status').textContent = existingImg ? 'Current image kept. Choose a file to replace it.' : '';
+  document.getElementById('image-actions').style.display = existingImg ? 'block' : 'none';
   document.getElementById('k-rows').innerHTML = '';
   (d.knowledge||[]).forEach(k => addKRow(k.title, k.text));
   if(!(d.knowledge||[]).length) addKRow();
@@ -398,12 +427,56 @@ function setMsg(text, cls){
   el.textContent = text; el.className = 'msg ' + (cls||'');
 }
 
+/* ── Image upload: read file, resize/compress in-browser, store as data URL ── */
+const IMG_MAX_W = 900;   // resize wide edge down to this
+const IMG_QUALITY = 0.82; // JPEG quality
+
+function handleImageFile(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('image-status');
+  status.textContent = 'Processing image…';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, IMG_MAX_W / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      let dataUrl;
+      try { dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY); }
+      catch(err){ dataUrl = e.target.result; }
+      document.getElementById('f-image').value = dataUrl;
+      const kb = Math.round((dataUrl.length * 0.75) / 1024); // approx bytes
+      status.textContent = 'Ready · ' + w + '×' + h + ' · ~' + kb + ' KB';
+      document.getElementById('image-actions').style.display = 'block';
+      renderPreview();
+    };
+    img.onerror = () => { status.textContent = 'Could not read that image.'; };
+    img.src = e.target.result;
+  };
+  reader.onerror = () => { status.textContent = 'Could not read that file.'; };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(){
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-image-file').value = '';
+  document.getElementById('image-status').textContent = '';
+  document.getElementById('image-actions').style.display = 'none';
+  renderPreview();
+}
+
 /* ── Live preview (mirrors food-net card) ── */
 function renderPreview(){
   const d = readForm();
   const img = fixImg(d.images[0]);
+  const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
   const media = img
-    ? `<div class="dish-media" style="background-image:url('${encodeURI(img)}')"><span class="dish-course">${esc(d.course)}</span></div>`
+    ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">${esc(d.course)}</span></div>`
     : `<div class="dish-media empty"><span class="dish-course">${esc(d.course)}</span></div>`;
   const chips = d.allergies.map(a => `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
   const setup = d.setup.filter(s=>s && s!=='No Set Up');
