@@ -20,15 +20,17 @@ service cloud.firestore {
       allow write: if isManager();
     }
 
-    // Home notes with optional recipient.
-    //  - recipient 'all'      → any signed-in team member can read
-    //  - recipient <email>    → only that person, the author, or Fiorella
+    // Home notes with one or more recipients (array `recipients`).
+    //  - 'all' in recipients  → any signed-in team member can read
+    //  - an email in recipients → only those people, the author, or Fiorella
     //  Create/edit: Fiorella & Milena. Delete: Fiorella only.
     match /notes/{noteId} {
       allow read: if signedIn() && (
                      isFiorella()
-                  || resource.data.recipient == 'all'
-                  || resource.data.recipient == request.auth.token.email
+                  || (resource.data.recipients is list && (
+                        resource.data.recipients.hasAny(['all'])
+                     || resource.data.recipients.hasAny([request.auth.token.email])
+                     ))
                   || resource.data.authorEmail == request.auth.token.email
                   );
       allow create, update: if isManager();
