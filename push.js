@@ -56,25 +56,37 @@ var PETRUS_VAPID_KEY = "BNldmwYVZAyMgyin7lZsAU0yKYsEbX2dniA2aSKjmNTtkGtXv5XqwFJ2
     });
   }
 
+  // Base path of the site (handles GitHub Pages subfolders like /petrus/).
+  var BASE = location.pathname.replace(/[^/]*$/, ''); // e.g. "/petrus/"
+
   // Register the SW, request permission, fetch the token.
-  function enablePushFor(user) {
-    navigator.serviceWorker.register('firebase-messaging-sw.js')
+  // `loud` = true → show on-screen alerts (used by the manual button) so the
+  // user can see exactly what failed. Silent for the automatic call.
+  function enablePushFor(user, loud) {
+    function say(msg) { if (loud) { try { alert(msg); } catch (e) {} } console.log('[push]', msg); }
+
+    // Register the SW at the site base so its scope covers all pages.
+    navigator.serviceWorker.register(BASE + 'firebase-messaging-sw.js', { scope: BASE })
       .then(function (registration) {
         return Notification.requestPermission().then(function (permission) {
           if (permission !== 'granted') {
-            console.log('[push] permission not granted:', permission);
+            say('Notifications permission was not granted (' + permission + '). '
+              + 'On iPhone: open the app from the home-screen icon, then try again.');
             return;
           }
           return messaging.getToken({
             vapidKey: PETRUS_VAPID_KEY,
             serviceWorkerRegistration: registration
           }).then(function (token) {
-            saveToken(token, user);
+            if (!token) { say('No token returned by the browser.'); return; }
+            return saveToken(token, user).then(function () {
+              say('Notifications enabled on this device ✓');
+            });
           });
         });
       })
       .catch(function (err) {
-        console.log('[push] enable failed:', err.message);
+        say('Could not enable notifications: ' + (err && err.message ? err.message : err));
       });
   }
 
@@ -96,14 +108,15 @@ var PETRUS_VAPID_KEY = "BNldmwYVZAyMgyin7lZsAU0yKYsEbX2dniA2aSKjmNTtkGtXv5XqwFJ2
       console.log('[push] VAPID key not set yet — skipping token registration.');
       return;
     }
-    // Give the SW a moment, then enable.
-    enablePushFor(user);
+    // Give the SW a moment, then enable (silent — no pop-ups).
+    enablePushFor(user, false);
   });
 
-  // Expose a manual trigger (e.g. an "Enable notifications" button).
+  // Expose a manual trigger (the "Enable on this device" button).
+  // loud = true → shows a message telling you exactly what happened.
   window.petrusEnablePush = function () {
     var user = firebase.auth().currentUser;
     if (!user) { alert('Please sign in first.'); return; }
-    enablePushFor(user);
+    enablePushFor(user, true);
   };
 })();
