@@ -370,6 +370,16 @@ body {
     <a href="operations.html" class="nav-btn" data-section="operations">Operations</a>
   </nav>
 
+  <!-- Enable notifications (visible when logged in). Each person taps this
+       once on their own phone, with their own account. -->
+  <div id="enablePushWrap" style="display:none;margin-top:18px;">
+    <button type="button" class="nav-btn" style="border-color:rgba(184,150,80,0.5);"
+      onclick="petrusEnablePush && petrusEnablePush()">🔔 Turn on notifications</button>
+    <p id="enablePushHint" style="font-size:11px;color:var(--gold-light);opacity:0.7;margin-top:8px;letter-spacing:0.5px;">
+      Tap once to receive team alerts on this device.
+    </p>
+  </div>
+
   <!-- Login prompt (shown when NOT logged in) -->
   <div id="loginPrompt" style="display:none;">
     <p style="color:var(--gold-light);font-size:13px;margin-bottom:24px;opacity:0.8;">Sign in to access the site</p>
@@ -442,6 +452,8 @@ auth.onAuthStateChanged((user) => {
     // Buttons: everyone sees all (access enforced on target page) EXCEPT guest,
     // who only sees Training; the rest are hidden for guest.
     nav.style.display = 'flex';
+    var pushWrap = document.getElementById('enablePushWrap');
+    if (pushWrap) pushWrap.style.display = guest ? 'none' : 'block';
     nav.querySelectorAll('.nav-btn').forEach(btn => {
       const section = btn.getAttribute('data-section');
       btn.style.display = (guest && section !== 'training') ? 'none' : 'block';
@@ -463,6 +475,8 @@ auth.onAuthStateChanged((user) => {
     nav.style.display = 'none';
     notesPanel.style.display = 'none';
     loginPrompt.style.display = 'block';
+    var pushWrap0 = document.getElementById('enablePushWrap');
+    if (pushWrap0) pushWrap0.style.display = 'none';
   }
 });
 
