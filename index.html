@@ -390,12 +390,10 @@ auth.onAuthStateChanged((user) => {
     loginPrompt.style.display = 'none';
     logAccess(user, 'page_view', 'index.html');
 
-    // Show only the sections this user is allowed to see.
+    // All section buttons are shown to everyone. Access is enforced on the
+    // target page itself (a restricted screen appears if not allowed).
     nav.style.display = 'flex';
-    nav.querySelectorAll('.nav-btn').forEach(btn => {
-      const section = btn.getAttribute('data-section');
-      btn.style.display = userCanSee(user, section) ? 'block' : 'none';
-    });
+    nav.querySelectorAll('.nav-btn').forEach(btn => { btn.style.display = 'block'; });
 
     // Notes panel: visible to everyone; editing controls appear for managers.
     notesPanel.style.display = 'block';
