@@ -12,10 +12,8 @@
 :root {
   --green: #5c1a1a;
   --green-dark: #2d0a0a;
-  /* Gold replaced by rose everywhere (same variable names kept for simplicity). */
-  --gold: #e8b4c4;
-  --gold-light: #f0cdd8;
-  --rose: #e8b4c4;
+  --gold: #b89650;
+  --gold-light: #d4b87a;
   --cream: #faf7f1;
   --white: #ffffff;
   --text: #2c2c2c;
@@ -82,7 +80,7 @@ body {
   width: 100%;
   padding: 16px 24px;
   background: transparent;
-  border: 1px solid rgba(232, 180, 196, 0.3);
+  border: 1px solid rgba(184, 150, 80, 0.3);
   border-radius: 6px;
   color: var(--cream);
   font-family: var(--sans);
@@ -96,11 +94,11 @@ body {
 }
 
 .nav-btn:hover {
-  background: rgba(232, 180, 196, 0.1);
+  background: rgba(184, 150, 80, 0.1);
   border-color: var(--gold);
   color: var(--gold);
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(232, 180, 196, 0.15);
+  box-shadow: 0 4px 20px rgba(184, 150, 80, 0.15);
 }
 
 .nav-btn:active { transform: translateY(0); }
@@ -174,7 +172,7 @@ body {
 .modal-input {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #f0cdd8;
+  border: 1px solid #d4b87a;
   border-radius: 6px;
   font-family: var(--sans);
   font-size: 14px;
@@ -243,15 +241,15 @@ body {
 .footer {
   margin-top: 60px;
   font-size: 10px;
-  color: rgba(232, 180, 196, 0.4);
+  color: rgba(184, 150, 80, 0.4);
   letter-spacing: 1px;
 }
 
 /* ── Notes panel (above the buttons) ───────────────────────────── */
 #notesPanel { margin-bottom: 28px; text-align: left; }
 .note-card {
-  background: rgba(232, 180, 196,0.07);
-  border: 1px solid rgba(232, 180, 196,0.28);
+  background: rgba(184, 150, 80,0.07);
+  border: 1px solid rgba(184, 150, 80,0.28);
   border-radius: 10px;
   padding: 16px 18px;
   margin-bottom: 10px;
@@ -265,20 +263,20 @@ body {
 }
 .note-pill-to {
   background: transparent; color: var(--gold-light);
-  border: 1px solid rgba(232,180,196,0.5);
+  border: 1px solid rgba(184, 150, 80,0.5);
 }
 .note-recipient-row { display:flex; align-items:center; gap:8px; margin-top:8px; }
 .note-recipient-row label {
   font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--gold-light); opacity:0.8;
 }
 .note-recipient-row select {
-  flex:1; padding:8px 10px; border-radius:6px; border:1px solid rgba(232,180,196,0.3);
+  flex:1; padding:8px 10px; border-radius:6px; border:1px solid rgba(184, 150, 80,0.3);
   background: rgba(0,0,0,0.15); color: var(--cream); font-family:var(--sans); font-size:13px; outline:none;
 }
 .note-recipient-row select:focus { border-color: var(--gold); }
 .note-actions { margin-left:auto; display:flex; gap:8px; }
 .note-actions button {
-  background: transparent; border: 1px solid rgba(232, 180, 196,0.3);
+  background: transparent; border: 1px solid rgba(184, 150, 80,0.3);
   color: var(--gold-light); border-radius: 6px; padding: 4px 12px;
   font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;
   cursor: pointer; transition: all .2s;
@@ -289,14 +287,14 @@ body {
 .note-editor { margin-top: 10px; }
 .note-editor textarea {
   width:100%; min-height:60px; padding:12px 14px; border-radius:8px;
-  border:1px solid rgba(232, 180, 196,0.3); background: rgba(0,0,0,0.15);
+  border:1px solid rgba(184, 150, 80,0.3); background: rgba(0,0,0,0.15);
   color: var(--cream); font-family: var(--sans); font-size: 14px;
   outline:none; resize: vertical; line-height:1.5;
 }
 .note-editor textarea:focus { border-color: var(--gold); }
 .note-editor-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
 .note-add-btn {
-  width:100%; background: transparent; border:1px dashed rgba(232, 180, 196,0.4);
+  width:100%; background: transparent; border:1px dashed rgba(184, 150, 80,0.4);
   color: var(--gold-light); border-radius:8px; padding:10px; cursor:pointer;
   font-size:12px; letter-spacing:1px; text-transform:uppercase; transition:all .2s;
 }
@@ -307,7 +305,7 @@ body {
   text-transform:uppercase; font-weight:600; cursor:pointer;
 }
 .btn-cancel-note {
-  background: transparent; color: var(--gold-light); border:1px solid rgba(232, 180, 196,0.3);
+  background: transparent; color: var(--gold-light); border:1px solid rgba(184, 150, 80,0.3);
   border-radius:6px; padding:8px 18px; font-size:12px; letter-spacing:1px;
   text-transform:uppercase; cursor:pointer;
 }
@@ -351,9 +349,9 @@ body {
     <p style="color:var(--gold-light);font-size:13px;margin-bottom:24px;opacity:0.8;">Sign in to access the site</p>
     <form id="loginForm" onsubmit="return submitDirectLogin(event)" style="max-width:320px;margin:0 auto;display:flex;flex-direction:column;gap:12px;text-align:left;">
       <input type="text" id="directUser" placeholder="User" autocomplete="username" autocapitalize="none"
-        style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(232, 180, 196,0.3);border-radius:6px;color:var(--cream);font-family:var(--sans);font-size:14px;outline:none;">
+        style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(184, 150, 80,0.3);border-radius:6px;color:var(--cream);font-family:var(--sans);font-size:14px;outline:none;">
       <input type="password" id="directCode" placeholder="Password" autocomplete="current-password"
-        style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(232, 180, 196,0.3);border-radius:6px;color:var(--cream);font-family:var(--sans);font-size:14px;outline:none;">
+        style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(184, 150, 80,0.3);border-radius:6px;color:var(--cream);font-family:var(--sans);font-size:14px;outline:none;">
       <div id="directError" style="color:#e08a7a;font-size:12px;min-height:16px;"></div>
       <button type="submit" id="directBtn"
         style="width:100%;padding:14px 24px;background:var(--gold);color:var(--green-dark);border:none;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;">Enter</button>
@@ -363,7 +361,7 @@ body {
 
   <!-- Admin: subtle text link, only visible to Fiorella -->
   <div id="adminLinkWrap" style="display:none;margin-top:44px;">
-    <a href="admin.html" style="color:var(--rose);opacity:0.55;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">Admin</a>
+    <a href="admin.html" style="color:var(--gold);opacity:0.55;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">Admin</a>
   </div>
 
   <div class="footer">
