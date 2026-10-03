@@ -67,20 +67,29 @@ def get_tokens(emails=None):
     return tokens
 
 
-def send(tokens, title, body, url="index.html", tag="petrus"):
+# Todas las notificaciones muestran este título fijo. El detalle va en el cuerpo.
+APP_TITLE = "Petrus FOH"
+
+
+def send(tokens, heading, body, url="index.html", tag="petrus"):
     """Envía una push a la lista de tokens y limpia los que ya no sirven.
-    `url` es una página relativa (ej. 'somm-stock.html'); aquí se convierte
-    en una URL HTTPS completa, que es lo que FCM exige para webpush."""
+    El título siempre es «Petrus FOH»; `heading` (ej. 'Dish updated') se pone
+    como primera línea del cuerpo, seguido del mensaje.
+    `url` es una página relativa; aquí se convierte en URL HTTPS completa."""
     if not tokens:
-        print(f"[push] sin dispositivos para «{title}»")
+        print(f"[push] sin dispositivos para «{heading}»")
         return
 
     full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
 
+    # Cuerpo final: "Encabezado\nmensaje". Si no hay encabezado, solo el mensaje.
+    full_body = (f"{heading}\n{body}" if heading and body
+                 else (heading or body or ""))
+
     message = messaging.MulticastMessage(
         tokens=tokens,
-        notification=messaging.Notification(title=title, body=body),
-        data={"title": title, "body": body, "url": full_url, "tag": tag},
+        notification=messaging.Notification(title=APP_TITLE, body=full_body),
+        data={"title": APP_TITLE, "body": full_body, "url": full_url, "tag": tag},
         webpush=messaging.WebpushConfig(
             notification=messaging.WebpushNotification(
                 icon=SITE_URL + "icons/icon-192.png",
@@ -112,7 +121,7 @@ def send(tokens, title, body, url="index.html", tag="petrus"):
                     dead += 1
                 except Exception:
                     pass
-    print(f"[push] «{title}» → {resp.success_count} enviadas, "
+    print(f"[push] «{heading or body}» → {resp.success_count} enviadas, "
           f"{resp.failure_count} fallidas, {dead} tokens limpiados")
 
 
@@ -137,9 +146,11 @@ def on_notifications(col_snapshot, changes, read_time):
         created = d.get("createdAt")
         if created and created.timestamp() < _started_at - 5:
             continue
-        title = d.get("title") or "Petrus"
+        title = d.get("title") or ""
         body = d.get("body") or d.get("message") or ""
-        send(get_tokens(None), title, body, url="index.html", tag="broadcast")
+        # Si el título es un placeholder genérico, no lo repetimos como encabezado.
+        heading = "" if title.strip().lower() in ("", "petrus", "petrus foh") else title
+        send(get_tokens(None), heading, body, url="index.html", tag="broadcast")
 
 
 def on_dishes(col_snapshot, changes, read_time):
