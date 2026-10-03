@@ -148,6 +148,14 @@ textarea.desc-big { min-height:120px; }
 }
 .ms.open .ms-panel { display:block; }
 .ms.open .ms-caret { transform:rotate(180deg); }
+/* Vertical list layout inside a dropdown panel: one option per line, like a
+   native <select> list, instead of chip-style buttons. */
+.ms-panel.list .check-grid { display:block; }
+.ms-panel.list .check {
+  display:flex; width:100%; border:none; background:transparent; border-radius:4px;
+  padding:6px 8px; margin:0; gap:8px;
+}
+.ms-panel.list .check:hover { background:var(--bg-soft); }
 
 #app { display:none; }
 </style>
@@ -216,7 +224,7 @@ textarea.desc-big { min-height:120px; }
               <span class="ms-summary placeholder" id="ms-allergen-summary">Choose allergens…</span>
               <span class="ms-caret">▾</span>
             </button>
-            <div class="ms-panel"><div class="check-grid" id="allergen-grid"></div></div>
+            <div class="ms-panel list"><div class="check-grid" id="allergen-grid"></div></div>
           </div>
           <input id="f-allergens-extra" placeholder="Other allergens, comma-separated (optional)" oninput="renderPreview()" style="margin-top:6px;">
           <div class="hint">Tick the allergens present, or add extras separated by commas.</div>
