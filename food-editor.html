@@ -916,7 +916,7 @@ function renderPreview(){
     : `<div class="dish-media empty"><span class="dish-course">${esc(d.course)}</span></div>`;
   const chips = d.allergies.map(a => `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
   const setup = d.setup.filter(s=>s && s!=='No Set Up');
-  const setupLine = setup.length ? `<div class="setup-line"><b>Set up:</b> ${esc(setup.join(', '))}</div>` : '';
+  const setupLine = setup.length ? `<div class="setup-line"><b>Set up:</b><br>${setup.map(s=>esc(s)).join('<br>')}</div>` : '';
   const know = d.knowledge.map(k => `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}</div>`).join('');
   const knowBlock = know ? `<div class="knowledge"><div class="k-toggle">Knowledge points <span>−</span></div><div class="k-list">${know}</div></div>` : '';
   const announce = (d.announcement||'').trim();

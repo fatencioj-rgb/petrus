@@ -286,11 +286,11 @@ function renderDishes(){
     const chips = (d.allergies||[]).map(a =>
       `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
     const setup = Array.isArray(d.setup) ? d.setup.filter(s => s && s!=='No Set Up') : [];
-    // Set up — collapsible, same look as Knowledge points.
+    // Set up — collapsible, same look as Knowledge points. One piece per line.
     const setupBlock = setup.length ? `
       <div class="knowledge">
         <button class="k-toggle" onclick="toggleSection('setup-${i}')">Set up <span id="setup-${i}-tog">+</span></button>
-        <div class="k-list" id="setup-${i}-list"><div class="k-item">${esc(setup.join(', '))}</div></div>
+        <div class="k-list" id="setup-${i}-list">${setup.map(s => `<div class="k-item">${esc(s)}</div>`).join('')}</div>
       </div>` : '';
     const know = (d.knowledge||[]).map(k => {
       const imgs = (k.images||[]).map(im => `<img src="${encodeURI(fixImg('images/'+im))}" alt="${esc(k.title)}" loading="lazy" onerror="this.style.display='none'">`).join('');
