@@ -265,22 +265,35 @@ body {
   background: transparent; color: var(--gold-light);
   border: 1px solid rgba(184, 150, 80,0.5);
 }
-.note-recipient-row { margin-top:10px; }
+.note-recipient-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
 .note-recipient-row > .send-to-label {
-  display:block; font-size:11px; letter-spacing:1px; text-transform:uppercase;
-  color:var(--gold-light); opacity:0.8; margin-bottom:8px;
+  font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--gold-light); opacity:0.8; flex:0 0 auto;
 }
-/* Light rose panel with deep-red names so recipients are easy to read. */
-.recipient-list {
+/* Collapsed dropdown row: rose field, deep-red text */
+.recipient-dd { position:relative; flex:1; }
+.recipient-dd-toggle {
+  width:100%; text-align:left; cursor:pointer;
   background:#fdf1f4; border:1px solid rgba(184,150,80,0.4); border-radius:8px;
-  padding:10px 12px; display:flex; flex-wrap:wrap; gap:6px 10px;
+  padding:9px 12px; color:#5c1a1a; font-family:var(--sans); font-size:13px; font-weight:500;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
 }
+.recipient-dd-toggle:hover { border-color:var(--gold); }
+.recipient-dd-toggle .caret { opacity:0.6; font-size:10px; }
+/* Open menu with checkboxes */
+.recipient-menu {
+  display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50;
+  background:#fdf1f4; border:1px solid rgba(184,150,80,0.5); border-radius:8px;
+  padding:8px; max-height:230px; overflow:auto; box-shadow:0 8px 24px rgba(0,0,0,0.25);
+}
+.recipient-menu.open { display:block; }
 .recipient-check {
-  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
-  color:#5c1a1a; font-size:13px; font-weight:500;
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  color:#5c1a1a; font-size:13px; font-weight:500; padding:6px 6px; border-radius:6px;
 }
+.recipient-check:hover { background:rgba(92,26,26,0.06); }
 .recipient-check input { width:auto; margin:0; accent-color:#5c1a1a; cursor:pointer; }
-.recipient-check.everyone { width:100%; border-bottom:1px solid rgba(92,26,26,0.15); padding-bottom:8px; margin-bottom:4px; font-weight:600; }
+.recipient-check.everyone { border-bottom:1px solid rgba(92,26,26,0.15); margin-bottom:4px; font-weight:600; }
 .note-actions { margin-left:auto; display:flex; gap:8px; }
 .note-actions button {
   background: transparent; border: 1px solid rgba(184, 150, 80,0.3);
@@ -655,7 +668,12 @@ function renderNotes(){
           <textarea id="noteInput" placeholder="Write a note…"></textarea>
           <div class="note-recipient-row">
             <span class="send-to-label">Send to</span>
-            <div class="recipient-list">${checks}</div>
+            <div class="recipient-dd">
+              <div class="recipient-dd-toggle" id="rcptToggle" onclick="toggleRecipientMenu(event)">
+                <span id="rcptSummary">Everyone</span><span class="caret">▾</span>
+              </div>
+              <div class="recipient-menu" id="rcptMenu">${checks}</div>
+            </div>
           </div>
           <div class="note-editor-actions">
             <button class="btn-cancel-note" onclick="cancelNoteEditor()">Cancel</button>
@@ -683,19 +701,48 @@ function cancelNoteEditor(){
   renderNotes();
 }
 
-// Recipient checkbox helpers.
+// Recipient dropdown helpers.
 // "Everyone" ticked = broadcast; unticking it lets you pick individuals.
+function toggleRecipientMenu(e){
+  if(e) e.stopPropagation();
+  const menu = document.getElementById('rcptMenu');
+  menu.classList.toggle('open');
+}
+function closeRecipientMenu(){
+  const menu = document.getElementById('rcptMenu');
+  if(menu) menu.classList.remove('open');
+}
+// Close the menu when clicking outside it.
+document.addEventListener('click', (e) => {
+  const dd = document.querySelector('.recipient-dd');
+  if(dd && !dd.contains(e.target)) closeRecipientMenu();
+});
+
+function updateRecipientSummary(){
+  const summary = document.getElementById('rcptSummary');
+  if(!summary) return;
+  const all = document.getElementById('rcpt-all');
+  if(all && all.checked){ summary.textContent = 'Everyone'; return; }
+  const names = [...document.querySelectorAll('.rcpt:checked')].map(c => {
+    const lbl = c.closest('.recipient-check');
+    return lbl ? lbl.textContent.trim() : c.value;
+  });
+  summary.textContent = names.length ? names.join(', ') : 'Everyone';
+}
+
 function onEveryoneToggle(){
   const all = document.getElementById('rcpt-all');
   if(all.checked){
     document.querySelectorAll('.rcpt').forEach(c => { c.checked = false; });
   }
+  updateRecipientSummary();
 }
 function onPersonToggle(){
   const anyPerson = [...document.querySelectorAll('.rcpt')].some(c => c.checked);
   const all = document.getElementById('rcpt-all');
   if(anyPerson) all.checked = false;
   if(!anyPerson) all.checked = true; // nothing picked → back to Everyone
+  updateRecipientSummary();
 }
 function setRecipients(list){
   const arr = Array.isArray(list) ? list : [list];
@@ -703,6 +750,7 @@ function setRecipients(list){
   const all = document.getElementById('rcpt-all');
   if(all) all.checked = isAll;
   document.querySelectorAll('.rcpt').forEach(c => { c.checked = !isAll && arr.indexOf(c.value) >= 0; });
+  updateRecipientSummary();
 }
 function readRecipients(){
   const all = document.getElementById('rcpt-all');
