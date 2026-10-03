@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food Editor — Petrus</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2d0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Petrus FOH">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -213,7 +218,8 @@ textarea.desc-big { min-height:120px; }
           <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
 
           <div class="actions">
-            <button type="button" class="btn" id="save-btn" onclick="saveDish()">Save dish</button>
+            <button type="button" class="btn" id="save-btn" onclick="saveDish(false)">Save dish</button>
+            <button type="button" class="btn" id="save-notify-btn" onclick="saveDish(true)" style="background:#5c1a1a;color:#faf7f1;">Save &amp; Notify team</button>
             <button type="button" class="btn ghost" onclick="closeForm()">Cancel</button>
           </div>
           <div class="msg" id="msg"></div>
@@ -240,7 +246,9 @@ textarea.desc-big { min-height:120px; }
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="auth.js"></script>
+<script src="push.js"></script>
 <script>
 const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local'];
 const STANDARD_ALLERGENS = ['Celery','Crustacean','Egg','Fish','Gluten','Milk','Mollusc','Mustard','Nuts','Sesame','Soya','Sulphites'];
@@ -360,31 +368,53 @@ function renderGroups(){
   const q = (document.getElementById('search').value||'').toLowerCase();
   const box = document.getElementById('groups');
   let html = '';
+  // Track which dishes land in at least one menu group, so we can surface the rest.
+  const placed = new Set();
   MENUS.forEach(m => {
     let items = allDishes
       .filter(d => Array.isArray(d.menus) && d.menus.indexOf(m.id) >= 0)
       .sort((a,b) => menuPos(a,m.id) - menuPos(b,m.id));
     if(q) items = items.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
     if(!items.length) return;
+    items.forEach(d => placed.add(d.id));
     html += `<div class="menu-group" data-menu="${m.id}">
       <div class="menu-group-title">${esc(m.label)} <span class="count">${items.length}</span></div>
       ${items.map((d,i) => dragItem(d, m.id, i, items.length)).join('')}
     </div>`;
   });
+
+  // Dishes with no menu assigned (or an unrecognised menu) never show up in the
+  // groups above, which is why some dishes appear on the Food page but can't be
+  // found here. List them in their own group so they can be edited.
+  let orphans = allDishes.filter(d => !placed.has(d.id));
+  if(q) orphans = orphans.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
+  if(orphans.length){
+    html += `<div class="menu-group" data-menu="__none__">
+      <div class="menu-group-title">Unassigned — no menu <span class="count">${orphans.length}</span></div>
+      <div class="hint" style="margin-bottom:6px;">These dishes aren't attached to any menu, so they don't appear under the menus above. Open one and tick a menu to file it.</div>
+      ${orphans.map((d,i) => dragItem(d, '__none__', i, orphans.length)).join('')}
+    </div>`;
+  }
+
   box.innerHTML = html || '<p style="opacity:.6">No dishes yet. Use “+ New dish”.</p>';
   wireDrag();
 }
 
 function dragItem(d, menuId, i, total){
+  const isNone = menuId === '__none__';
   const isMaster = masterOf(d) === menuId;
-  const star = isMaster ? '<span class="star" title="This menu owns the dish">★</span>' : `<span class="from-tag">↳ from ${esc(MENU_LABEL[masterOf(d)]||masterOf(d))}</span>`;
+  const star = isNone
+    ? ''
+    : (isMaster ? '<span class="star" title="This menu owns the dish">★</span>' : `<span class="from-tag">↳ from ${esc(MENU_LABEL[masterOf(d)]||masterOf(d))}</span>`);
   const nameSafe = esc((d.name||'').replace(/'/g,''));
+  // Orphan dishes (no menu) can't be reordered — their arrows are disabled and
+  // drag is turned off, but Edit / Hide / Delete all work normally.
   return `
-    <div class="drag-item${d.hidden?'':''}" draggable="true" data-id="${d.id}" data-menu="${menuId}"${d.hidden?' style="opacity:0.55;"':''}>
-      <div class="n"><span class="drag-handle" title="Drag to reorder">⠿</span> ${esc(d.name||'')} ${star}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
+    <div class="drag-item${d.hidden?'':''}" ${isNone?'':'draggable="true"'} data-id="${d.id}" data-menu="${menuId}"${d.hidden?' style="opacity:0.55;"':''}>
+      <div class="n">${isNone?'':'<span class="drag-handle" title="Drag to reorder">⠿</span> '}${esc(d.name||'')} ${star}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
       <div class="mini">
-        <button title="Move up" onclick="moveInMenu('${d.id}','${menuId}',-1)" ${i===0?'disabled':''}>↑</button>
-        <button title="Move down" onclick="moveInMenu('${d.id}','${menuId}',1)" ${i===total-1?'disabled':''}>↓</button>
+        <button title="Move up" onclick="moveInMenu('${d.id}','${menuId}',-1)" ${(isNone||i===0)?'disabled':''}>↑</button>
+        <button title="Move down" onclick="moveInMenu('${d.id}','${menuId}',1)" ${(isNone||i===total-1)?'disabled':''}>↓</button>
         <button class="hiddenbtn" title="${d.hidden?'Show':'Hide'}" onclick="toggleHidden('${d.id}')">${d.hidden?'Show':'Hide'}</button>
         <button title="Edit" onclick="editDish('${d.id}')">Edit</button>
         <button class="delbtn" title="Delete" onclick="deleteDish('${d.id}','${nameSafe}')">✕</button>
@@ -580,14 +610,22 @@ function editDish(id){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function saveDish(){
+function saveDish(notify){
   const data = readForm();
   if(!data.name){ setMsg('Please enter a name.', 'err'); return; }
   const id = document.getElementById('docId').value;
-  const btn = document.getElementById('save-btn');
+  const btn = document.getElementById(notify ? 'save-notify-btn' : 'save-btn');
+  const btnLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp();
   const payload = Object.assign({}, data, { updatedAt: now });
+
+  // Notification flag: when "Save & Notify team" is pressed, a Cloud Function
+  // sends a push to everyone with the dish name. `notifyAt` is bumped each
+  // time so repeated edits re-trigger the notification; a plain "Save dish"
+  // clears the flag so silent edits don't notify.
+  payload.notifyTeam = !!notify;
+  payload.notifyAt = notify ? now : null;
 
   // Build menuOrder: keep existing positions where set, append new menus to the end.
   const existing = id ? (allDishes.find(x=>x.id===id) || {}) : {};
@@ -621,12 +659,13 @@ function saveDish(){
     op = db.collection('dishes').add(payload);
   }
   op.then(() => {
-    btn.disabled = false; btn.textContent = 'Save dish';
-    setMsg(id ? 'Dish updated.' : 'Dish created.', 'ok');
+    btn.disabled = false; btn.textContent = btnLabel;
+    const base = id ? 'Dish updated.' : 'Dish created.';
+    setMsg(notify ? base + ' Team notified.' : base, 'ok');
     closeForm();
     loadDishes();
   }).catch(err => {
-    btn.disabled = false; btn.textContent = 'Save dish';
+    btn.disabled = false; btn.textContent = btnLabel;
     setMsg('Error: ' + err.message, 'err');
   });
 }
