@@ -28,7 +28,7 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import firebase_admin
-from firebase_admin import credentials, firestore, messaging
+from firebase_admin import credentials, firestore, messaging, exceptions as fb_exceptions
 
 # ── Configuración ──────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -92,16 +92,21 @@ def send(tokens, title, body, url="index.html", tag="petrus"):
 
     resp = messaging.send_each_for_multicast(message)
 
-    # Limpia tokens muertos (app desinstalada, permiso revocado, etc.)
+    # Limpia tokens muertos (app desinstalada, reinstalada, permiso revocado…).
+    # Se detecta por el TIPO de error de FCM, que es más fiable que el texto:
+    #   • UnregisteredError  → el token ya no existe (reinstalación/desinstalación)
+    #   • InvalidArgumentError → token con formato inválido
     dead = 0
     for i, r in enumerate(resp.responses):
-        if not r.success:
-            code = getattr(r.exception, "code", "") if r.exception else ""
-            if r.exception and (
-                "not-registered" in str(r.exception).lower()
-                or "invalid-registration" in str(r.exception).lower()
-                or "unregistered" in str(r.exception).lower()
-            ):
+        if not r.success and r.exception:
+            e = r.exception
+            is_dead = isinstance(e, fb_exceptions.NotFoundError) \
+                or type(e).__name__ in ("UnregisteredError", "SenderIdMismatchError") \
+                or "notregistered" in str(e).lower().replace("-", "") \
+                or "unregistered" in str(e).lower() \
+                or "invalid-argument" in str(e).lower() \
+                or "invalidargument" in str(e).lower().replace("-", "")
+            if is_dead:
                 try:
                     db.collection("push_tokens").document(tokens[i]).delete()
                     dead += 1
@@ -186,7 +191,38 @@ def on_stock(col_snapshot, changes, read_time):
              f"{vintage}{name} is 86{where}.", url="somm-stock.html", tag="86")
 
 
-# ── Arranque ─────────────────────────────────────────────────────────────
+# ── Suscripciones + reconexión ───────────────────────────────────────────
+# Los listeners de Firestore de larga duración a veces se "duermen" y dejan
+# de recibir eventos sin avisar. Para evitarlo, cada cierto tiempo cerramos
+# y volvemos a abrir las suscripciones, manteniendo la conexión fresca.
+
+RESUBSCRIBE_SECONDS = 15 * 60  # re-suscribir cada 15 minutos
+
+_watches = []
+
+
+def subscribe():
+    """Abre las 4 suscripciones y guarda sus handles."""
+    global _watches
+    _watches = [
+        db.collection("notifications").on_snapshot(on_notifications),
+        db.collection("dishes").on_snapshot(on_dishes),
+        db.collection("somm_duties").on_snapshot(on_duties),
+        db.collection("somm_stock").on_snapshot(on_stock),
+    ]
+
+
+def unsubscribe():
+    """Cierra las suscripciones actuales."""
+    global _watches
+    for w in _watches:
+        try:
+            w.unsubscribe()
+        except Exception:
+            pass
+    _watches = []
+
+
 def main():
     print("=" * 60)
     print("  Petrus FOH — Servidor de notificaciones (gratis)")
@@ -195,17 +231,20 @@ def main():
     print("  Déjalo corriendo. Ctrl+C para detener.")
     print("=" * 60)
 
-    # Suscripciones en tiempo real.
-    db.collection("notifications").on_snapshot(on_notifications)
-    db.collection("dishes").on_snapshot(on_dishes)
-    db.collection("somm_duties").on_snapshot(on_duties)
-    db.collection("somm_stock").on_snapshot(on_stock)
+    subscribe()
 
-    # Mantener vivo el proceso.
     try:
+        last = time.time()
         while True:
             time.sleep(1)
+            # Refresca las suscripciones periódicamente para que no se duerman.
+            if time.time() - last >= RESUBSCRIBE_SECONDS:
+                unsubscribe()
+                subscribe()
+                last = time.time()
+                print("[push] conexión refrescada")
     except KeyboardInterrupt:
+        unsubscribe()
         print("\n[push] Detenido.")
 
 
