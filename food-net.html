@@ -43,9 +43,6 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 
 /* ── Dish cards ── */
 .dish-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
-/* Single-column (menu progression) view: dishes stacked one below the other,
-   keeping the same card width as the grid (~300px). */
-.dish-grid.single-col { grid-template-columns:minmax(0,300px); }
 .dish-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
 .dish-media { width:100%; height:180px; background:var(--bg-soft) center/cover no-repeat; position:relative; }
 .dish-media.empty { display:flex; align-items:center; justify-content:center; }
@@ -277,10 +274,6 @@ function renderDishes(){
   supplierGrid.style.display = 'none';
   if(title) title.textContent = 'The Menu';
   if(sub) sub.textContent = 'Every dish, with descriptions and knowledge points. Filter by menu below.';
-
-  // Specific menus show dishes stacked in a single column (menu progression);
-  // "All dishes" stays a multi-column catalogue.
-  grid.classList.toggle('single-col', selectedFN !== 'all');
 
   const list = dishesForMenu(selectedFN);
   if(!list.length){ grid.innerHTML = '<p style="opacity:.6">No dishes in this menu yet.</p>'; return; }
