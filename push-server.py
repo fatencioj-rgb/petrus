@@ -149,9 +149,9 @@ def on_dishes(col_snapshot, changes, read_time):
         # Solo si el "notificar" es reciente (evita avisos viejos al arrancar).
         if notify_at and notify_at.timestamp() < _started_at - 5:
             continue
-        name = d.get("name") or "Un plato"
-        title = "Plato actualizado"
-        body = f"{name} se ha actualizado en el menú."
+        name = d.get("name") or "A dish"
+        title = "Dish updated"
+        body = f"{name} has been updated on the menu."
         send(get_tokens(None), title, body, url="food-net.html", tag="dish")
 
 
@@ -163,9 +163,9 @@ def on_duties(col_snapshot, changes, read_time):
         created = d.get("createdAt")
         if created and created.timestamp() < _started_at - 5:
             continue
-        text = d.get("text") or "Nueva tarea asignada."
+        text = d.get("text") or "A new task has been assigned."
         assignee = f" ({d.get('assignee')})" if d.get("assignee") else ""
-        send(get_tokens(DUTY_RECIPIENTS), "Nueva tarea",
+        send(get_tokens(DUTY_RECIPIENTS), "New task",
              f"{text}{assignee}", url="sommeliers.html", tag="duty")
 
 
@@ -179,11 +179,11 @@ def on_stock(col_snapshot, changes, read_time):
         created = d.get("createdAt")
         if created and created.timestamp() < _started_at - 5:
             continue
-        name = d.get("name") or "Un producto"
+        name = d.get("name") or "An item"
         vintage = f"{d.get('vintage')} " if d.get("vintage") else ""
         where = f" — {d.get('location')}" if d.get("location") else ""
         send(get_tokens(None), "86",
-             f"{vintage}{name} está 86{where}.", url="somm-stock.html", tag="86")
+             f"{vintage}{name} is 86{where}.", url="somm-stock.html", tag="86")
 
 
 # ── Arranque ─────────────────────────────────────────────────────────────
