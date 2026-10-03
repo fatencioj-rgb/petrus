@@ -245,6 +245,58 @@ body {
   letter-spacing: 1px;
 }
 
+/* ── Notes panel (above the buttons) ───────────────────────────── */
+#notesPanel { margin-bottom: 28px; text-align: left; }
+.note-card {
+  background: rgba(184,150,80,0.07);
+  border: 1px solid rgba(184,150,80,0.28);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+}
+.note-text { color: var(--cream); font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.note-meta { display:flex; align-items:center; gap:8px; margin-top: 12px; flex-wrap: wrap; }
+.note-pill {
+  display:inline-block; font-size: 10px; letter-spacing: 0.5px;
+  color: var(--green-dark); background: var(--gold-light);
+  border-radius: 20px; padding: 3px 10px; opacity: 0.9;
+}
+.note-actions { margin-left:auto; display:flex; gap:8px; }
+.note-actions button {
+  background: transparent; border: 1px solid rgba(184,150,80,0.3);
+  color: var(--gold-light); border-radius: 6px; padding: 4px 12px;
+  font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;
+  cursor: pointer; transition: all .2s;
+}
+.note-actions button:hover { border-color: var(--gold); color: var(--gold); }
+.note-actions button.del:hover { border-color:#e08a7a; color:#e08a7a; }
+.note-empty { color: var(--gold-light); font-size: 12px; opacity: 0.6; text-align:center; padding: 6px 0; }
+.note-editor { margin-top: 10px; }
+.note-editor textarea {
+  width:100%; min-height:60px; padding:12px 14px; border-radius:8px;
+  border:1px solid rgba(184,150,80,0.3); background: rgba(0,0,0,0.15);
+  color: var(--cream); font-family: var(--sans); font-size: 14px;
+  outline:none; resize: vertical; line-height:1.5;
+}
+.note-editor textarea:focus { border-color: var(--gold); }
+.note-editor-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+.note-add-btn {
+  width:100%; background: transparent; border:1px dashed rgba(184,150,80,0.4);
+  color: var(--gold-light); border-radius:8px; padding:10px; cursor:pointer;
+  font-size:12px; letter-spacing:1px; text-transform:uppercase; transition:all .2s;
+}
+.note-add-btn:hover { border-color: var(--gold); color: var(--gold); }
+.btn-save-note {
+  background: var(--gold); color: var(--green-dark); border:none;
+  border-radius:6px; padding:8px 18px; font-size:12px; letter-spacing:1px;
+  text-transform:uppercase; font-weight:600; cursor:pointer;
+}
+.btn-cancel-note {
+  background: transparent; color: var(--gold-light); border:1px solid rgba(184,150,80,0.3);
+  border-radius:6px; padding:8px 18px; font-size:12px; letter-spacing:1px;
+  text-transform:uppercase; cursor:pointer;
+}
+
 @media (max-width: 600px) {
   .logo h1 { font-size: 38px; }
   .subtitle { font-size: 11px; margin-bottom: 36px; }
@@ -269,11 +321,15 @@ body {
 
   <div class="divider"></div>
 
+  <!-- Notes panel (shown above the buttons, visible to everyone) -->
+  <div id="notesPanel" style="display:none;"></div>
+
   <!-- Navigation (hidden until logged in) -->
   <nav class="nav-buttons" id="navButtons" style="display:none;">
-    <a href="sommeliers.html" class="nav-btn">Sommeliers</a>
-    <a href="training.html" class="nav-btn">Training</a>
-    <a href="operations.html" class="nav-btn">Operations</a>
+    <a href="training.html" class="nav-btn" data-section="training">Training</a>
+    <a href="sommeliers.html" class="nav-btn" data-section="sommeliers">Sommeliers</a>
+    <a href="operations.html" class="nav-btn" data-section="operations">Operations</a>
+    <a href="admin.html" class="nav-btn" data-section="admin">Admin</a>
   </nav>
 
   <!-- Login prompt (shown when NOT logged in) -->
@@ -325,6 +381,7 @@ auth.onAuthStateChanged((user) => {
   const status = document.getElementById('userStatus');
   const nav = document.getElementById('navButtons');
   const loginPrompt = document.getElementById('loginPrompt');
+  const notesPanel = document.getElementById('notesPanel');
 
   if (user) {
     const displayName = user.displayName || user.email.split('@')[0].replace(/\./g, ' ');
@@ -333,22 +390,20 @@ auth.onAuthStateChanged((user) => {
     loginPrompt.style.display = 'none';
     logAccess(user, 'page_view', 'index.html');
 
-    // Guest: only show Training
-    var isGuest = user.email && user.email.startsWith('guest');
-    var sommAllowed = ['christian@petrus.local','milena@petrus.local','fiorella@petrus.local'];
-    var isSomm = sommAllowed.indexOf(user.email) >= 0;
-    if (isGuest) {
-      nav.style.display = 'flex';
-      nav.innerHTML = '<a href="training.html" class="nav-btn">Training</a>';
-    } else {
-      nav.style.display = 'flex';
-      // Hide Sommeliers link for non-somm users
-      var sommLink = nav.querySelector('a[href="sommeliers.html"]');
-      if (sommLink && !isSomm) sommLink.style.display = 'none';
-    }
+    // Show only the sections this user is allowed to see.
+    nav.style.display = 'flex';
+    nav.querySelectorAll('.nav-btn').forEach(btn => {
+      const section = btn.getAttribute('data-section');
+      btn.style.display = userCanSee(user, section) ? 'block' : 'none';
+    });
+
+    // Notes panel: visible to everyone; editing controls appear for managers.
+    notesPanel.style.display = 'block';
+    initNotes(user);
   } else {
     status.style.display = 'none';
     nav.style.display = 'none';
+    notesPanel.style.display = 'none';
     loginPrompt.style.display = 'block';
   }
 });
@@ -449,6 +504,117 @@ document.getElementById('loginModal').addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
 });
+
+// ══ Notes panel ═══════════════════════════════════════════════════
+// Everyone signed-in can read. Fiorella & Milena can add/edit.
+// Only Fiorella can delete. Each note shows a subtle author · date pill.
+let NOTES_USER = null;
+function isManager(user){ return user && (user.email==='fiorella@petrus.local' || user.email==='milena@petrus.local'); }
+function isFiorella(user){ return user && user.email==='fiorella@petrus.local'; }
+function escNote(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(ts){
+  try {
+    const d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+    if(!d) return '';
+    return d.toLocaleDateString(undefined, { day:'numeric', month:'short' });
+  } catch(e){ return ''; }
+}
+
+function initNotes(user){
+  NOTES_USER = user;
+  renderNotes();
+}
+
+function renderNotes(){
+  const panel = document.getElementById('notesPanel');
+  const manager = isManager(NOTES_USER);
+  const canDelete = isFiorella(NOTES_USER);
+  db.collection('notes').orderBy('createdAt','desc').get().then(snap => {
+    let html = '';
+    if(snap.empty){
+      html += '<div class="note-empty">No notes right now.</div>';
+    } else {
+      snap.forEach(doc => {
+        const n = doc.data();
+        const when = fmtDate(n.updatedAt || n.createdAt);
+        const author = escNote(n.author || 'Team');
+        const pill = `<span class="note-pill">${author}${when ? ' · ' + when : ''}</span>`;
+        const actions = (manager || canDelete) ? `<div class="note-actions">
+            ${manager ? `<button onclick="editNote('${doc.id}')">Edit</button>` : ''}
+            ${canDelete ? `<button class="del" onclick="deleteNote('${doc.id}')">Delete</button>` : ''}
+          </div>` : '';
+        html += `<div class="note-card">
+          <div class="note-text">${escNote(n.text||'')}</div>
+          <div class="note-meta">${pill}${actions}</div>
+        </div>`;
+      });
+    }
+    // Managers get an "add note" control at the bottom.
+    if(manager){
+      html += `<button class="note-add-btn" id="noteAddBtn" onclick="showNoteEditor()">+ Add note</button>
+        <div class="note-editor" id="noteEditor" style="display:none;">
+          <textarea id="noteInput" placeholder="Write a note for the team…"></textarea>
+          <div class="note-editor-actions">
+            <button class="btn-cancel-note" onclick="cancelNoteEditor()">Cancel</button>
+            <button class="btn-save-note" id="noteSaveBtn" onclick="saveNewNote()">Save</button>
+          </div>
+        </div>`;
+    }
+    panel.innerHTML = html;
+  }).catch(err => {
+    panel.innerHTML = '<div class="note-empty">Could not load notes.</div>';
+    console.error('notes load error', err);
+  });
+}
+
+function showNoteEditor(){
+  document.getElementById('noteAddBtn').style.display = 'none';
+  const ed = document.getElementById('noteEditor');
+  ed.style.display = 'block';
+  ed.removeAttribute('data-edit-id');
+  document.getElementById('noteInput').value = '';
+  document.getElementById('noteInput').focus();
+}
+function cancelNoteEditor(){
+  renderNotes();
+}
+
+function saveNewNote(){
+  const ed = document.getElementById('noteEditor');
+  const text = document.getElementById('noteInput').value.trim();
+  if(!text) return;
+  const editId = ed.getAttribute('data-edit-id');
+  const author = (NOTES_USER.displayName) || NOTES_USER.email.split('@')[0].replace(/\./g,' ');
+  const authorName = author.charAt(0).toUpperCase() + author.slice(1);
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  const btn = document.getElementById('noteSaveBtn');
+  btn.disabled = true; btn.textContent = '…';
+  let op;
+  if(editId){
+    op = db.collection('notes').doc(editId).update({ text, author: authorName, authorEmail: NOTES_USER.email, updatedAt: now });
+  } else {
+    op = db.collection('notes').add({ text, author: authorName, authorEmail: NOTES_USER.email, createdAt: now, updatedAt: now });
+  }
+  op.then(() => renderNotes())
+    .catch(err => { btn.disabled=false; btn.textContent='Save'; alert('Could not save: ' + err.message); });
+}
+
+function editNote(id){
+  db.collection('notes').doc(id).get().then(doc => {
+    if(!doc.exists) return;
+    showNoteEditor();
+    const ed = document.getElementById('noteEditor');
+    ed.setAttribute('data-edit-id', id);
+    document.getElementById('noteInput').value = doc.data().text || '';
+    document.getElementById('noteInput').focus();
+  });
+}
+
+function deleteNote(id){
+  if(!confirm('Delete this note?')) return;
+  db.collection('notes').doc(id).delete().then(() => renderNotes())
+    .catch(err => alert('Could not delete: ' + err.message));
+}
 </script>
 </body>
 </html>

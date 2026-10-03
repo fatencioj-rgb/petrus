@@ -19,26 +19,58 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ── Guest Guard (auto-redirect guests away from restricted pages) ──
+// ═══════════════════════════════════════════════════════════════════
+// Access control — which sections each user may see.
+// Sections: 'training', 'sommeliers', 'operations', 'admin'.
+// Everyone always has access to the home page and training.
+// ═══════════════════════════════════════════════════════════════════
+var PETRUS_ACCESS = {
+  'tanvir@petrus.local':   ['training'],
+  'cain@petrus.local':     ['training'],
+  'johnny@petrus.local':   ['training'],
+  'irena@petrus.local':    ['training'],
+  'christian@petrus.local':['training','sommeliers'],
+  'liza@petrus.local':     ['training','operations'],
+  'milena@petrus.local':   ['training','sommeliers','operations'],
+  'fiorella@petrus.local': ['training','sommeliers','operations','admin'],
+};
+
+// Pages that belong to each section (for the URL guard).
+var SECTION_PAGES = {
+  training:   ['training.html','winelist.html','wine-pairings.html','wine-btg.html','food-net.html','food-editor.html'],
+  sommeliers: ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-recipes.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-holiday.html','somm-pairings.html','somm-sales.html','somm-viniv.html','somm-admin.html'],
+  operations: ['operations.html'],
+  admin:      ['admin.html'],
+};
+// Pages everyone (any signed-in user) may open.
+var PUBLIC_PAGES = ['index.html'];
+
+function getAllowedSections(user){
+  if(!user || !user.email) return [];
+  return PETRUS_ACCESS[user.email] || ['training']; // default: training only
+}
+function userCanSee(user, section){
+  return getAllowedSections(user).indexOf(section) >= 0;
+}
+function sectionOfPage(page){
+  for(var s in SECTION_PAGES){
+    if(SECTION_PAGES[s].indexOf(page) >= 0) return s;
+  }
+  return null; // unknown page → not section-restricted here
+}
+
+// ── Page Guard (redirect users away from sections they can't access) ──
 (function() {
   var page = window.location.pathname.split('/').pop() || 'index.html';
-  var guestAllowed = ['training.html', 'winelist.html', 'index.html'];
-  var sommPages = ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-recipes.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-admin.html'];
-  var sommAllowed = ['christian@petrus.local','milena@petrus.local','fiorella@petrus.local'];
-  if (guestAllowed.indexOf(page) < 0) {
-    auth.onAuthStateChanged(function(user) {
-      if (!user) return;
-      // Guest: only training
-      if (user.email && user.email.startsWith('guest')) {
-        window.location.href = 'training.html';
-        return;
-      }
-      // Somm pages: only somm team
-      if (sommPages.indexOf(page) >= 0 && sommAllowed.indexOf(user.email) < 0) {
-        window.location.href = 'index.html';
-      }
-    });
-  }
+  if (PUBLIC_PAGES.indexOf(page) >= 0) return;
+  var section = sectionOfPage(page);
+  if (!section) return; // not a guarded page
+  auth.onAuthStateChanged(function(user) {
+    if (!user) return; // not logged in — other logic handles redirect to login
+    if (!userCanSee(user, section)) {
+      window.location.href = 'index.html';
+    }
+  });
 })();
 
 // ── Auth Functions ────────────────────────────────────────────────

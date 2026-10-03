@@ -6,13 +6,26 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null;
     }
+    function isFiorella() {
+      return signedIn() && request.auth.token.email == 'fiorella@petrus.local';
+    }
+    function isManager() {
+      return signedIn() && (request.auth.token.email == 'fiorella@petrus.local'
+                         || request.auth.token.email == 'milena@petrus.local');
+    }
 
     // Dishes: any signed-in user can read; Fiorella and Milena can write.
     match /dishes/{dishId} {
       allow read: if signedIn();
-      allow write: if signedIn()
-                   && (request.auth.token.email == 'fiorella@petrus.local'
-                    || request.auth.token.email == 'milena@petrus.local');
+      allow write: if isManager();
+    }
+
+    // Home notes: everyone signed-in can read; Fiorella & Milena create/edit;
+    // only Fiorella can delete.
+    match /notes/{noteId} {
+      allow read: if signedIn();
+      allow create, update: if isManager();
+      allow delete: if isFiorella();
     }
 
     // Access logs: signed-in users may create their own log entries; no edits.
