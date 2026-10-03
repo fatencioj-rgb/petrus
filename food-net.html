@@ -257,19 +257,24 @@ function renderDishes(){
     const chips = (d.allergies||[]).map(a =>
       `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
     const setup = Array.isArray(d.setup) ? d.setup.filter(s => s && s!=='No Set Up') : [];
-    const setupLine = setup.length ? `<div class="setup-line"><b>Set up:</b> ${esc(setup.join(', '))}</div>` : '';
+    // Set up — collapsible, same look as Knowledge points.
+    const setupBlock = setup.length ? `
+      <div class="knowledge">
+        <button class="k-toggle" onclick="toggleSection('setup-${i}')">Set up <span id="setup-${i}-tog">+</span></button>
+        <div class="k-list" id="setup-${i}-list"><div class="k-item">${esc(setup.join(', '))}</div></div>
+      </div>` : '';
     const know = (d.knowledge||[]).map(k => {
       const imgs = (k.images||[]).map(im => `<img src="${encodeURI(fixImg('images/'+im))}" alt="${esc(k.title)}" loading="lazy" onerror="this.style.display='none'">`).join('');
       return `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}${imgs}</div>`;
     }).join('');
     const knowBlock = know ? `
       <div class="knowledge">
-        <button class="k-toggle" onclick="toggleK(${i})">Knowledge points <span id="ktog-${i}">+</span></button>
-        <div class="k-list" id="klist-${i}">${know}</div>
+        <button class="k-toggle" onclick="toggleSection('know-${i}')">Knowledge points <span id="know-${i}-tog">+</span></button>
+        <div class="k-list" id="know-${i}-list">${know}</div>
       </div>` : '';
     const announce = (d.announcement||'').trim();
     const announceBlock = announce ? `<div class="dish-announce">${esc(announce).replace(/\n/g,'<br>')}</div>` : '';
-    const wineBlock = winePairingBlock(d.winePairing);
+    const wineBlock = winePairingBlock(d.winePairing, i);
     return `
       <article class="dish-card">
         ${media}
@@ -278,7 +283,7 @@ function renderDishes(){
           ${announceBlock}
           <div class="dish-desc">${esc(d.desc||'').replace(/\n/g,'<br>')}</div>
           ${chips ? `<div class="chips">${chips}</div>` : ''}
-          ${setupLine}
+          ${setupBlock}
           ${wineBlock}
           ${knowBlock}
         </div>
@@ -287,8 +292,9 @@ function renderDishes(){
 }
 
 // Build the wine pairing block from a dish's winePairing object (saved by the
-// editor). Only rows that have a value are shown; if none, nothing is rendered.
-function winePairingBlock(wp){
+// editor). Collapsible, same look as Knowledge points. Only rows with a value
+// are shown; if none, nothing is rendered.
+function winePairingBlock(wp, i){
   if(!wp || typeof wp !== 'object') return '';
   const rows = [
     ['Matching wines', wp.matching],
@@ -300,12 +306,17 @@ function winePairingBlock(wp){
   const items = rows.map(([label, v]) =>
     `<div class="wine-row"><span class="wine-label">${esc(label)}</span><span class="wine-val">${esc(v)}</span></div>`
   ).join('');
-  return `<div class="wine-pairing"><div class="wine-title">Wine pairing</div>${items}</div>`;
+  return `
+    <div class="knowledge">
+      <button class="k-toggle" onclick="toggleSection('wine-${i}')">Wine pairing <span id="wine-${i}-tog">+</span></button>
+      <div class="k-list" id="wine-${i}-list">${items}</div>
+    </div>`;
 }
 
-function toggleK(i){
-  const list = document.getElementById('klist-'+i);
-  const tog = document.getElementById('ktog-'+i);
+// Toggle any collapsible section by its id prefix (setup-i, wine-i, know-i).
+function toggleSection(key){
+  const list = document.getElementById(key+'-list');
+  const tog = document.getElementById(key+'-tog');
   const open = list.classList.toggle('open');
   tog.textContent = open ? '−' : '+';
 }
