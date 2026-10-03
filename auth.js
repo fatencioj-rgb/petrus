@@ -25,6 +25,7 @@ const db = firebase.firestore();
 // Everyone always has access to the home page and training.
 // ═══════════════════════════════════════════════════════════════════
 var PETRUS_ACCESS = {
+  'guest@petrus.local':    ['training'],
   'tanvir@petrus.local':   ['training'],
   'cain@petrus.local':     ['training'],
   'johnny@petrus.local':   ['training'],
@@ -34,6 +35,22 @@ var PETRUS_ACCESS = {
   'milena@petrus.local':   ['training','sommeliers','operations'],
   'fiorella@petrus.local': ['training','sommeliers','operations','admin'],
 };
+
+// Guest = a limited viewer: only Training, no notes, other buttons hidden.
+function isPetrusGuest(user){
+  return !!(user && user.email && user.email.toLowerCase().indexOf('guest') === 0);
+}
+// Team roster used by the notes recipient picker.
+var PETRUS_TEAM = [
+  { email:'fiorella@petrus.local', name:'Fiorella' },
+  { email:'milena@petrus.local',   name:'Milena' },
+  { email:'christian@petrus.local',name:'Christian' },
+  { email:'liza@petrus.local',     name:'Liza' },
+  { email:'tanvir@petrus.local',   name:'Tanvir' },
+  { email:'cain@petrus.local',     name:'Cain' },
+  { email:'johnny@petrus.local',   name:'Johnny' },
+  { email:'irena@petrus.local',    name:'Irena' },
+];
 
 // Pages that belong to each section (for the URL guard).
 var SECTION_PAGES = {

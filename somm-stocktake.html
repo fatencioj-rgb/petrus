@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--green:#5c1a1a;--green-dark:#2d0a0a;--gold:#b89650;--gold-light:#d4b87a;--cream:#faf7f1;--sans:'Inter',sans-serif;--serif:'Cormorant Garamond',serif;--fs:10px}
+:root{--green:#5c1a1a;--green-dark:#2d0a0a;--gold:#e8b4c4;--gold-light:#f0cdd8;--cream:#faf7f1;--sans:'Inter',sans-serif;--serif:'Cormorant Garamond',serif;--fs:10px}
 body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:100vh;font-size:var(--fs)}
 .top-bar{background:var(--green-dark);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
 .top-bar a{color:var(--gold);text-decoration:none;font-size:var(--fs);letter-spacing:1px;text-transform:uppercase}
@@ -44,7 +44,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 .stock-table td.name-cell{font-weight:500;max-width:200px}
 .stock-table td.num-cell{text-align:center;color:#666}
 .stock-table .qty-input{width:40px;height:22px;padding:2px 3px;border:1px solid #ddd;border-radius:3px;font-size:var(--fs);font-family:var(--sans);text-align:center;outline:none;background:#fffef8;line-height:1}
-.stock-table .qty-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,150,80,0.18)}
+.stock-table .qty-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232, 180, 196,0.18)}
 
 /* Category separator */
 .cat-row td{background:#f9f5ef;font-size:var(--fs);font-weight:600;color:var(--green);padding:5px 8px}
@@ -124,7 +124,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;min-height:10
 /* Search */
 .search-bar{margin-bottom:16px;position:sticky;top:0;z-index:3;background:var(--cream);padding:8px 0}
 .search-bar input{width:calc(100% - 50px);padding:10px 14px;border:1px solid #e8e0d4;border-radius:6px;font-family:var(--sans);font-size:var(--fs);outline:none;background:#fff;display:inline-block}
-.search-bar input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,150,80,0.12)}
+.search-bar input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(232, 180, 196,0.12)}
 .search-bar .done-btn{display:inline-block;width:44px;padding:10px 0;text-align:center;font-size:var(--fs);font-weight:600;color:var(--green);cursor:pointer;vertical-align:top}
 
 /* Saved document indicator */
@@ -1252,7 +1252,7 @@ function downloadZerosPDF(){
     startY: 28,
     head: [['Brand & Description', 'Category', 'Pack Size']],
     body: zeroItems,
-    headStyles: {fillColor: [184,150,80], textColor: [255,255,255], fontSize: 8},
+    headStyles: {fillColor: [232, 180, 196], textColor: [255,255,255], fontSize: 8},
     bodyStyles: {fontSize: 8},
     margin: {left: 14, right: 14}
   });

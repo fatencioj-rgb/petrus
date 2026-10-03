@@ -20,12 +20,26 @@ service cloud.firestore {
       allow write: if isManager();
     }
 
-    // Home notes: everyone signed-in can read; Fiorella & Milena create/edit;
-    // only Fiorella can delete.
+    // Home notes with optional recipient.
+    //  - recipient 'all'      → any signed-in team member can read
+    //  - recipient <email>    → only that person, the author, or Fiorella
+    //  Create/edit: Fiorella & Milena. Delete: Fiorella only.
     match /notes/{noteId} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (
+                     isFiorella()
+                  || resource.data.recipient == 'all'
+                  || resource.data.recipient == request.auth.token.email
+                  || resource.data.authorEmail == request.auth.token.email
+                  );
       allow create, update: if isManager();
       allow delete: if isFiorella();
+    }
+
+    // Admins registry: signed-in users may read (admin.html checks membership);
+    // writes only via the Admin SDK (service account), never from the client.
+    match /admins/{uid} {
+      allow read: if signedIn();
+      allow write: if false;
     }
 
     // Access logs: signed-in users may create their own log entries; no edits.

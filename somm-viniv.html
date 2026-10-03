@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#b89650;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
+:root{--grn:#5c1a1a;--grn2:#2d0a0a;--gld:#e8b4c4;--crm:#faf7f1;--pink:#f8e8e8;--s:'Inter',sans-serif;--f:'Cormorant Garamond',serif}
 body{font-family:var(--s);background:var(--crm);color:#2c2c2c;min-height:100vh}
 .tb{background:var(--grn2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
 .tb a{color:var(--gld);text-decoration:none;font-size:12px;letter-spacing:1px;text-transform:uppercase}
@@ -443,7 +443,7 @@ function renderMonthlyReport(monthLabel, weekResults, accountId, accountName) {
 
   // Email preview for the whole month
   h += '<div class="email-preview">';
-  h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b89650;margin-bottom:8px">Email Preview</h3>';
+  h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#e8b4c4;margin-bottom:8px">Email Preview</h3>';
   h += '<textarea id="emailBody">' + buildMonthlyEmailBody(monthLabel, weekResults, mGlass, mPairing, mTotal) + '</textarea>';
   h += '<div class="email-actions">';
   h += '<button class="btn btn-send" onclick="sendMonthlyEmail(\'' + monthLabel.replace(/'/g, "") + '\')">Send to my email</button>';
@@ -539,7 +539,7 @@ function renderReport(data) {
   h += '</tbody></table></div>';
 
   h += '<div class="email-preview">';
-  h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b89650;margin-bottom:8px">Email Preview</h3>';
+  h += '<h3 style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#e8b4c4;margin-bottom:8px">Email Preview</h3>';
   h += '<textarea id="emailBody">' + buildEmailBody(data) + '</textarea>';
   h += '<div class="email-actions">';
   h += '<button class="btn btn-send" onclick="sendEmail()">Send to my email</button>';
