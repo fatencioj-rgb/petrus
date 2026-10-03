@@ -104,17 +104,15 @@ tr:last-child td { border-bottom:none; }
 
   <!-- MENUS -->
   <section class="section">
-    <h2 class="section-title">The Menu</h2>
-    <p class="section-sub">Every dish, with descriptions and knowledge points. Filter by menu below.</p>
+    <h2 class="section-title" id="fn-section-title">The Menu</h2>
+    <p class="section-sub" id="fn-section-sub">Every dish, with descriptions and knowledge points. Filter by menu below.</p>
     <div class="tabs" id="fn-menu-tabs"></div>
-    <div class="dish-grid" id="fn-dish-grid"></div>
-  </section>
 
-  <!-- ALLERGENS -->
-  <section class="section">
-    <h2 class="section-title">Allergy Reference</h2>
-    <p class="section-sub">Complete allergen listing for every dish.</p>
-    <div class="table-wrap">
+    <!-- Dishes grid (shown for every menu tab) -->
+    <div class="dish-grid" id="fn-dish-grid"></div>
+
+    <!-- Allergy table (shown only when the Allergens tab is selected) -->
+    <div class="table-wrap" id="fn-allergy-wrap" style="display:none;">
       <table>
         <thead><tr><th>Dish</th><th>Allergens present</th></tr></thead>
         <tbody id="fn-allergy-tbody"></tbody>
@@ -187,7 +185,8 @@ function availableMenus(){
   const base = (typeof getAvailableMenuDefinitions === 'function')
     ? getAvailableMenuDefinitions()
     : (typeof menuDefinitions !== 'undefined' ? menuDefinitions : []);
-  return [{id:'all', label:'All dishes'}, ...base];
+  // 'allergens' is a virtual tab that shows the allergy table instead of dishes.
+  return [{id:'all', label:'All dishes'}, ...base, {id:'allergens', label:'Allergy reference'}];
 }
 
 // Fixed display order of courses within every menu, so dishes always appear
@@ -246,6 +245,24 @@ function selectMenuFN(id){ selectedFN = id; renderMenuTabs(); renderDishes(); }
 
 function renderDishes(){
   const grid = document.getElementById('fn-dish-grid');
+  const allergyWrap = document.getElementById('fn-allergy-wrap');
+  const title = document.getElementById('fn-section-title');
+  const sub = document.getElementById('fn-section-sub');
+
+  // Allergy reference is its own tab: show the table, hide the dish grid.
+  if(selectedFN === 'allergens'){
+    grid.style.display = 'none';
+    allergyWrap.style.display = 'block';
+    if(title) title.textContent = 'Allergy Reference';
+    if(sub) sub.textContent = 'Complete allergen listing for every dish.';
+    renderAllergies();
+    return;
+  }
+  grid.style.display = '';
+  allergyWrap.style.display = 'none';
+  if(title) title.textContent = 'The Menu';
+  if(sub) sub.textContent = 'Every dish, with descriptions and knowledge points. Filter by menu below.';
+
   const list = dishesForMenu(selectedFN);
   if(!list.length){ grid.innerHTML = '<p style="opacity:.6">No dishes in this menu yet.</p>'; return; }
   grid.innerHTML = list.map((d, i) => {
