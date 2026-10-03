@@ -64,6 +64,12 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .k-item img { display:block; margin-top:6px; max-width:100%; border-radius:8px; border:1px solid var(--border); }
 .setup-line { font-size:12px; color:var(--text); opacity:0.7; }
 .setup-line b { color:var(--wine); font-weight:500; }
+/* Wine pairing block on each dish card */
+.wine-pairing { margin-top:4px; padding-top:10px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:5px; }
+.wine-title { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--wine-soft); }
+.wine-row { display:flex; gap:8px; font-size:13px; line-height:1.4; }
+.wine-row .wine-label { flex:0 0 110px; color:var(--wine); font-weight:600; }
+.wine-row .wine-val { color:var(--text); opacity:0.9; }
 
 /* ── Allergy table ── */
 .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
@@ -263,6 +269,7 @@ function renderDishes(){
       </div>` : '';
     const announce = (d.announcement||'').trim();
     const announceBlock = announce ? `<div class="dish-announce">${esc(announce).replace(/\n/g,'<br>')}</div>` : '';
+    const wineBlock = winePairingBlock(d.winePairing);
     return `
       <article class="dish-card">
         ${media}
@@ -272,10 +279,28 @@ function renderDishes(){
           <div class="dish-desc">${esc(d.desc||'').replace(/\n/g,'<br>')}</div>
           ${chips ? `<div class="chips">${chips}</div>` : ''}
           ${setupLine}
+          ${wineBlock}
           ${knowBlock}
         </div>
       </article>`;
   }).join('');
+}
+
+// Build the wine pairing block from a dish's winePairing object (saved by the
+// editor). Only rows that have a value are shown; if none, nothing is rendered.
+function winePairingBlock(wp){
+  if(!wp || typeof wp !== 'object') return '';
+  const rows = [
+    ['Matching wines', wp.matching],
+    ['Connoisseur', wp.connoisseur],
+    ['Indulgence', wp.indulgence],
+    ['Non alcoholic', wp.nonAlcoholic],
+  ].filter(([,v]) => v && String(v).trim());
+  if(!rows.length) return '';
+  const items = rows.map(([label, v]) =>
+    `<div class="wine-row"><span class="wine-label">${esc(label)}</span><span class="wine-val">${esc(v)}</span></div>`
+  ).join('');
+  return `<div class="wine-pairing"><div class="wine-title">Wine pairing</div>${items}</div>`;
 }
 
 function toggleK(i){

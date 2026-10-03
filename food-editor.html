@@ -98,6 +98,12 @@ textarea { resize:vertical; min-height:56px; line-height:1.45; }
 .k-item b { color:var(--wine); font-weight:600; }
 .setup-line { font-size:12px; color:var(--text); opacity:0.7; }
 .setup-line b { color:var(--wine); font-weight:500; }
+/* Wine pairing block (live preview) */
+.wine-pairing { margin-top:4px; padding-top:10px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:5px; }
+.wine-title { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--wine-soft); }
+.wine-row { display:flex; gap:8px; font-size:13px; line-height:1.4; }
+.wine-row .wine-label { flex:0 0 110px; color:var(--wine); font-weight:600; }
+.wine-row .wine-val { color:var(--text); opacity:0.9; }
 
 .gate { text-align:center; padding:80px 20px; }
 .gate h1 { font-family:var(--serif); color:var(--wine); font-size:32px; margin-bottom:10px; }
@@ -915,6 +921,18 @@ function renderPreview(){
   const knowBlock = know ? `<div class="knowledge"><div class="k-toggle">Knowledge points <span>−</span></div><div class="k-list">${know}</div></div>` : '';
   const announce = (d.announcement||'').trim();
   const announceBlock = announce ? `<div class="dish-announce">${esc(announce).replace(/\n/g,'<br>')}</div>` : '';
+  const wp = d.winePairing || {};
+  const wineRows = [
+    ['Matching wines', wp.matching],
+    ['Connoisseur', wp.connoisseur],
+    ['Indulgence', wp.indulgence],
+    ['Non alcoholic', wp.nonAlcoholic],
+  ].filter(([,v]) => v && String(v).trim());
+  const wineBlock = wineRows.length
+    ? `<div class="wine-pairing"><div class="wine-title">Wine pairing</div>${
+        wineRows.map(([l,v]) => `<div class="wine-row"><span class="wine-label">${esc(l)}</span><span class="wine-val">${esc(v)}</span></div>`).join('')
+      }</div>`
+    : '';
   document.getElementById('preview').innerHTML = `
     <article class="dish-card">
       ${media}
@@ -924,6 +942,7 @@ function renderPreview(){
         <div class="dish-desc">${(esc(d.desc)||'Description will appear here.').replace(/\n/g,'<br>')}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ''}
         ${setupLine}
+        ${wineBlock}
         ${knowBlock}
       </div>
     </article>`;
