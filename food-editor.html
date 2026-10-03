@@ -130,6 +130,25 @@ textarea.desc-big { min-height:120px; }
 .mini button.delbtn { color:#b23b2e; border-color:rgba(178,59,46,0.5); }
 .mini button:disabled { opacity:0.3; cursor:default; }
 
+/* Collapsible multi-select dropdown (used for Menus, Allergens, Cheese, Set up) */
+.ms { position:relative; }
+.ms-toggle {
+  width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:8px;
+  padding:7px 10px; background:#fff; border:1px solid var(--border); border-radius:6px;
+  color:var(--text); font-family:var(--sans); font-size:11px; cursor:pointer;
+}
+.ms-toggle:hover { border-color:var(--wine); }
+.ms-toggle .ms-summary { color:var(--text); opacity:0.95; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ms-toggle .ms-summary.placeholder { opacity:0.5; }
+.ms-toggle .ms-caret { color:var(--wine-soft); font-size:10px; flex:0 0 auto; }
+.ms-panel {
+  display:none; position:absolute; z-index:20; left:0; right:0; margin-top:4px;
+  background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px;
+  box-shadow:0 8px 24px rgba(92,26,26,0.14); max-height:240px; overflow:auto;
+}
+.ms.open .ms-panel { display:block; }
+.ms.open .ms-caret { transform:rotate(180deg); }
+
 #app { display:none; }
 </style>
 </head>
@@ -164,7 +183,13 @@ textarea.desc-big { min-height:120px; }
           <input id="f-name" placeholder="e.g. Canapé Tartlet" oninput="renderPreview()">
 
           <label>Menus</label>
-          <div class="check-grid" id="menu-grid"></div>
+          <div class="ms" id="ms-menu">
+            <button type="button" class="ms-toggle" onclick="toggleMs('ms-menu')">
+              <span class="ms-summary placeholder" id="ms-menu-summary">Choose menus…</span>
+              <span class="ms-caret">▾</span>
+            </button>
+            <div class="ms-panel"><div class="check-grid" id="menu-grid"></div></div>
+          </div>
           <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
 
           <label>Diet</label>
@@ -186,16 +211,34 @@ textarea.desc-big { min-height:120px; }
           <div class="hint">The dish details. Press Enter for new lines.</div>
 
           <label>Allergens</label>
-          <div class="check-grid" id="allergen-grid"></div>
+          <div class="ms" id="ms-allergen">
+            <button type="button" class="ms-toggle" onclick="toggleMs('ms-allergen')">
+              <span class="ms-summary placeholder" id="ms-allergen-summary">Choose allergens…</span>
+              <span class="ms-caret">▾</span>
+            </button>
+            <div class="ms-panel"><div class="check-grid" id="allergen-grid"></div></div>
+          </div>
           <input id="f-allergens-extra" placeholder="Other allergens, comma-separated (optional)" oninput="renderPreview()" style="margin-top:6px;">
           <div class="hint">Tick the allergens present, or add extras separated by commas.</div>
 
           <label>Cheese (dairy)</label>
-          <div class="check-grid" id="cheese-grid"></div>
+          <div class="ms" id="ms-cheese">
+            <button type="button" class="ms-toggle" onclick="toggleMs('ms-cheese')">
+              <span class="ms-summary placeholder" id="ms-cheese-summary">None</span>
+              <span class="ms-caret">▾</span>
+            </button>
+            <div class="ms-panel"><div class="check-grid" id="cheese-grid"></div></div>
+          </div>
           <div class="hint">Only for cheeses — leave unticked otherwise.</div>
 
           <label>Set up (cutlery)</label>
-          <div class="check-grid" id="setup-grid"></div>
+          <div class="ms" id="ms-setup">
+            <button type="button" class="ms-toggle" onclick="toggleMs('ms-setup')">
+              <span class="ms-summary placeholder" id="ms-setup-summary">No Set Up</span>
+              <span class="ms-caret">▾</span>
+            </button>
+            <div class="ms-panel"><div class="check-grid" id="setup-grid"></div></div>
+          </div>
           <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
           <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
 
@@ -317,24 +360,67 @@ function initEditor(){
     DIET_OPTIONS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
   // Allergen checkboxes (allergens only)
   document.getElementById('allergen-grid').innerHTML = STANDARD_ALLERGENS.map(a =>
-    `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="renderPreview()"> ${esc(a)}</label>`
+    `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="msChanged()"> ${esc(a)}</label>`
   ).join('');
   // Cheese / dairy checkboxes
   document.getElementById('cheese-grid').innerHTML = CHEESE_TAGS.map(a =>
-    `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="renderPreview()"> ${esc(a)}</label>`
+    `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="msChanged()"> ${esc(a)}</label>`
   ).join('');
   // Menu checkboxes
   document.getElementById('menu-grid').innerHTML = MENUS.map(m =>
-    `<label class="check"><input type="checkbox" value="${esc(m.id)}"> ${esc(m.label)}</label>`
+    `<label class="check"><input type="checkbox" value="${esc(m.id)}" onchange="msChanged()"> ${esc(m.label)}</label>`
   ).join('');
   // Cutlery checkboxes
   document.getElementById('setup-grid').innerHTML = CUTLERY.map(c =>
-    `<label class="check"><input type="checkbox" value="${esc(c)}" onchange="renderPreview()"> ${esc(c)}</label>`
+    `<label class="check"><input type="checkbox" value="${esc(c)}" onchange="msChanged()"> ${esc(c)}</label>`
   ).join('');
   addKRow();
   loadDishes();
+  updateMsSummaries();
   renderPreview();
 }
+
+/* ── Collapsible multi-select dropdowns ── */
+// Each dropdown wraps an existing checkbox grid; the grid IDs are unchanged so
+// readForm/editDish/resetForm keep working. We just show/hide a panel and keep
+// the toggle button's label in sync with what's ticked.
+const MS_CONFIG = {
+  'ms-menu':     { grid:'menu-grid',     placeholder:'Choose menus…',     empty:'Choose menus…', labelFor:(v)=>MENU_LABEL[v]||v },
+  'ms-allergen': { grid:'allergen-grid', placeholder:'Choose allergens…', empty:'Choose allergens…' },
+  'ms-cheese':   { grid:'cheese-grid',   placeholder:'None',              empty:'None' },
+  'ms-setup':    { grid:'setup-grid',    placeholder:'No Set Up',         empty:'No Set Up' },
+};
+function toggleMs(id){
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+  // Close all, then open this one if it was closed.
+  Object.keys(MS_CONFIG).forEach(k => document.getElementById(k).classList.remove('open'));
+  if(!wasOpen) el.classList.add('open');
+}
+// Close any open dropdown when clicking outside of it.
+document.addEventListener('click', (e) => {
+  Object.keys(MS_CONFIG).forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el.classList.contains('open') && !el.contains(e.target)) el.classList.remove('open');
+  });
+});
+function updateMsSummaries(){
+  Object.entries(MS_CONFIG).forEach(([id, cfg]) => {
+    const summary = document.getElementById(id + '-summary');
+    if(!summary) return;
+    const vals = [...document.querySelectorAll('#' + cfg.grid + ' input:checked')].map(c => c.value);
+    const labels = cfg.labelFor ? vals.map(cfg.labelFor) : vals;
+    if(labels.length){
+      summary.textContent = labels.join(', ');
+      summary.classList.remove('placeholder');
+    } else {
+      summary.textContent = cfg.empty;
+      summary.classList.add('placeholder');
+    }
+  });
+}
+// Called whenever any dropdown checkbox changes.
+function msChanged(){ updateMsSummaries(); renderPreview(); }
 
 /* ── New dish / show-hide form ── */
 // While the form is open we hide the "Dishes by menu" list so only the dish
@@ -570,6 +656,7 @@ function resetForm(){
   document.getElementById('k-rows').innerHTML = '';
   addKRow();
   setMsg('');
+  updateMsSummaries();
   renderPreview();
 }
 
@@ -625,6 +712,7 @@ function editDish(id){
   (d.knowledge||[]).forEach(k => addKRow(k.title, k.text));
   if(!(d.knowledge||[]).length) addKRow();
   setMsg('');
+  updateMsSummaries();
   renderPreview();
   window.scrollTo({top:0, behavior:'smooth'});
 }
