@@ -157,6 +157,11 @@ textarea.desc-big { min-height:120px; }
 }
 .ms-panel.list .check:hover { background:var(--bg-soft); }
 
+/* Wine pairing: fixed rows with a label on the left and a text field on the right. */
+.wp-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.wp-row .wp-label { flex:0 0 130px; font-size:11px; font-weight:600; color:var(--wine); }
+.wp-row input { flex:1; }
+
 #app { display:none; }
 </style>
 </head>
@@ -241,13 +246,32 @@ textarea.desc-big { min-height:120px; }
             <div class="hint">Only for cheeses — shown because this dish is on the Cheese menu.</div>
           </div>
 
+          <label>Wine pairing</label>
+          <div class="wp-row">
+            <span class="wp-label">Matching wines</span>
+            <input id="f-wp-matching" placeholder="e.g. Chablis 1er Cru 2020" oninput="renderPreview()">
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">Connoisseur</span>
+            <input id="f-wp-connoisseur" placeholder="Wine…" oninput="renderPreview()">
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">Indulgence</span>
+            <input id="f-wp-indulgence" placeholder="Wine…" oninput="renderPreview()">
+          </div>
+          <div class="wp-row">
+            <span class="wp-label">Non alcoholic</span>
+            <input id="f-wp-nonalcoholic" placeholder="Pairing…" oninput="renderPreview()">
+          </div>
+          <div class="hint">Leave a row blank if it doesn't apply.</div>
+
           <label>Set up (cutlery)</label>
           <div class="ms" id="ms-setup">
             <button type="button" class="ms-toggle" onclick="toggleMs('ms-setup')">
               <span class="ms-summary placeholder" id="ms-setup-summary">No Set Up</span>
               <span class="ms-caret">▾</span>
             </button>
-            <div class="ms-panel"><div class="check-grid" id="setup-grid"></div></div>
+            <div class="ms-panel list"><div class="check-grid" id="setup-grid"></div></div>
           </div>
           <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
           <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
@@ -647,6 +671,12 @@ function readForm(){
   const setup = setupChecked.concat(setupExtra);
   const menus = [...document.querySelectorAll('#menu-grid input:checked')].map(c=>c.value);
   const img = (document.getElementById('f-image').value||'').trim();
+  const winePairing = {
+    matching:    document.getElementById('f-wp-matching').value.trim(),
+    connoisseur: document.getElementById('f-wp-connoisseur').value.trim(),
+    indulgence:  document.getElementById('f-wp-indulgence').value.trim(),
+    nonAlcoholic:document.getElementById('f-wp-nonalcoholic').value.trim(),
+  };
   return {
     name: document.getElementById('f-name').value.trim(),
     course: document.getElementById('f-course').value.trim(),
@@ -657,6 +687,7 @@ function readForm(){
     menus: menus,
     images: img ? [img] : [],
     knowledge: readKRows(),
+    winePairing: winePairing,
     hidden: document.getElementById('f-hidden').checked,
   };
 }
@@ -671,6 +702,10 @@ function resetForm(){
   document.getElementById('f-desc').value = '';
   document.getElementById('f-allergens-extra').value = '';
   document.getElementById('f-setup-extra').value = '';
+  document.getElementById('f-wp-matching').value = '';
+  document.getElementById('f-wp-connoisseur').value = '';
+  document.getElementById('f-wp-indulgence').value = '';
+  document.getElementById('f-wp-nonalcoholic').value = '';
   document.getElementById('f-image').value = '';
   document.getElementById('f-hidden').checked = false;
   document.querySelectorAll('#allergen-grid input:checked, #cheese-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
@@ -696,6 +731,11 @@ function editDish(id){
   document.getElementById('f-course').value = d.course||'';
   document.getElementById('f-announce').value = d.announcement||'';
   document.getElementById('f-desc').value = d.desc||'';
+  const wp = d.winePairing || {};
+  document.getElementById('f-wp-matching').value = wp.matching || '';
+  document.getElementById('f-wp-connoisseur').value = wp.connoisseur || '';
+  document.getElementById('f-wp-indulgence').value = wp.indulgence || '';
+  document.getElementById('f-wp-nonalcoholic').value = wp.nonAlcoholic || '';
   // Route existing tags into allergens / diet / cheese; unknowns go to extra.
   const extras = [];
   document.querySelectorAll('#allergen-grid input, #cheese-grid input').forEach(c=>c.checked=false);
