@@ -1240,6 +1240,11 @@ const dishImages = {
 // Menu definitions and which dishes are included in each menu
 const menuDefinitions = [
   {
+    id: 'canapes_amuse',
+    label: 'Canapés & Amuse bouche',
+    description: 'Canapés and amuse-bouche served at the start of the meal.'
+  },
+  {
     id: 'a_la_carte',
     label: 'A la carte menu',
     description: 'A selection of our full a la carte dishes available as individual orders.'

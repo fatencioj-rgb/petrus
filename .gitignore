@@ -23,3 +23,7 @@ desktop.ini
 
 # Kiro local
 .kiro/
+
+# One-off admin scripts (run locally with the service account; not for the public site)
+migrate-dishes.js
+reconcile-dishes.js
