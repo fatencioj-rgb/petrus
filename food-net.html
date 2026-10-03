@@ -43,7 +43,24 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 
 /* ── Dish cards ── */
 .dish-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
-.dish-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
+.dish-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 18px rgba(92,26,26,0.06); cursor:pointer; transition:transform .15s, box-shadow .15s; }
+.dish-card:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(92,26,26,0.14); }
+
+/* ── Dish modal (pop-up detail view) ── */
+.dish-modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(58,34,38,0.55); backdrop-filter:blur(2px); display:none; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; }
+.dish-modal-overlay.open { display:flex; }
+.dish-modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; width:100%; max-width:620px; box-shadow:0 20px 60px rgba(58,34,38,0.4); overflow:hidden; position:relative; animation:dishPop .18s ease-out; }
+@keyframes dishPop { from { opacity:0; transform:translateY(12px) scale(0.98); } to { opacity:1; transform:none; } }
+.dish-modal .dish-media { height:300px; }
+.dish-modal .dish-body { padding:24px; }
+.dish-modal .dish-name { font-size:30px; }
+.dish-modal .dish-desc { font-size:15px; }
+/* In the modal all collapsible sections stay open and read like a page. */
+.dish-modal .k-list { display:flex; }
+.dish-modal .k-toggle { pointer-events:none; }
+.dish-modal .k-toggle span { display:none; }
+.dish-modal-close { position:absolute; top:12px; right:12px; z-index:2; width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.92); color:var(--wine); font-size:18px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.dish-modal-close:hover { background:#fff; border-color:var(--wine); }
 .dish-media { width:100%; height:180px; background:var(--bg-soft) center/cover no-repeat; position:relative; }
 .dish-media.empty { display:flex; align-items:center; justify-content:center; }
 .dish-media.empty::after { content:'PETRUS'; font-family:var(--serif); letter-spacing:4px; color:rgba(92,26,26,0.28); font-size:18px; }
@@ -124,6 +141,14 @@ tr:last-child td { border-bottom:none; }
   </section>
 
 
+</div>
+
+<!-- Dish detail pop-up -->
+<div class="dish-modal-overlay" id="dish-modal-overlay" onclick="if(event.target===this) closeDishModal()">
+  <div class="dish-modal" id="dish-modal" role="dialog" aria-modal="true">
+    <button class="dish-modal-close" onclick="closeDishModal()" aria-label="Close">&times;</button>
+    <div id="dish-modal-content"></div>
+  </div>
 </div>
 
 <!-- Firebase (for live dishes from Firestore) -->
@@ -276,49 +301,75 @@ function renderDishes(){
   if(sub) sub.textContent = 'Every dish, with descriptions and knowledge points. Filter by menu below.';
 
   const list = dishesForMenu(selectedFN);
+  currentList = list; // remember for the modal
   if(!list.length){ grid.innerHTML = '<p style="opacity:.6">No dishes in this menu yet.</p>'; return; }
-  grid.innerHTML = list.map((d, i) => {
-    const img = firstImage(d);
-    const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
-    const media = img
-      ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">${esc(d.course||'')}</span></div>`
-      : `<div class="dish-media empty"><span class="dish-course">${esc(d.course||'')}</span></div>`;
-    const chips = (d.allergies||[]).map(a =>
-      `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
-    const setup = Array.isArray(d.setup) ? d.setup.filter(s => s && s!=='No Set Up') : [];
-    // Set up — collapsible, same look as Knowledge points. One piece per line.
-    const setupBlock = setup.length ? `
-      <div class="knowledge">
-        <button class="k-toggle" onclick="toggleSection('setup-${i}')">Set up <span id="setup-${i}-tog">+</span></button>
-        <div class="k-list" id="setup-${i}-list">${setup.map(s => `<div class="k-item">${esc(s)}</div>`).join('')}</div>
-      </div>` : '';
-    const know = (d.knowledge||[]).map(k => {
-      const imgs = (k.images||[]).map(im => `<img src="${encodeURI(fixImg('images/'+im))}" alt="${esc(k.title)}" loading="lazy" onerror="this.style.display='none'">`).join('');
-      return `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}${imgs}</div>`;
-    }).join('');
-    const knowBlock = know ? `
-      <div class="knowledge">
-        <button class="k-toggle" onclick="toggleSection('know-${i}')">Knowledge points <span id="know-${i}-tog">+</span></button>
-        <div class="k-list" id="know-${i}-list">${know}</div>
-      </div>` : '';
-    const announce = (d.announcement||'').trim();
-    const announceBlock = announce ? `<div class="dish-announce">${esc(announce).replace(/\n/g,'<br>')}</div>` : '';
-    const wineBlock = winePairingBlock(d.winePairing, i);
-    return `
-      <article class="dish-card">
-        ${media}
-        <div class="dish-body">
-          <div class="dish-name">${esc(d.name)}</div>
-          ${announceBlock}
-          <div class="dish-desc">${esc(d.desc||'').replace(/\n/g,'<br>')}</div>
-          ${chips ? `<div class="chips">${chips}</div>` : ''}
-          ${setupBlock}
-          ${wineBlock}
-          ${knowBlock}
-        </div>
-      </article>`;
-  }).join('');
+  grid.innerHTML = list.map((d, i) =>
+    `<article class="dish-card" onclick="openDishModal(${i})">
+       ${dishMediaHtml(d)}
+       <div class="dish-body">${dishBodyHtml(d, i)}</div>
+     </article>`
+  ).join('');
 }
+
+// The list currently shown in the grid, so the modal can look up a dish by index.
+let currentList = [];
+
+function dishMediaHtml(d){
+  const img = firstImage(d);
+  const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
+  return img
+    ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">${esc(d.course||'')}</span></div>`
+    : `<div class="dish-media empty"><span class="dish-course">${esc(d.course||'')}</span></div>`;
+}
+
+// Builds the inner body markup for a dish, shared by the grid card and the modal.
+// `prefix` keeps collapsible section IDs unique (card uses the index, modal uses 'm').
+function dishBodyHtml(d, prefix){
+  const chips = (d.allergies||[]).map(a =>
+    `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
+  const setup = Array.isArray(d.setup) ? d.setup.filter(s => s && s!=='No Set Up') : [];
+  const setupBlock = setup.length ? `
+    <div class="knowledge">
+      <button class="k-toggle" onclick="event.stopPropagation(); toggleSection('setup-${prefix}')">Set up <span id="setup-${prefix}-tog">+</span></button>
+      <div class="k-list" id="setup-${prefix}-list">${setup.map(s => `<div class="k-item">${esc(s)}</div>`).join('')}</div>
+    </div>` : '';
+  const know = (d.knowledge||[]).map(k => {
+    const imgs = (k.images||[]).map(im => `<img src="${encodeURI(fixImg('images/'+im))}" alt="${esc(k.title)}" loading="lazy" onerror="this.style.display='none'">`).join('');
+    return `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}${imgs}</div>`;
+  }).join('');
+  const knowBlock = know ? `
+    <div class="knowledge">
+      <button class="k-toggle" onclick="event.stopPropagation(); toggleSection('know-${prefix}')">Knowledge points <span id="know-${prefix}-tog">+</span></button>
+      <div class="k-list" id="know-${prefix}-list">${know}</div>
+    </div>` : '';
+  const announce = (d.announcement||'').trim();
+  const announceBlock = announce ? `<div class="dish-announce">${esc(announce).replace(/\n/g,'<br>')}</div>` : '';
+  const wineBlock = winePairingBlock(d.winePairing, prefix);
+  return `
+    <div class="dish-name">${esc(d.name)}</div>
+    ${announceBlock}
+    <div class="dish-desc">${esc(d.desc||'').replace(/\n/g,'<br>')}</div>
+    ${chips ? `<div class="chips">${chips}</div>` : ''}
+    ${setupBlock}
+    ${wineBlock}
+    ${knowBlock}`;
+}
+
+// Open the pop-up for the dish at the given index of the current list.
+function openDishModal(i){
+  const d = currentList[i];
+  if(!d) return;
+  const content = document.getElementById('dish-modal-content');
+  content.innerHTML = dishMediaHtml(d) + `<div class="dish-body">${dishBodyHtml(d, 'm')}</div>`;
+  document.getElementById('dish-modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDishModal(){
+  document.getElementById('dish-modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close on Escape.
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDishModal(); });
 
 // Build the wine pairing block from a dish's winePairing object (saved by the
 // editor). Collapsible, same look as Knowledge points. Only rows with a value
@@ -337,7 +388,7 @@ function winePairingBlock(wp, i){
   ).join('');
   return `
     <div class="knowledge">
-      <button class="k-toggle" onclick="toggleSection('wine-${i}')">Wine pairing <span id="wine-${i}-tog">+</span></button>
+      <button class="k-toggle" onclick="event.stopPropagation(); toggleSection('wine-${i}')">Wine pairing <span id="wine-${i}-tog">+</span></button>
       <div class="k-list" id="wine-${i}-list">${items}</div>
     </div>`;
 }
