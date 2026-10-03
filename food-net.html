@@ -184,17 +184,45 @@ function availableMenus(){
   return [{id:'all', label:'All dishes'}, ...base];
 }
 
+// Fixed display order of courses within every menu, so dishes always appear
+// canapés → amuse bouche → starters → mains → pre dessert → dessert → petit fours.
+// Older course names are mapped to their nearest slot so legacy dishes still sort.
+const COURSE_ORDER = [
+  'Canapé','Amuse bouche','Starter 1','Starter 2',
+  'Main course 1','Main course 2','Pre dessert','Dessert','Petit fours'
+];
+const COURSE_ALIASES = {
+  'amuse-bouche':'Amuse bouche',
+  'starter fish':'Starter 1','starter meat':'Starter 2','shellfish':'Starter 2',
+  'fish':'Main course 1','meat':'Main course 2','vegetarian':'Main course 2',
+  'pre-dessert':'Pre dessert','end of service':'Petit fours',
+};
+function courseRank(course){
+  const raw = (course||'').trim();
+  const canonical = COURSE_ALIASES[raw.toLowerCase()] || raw;
+  const idx = COURSE_ORDER.indexOf(canonical);
+  return idx < 0 ? COURSE_ORDER.length : idx; // unknown courses go last
+}
+// Sort by fixed course order first, then by the dish's own position as a tie-break.
+function byCourseThen(posFn){
+  return (a,b) => {
+    const c = courseRank(a.course) - courseRank(b.course);
+    if(c !== 0) return c;
+    return posFn(a) - posFn(b);
+  };
+}
+
 function dishesForMenu(menuId){
   // Never show hidden dishes in Food.
   const visible = FN_DISHES.filter(d => !d.hidden);
   if(menuId === 'all'){
-    return visible.slice().sort((a,b) => (a.order||0) - (b.order||0));
+    return visible.slice().sort(byCourseThen(d => d.order || 0));
   }
   const menuPos = (d) => (d.menuOrder && typeof d.menuOrder[menuId] === 'number') ? d.menuOrder[menuId] : 9999;
-  // Prefer each dish's own menus[] (Firestore), ordered by menuOrder for this menu.
+  // Prefer each dish's own menus[] (Firestore), ordered by course then menuOrder.
   const byOwnMenus = visible.filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0);
   if(byOwnMenus.length){
-    return byOwnMenus.sort((a,b) => menuPos(a) - menuPos(b));
+    return byOwnMenus.sort(byCourseThen(menuPos));
   }
   // Fallback to the local menuItems map (used only if Firestore data is unavailable).
   const names = (typeof menuItems !== 'undefined' ? menuItems : {})[menuId] || [];

@@ -163,6 +163,13 @@ textarea.desc-big { min-height:120px; }
           <label>Name</label>
           <input id="f-name" placeholder="e.g. Canapé Tartlet" oninput="renderPreview()">
 
+          <label>Menus</label>
+          <div class="check-grid" id="menu-grid"></div>
+          <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
+
+          <label>Diet</label>
+          <div class="check-grid" id="diet-grid"></div>
+
           <div class="row">
             <div>
               <label>Course</label>
@@ -184,9 +191,6 @@ textarea.desc-big { min-height:120px; }
           <input id="f-allergens-extra" placeholder="Other allergens, comma-separated (optional)" oninput="renderPreview()" style="margin-top:6px;">
           <div class="hint">Tick the allergens present, or add extras separated by commas.</div>
 
-          <label>Diet</label>
-          <div class="check-grid" id="diet-grid"></div>
-
           <label>Cheese (dairy)</label>
           <div class="check-grid" id="cheese-grid"></div>
           <div class="hint">Only for cheeses — leave unticked otherwise.</div>
@@ -195,10 +199,6 @@ textarea.desc-big { min-height:120px; }
           <div class="check-grid" id="setup-grid"></div>
           <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
           <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
-
-          <label>Menus</label>
-          <div class="check-grid" id="menu-grid"></div>
-          <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
 
           <label>Visibility</label>
           <label class="check" style="width:fit-content;"><input type="checkbox" id="f-hidden" onchange="renderPreview()"> Hidden (kept but not shown in Food)</label>
@@ -265,7 +265,7 @@ const MENUS = [
   {id:'cheese', label:'Cheese'},
   {id:'new_dishes', label:'New Dishes'},
 ];
-const COURSES = ['Canapé','Amuse-Bouche','Starter Fish','Starter Meat','Shellfish','Fish','Meat','Vegetarian','Cheese','Pre-Dessert','Dessert','End of Service'];
+const COURSES = ['Canapé','Amuse bouche','Starter 1','Starter 2','Main course 1','Main course 2','Pre dessert','Dessert','Petit fours'];
 // Cutlery types derived from all existing dishes.
 const CUTLERY = ['Starter Fork','Starter Knife','Main Fork','Steak Knife','Fish Knife','Fish Spoon','Sauce Spoon','Soup Spoon','Dessert Spoon','Teaspoon','Butter Knife','Side plate'];
 // Master-menu priority: the highest one a dish belongs to "owns" it (★).
