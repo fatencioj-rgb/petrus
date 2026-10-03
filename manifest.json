@@ -1,0 +1,25 @@
+{
+  "name": "Petrus — Front of House",
+  "short_name": "Petrus FOH",
+  "description": "Petrus Front of House — training, sommelier operations and team notifications.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2d0a0a",
+  "theme_color": "#2d0a0a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

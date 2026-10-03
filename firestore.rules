@@ -50,6 +50,26 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── Push notifications (independent layer) ─────────────────────────
+    // Device tokens: a signed-in user may register/update/remove their own
+    // device token. The actual sending is done by Cloud Functions using the
+    // Admin SDK, which bypasses these rules.
+    match /push_tokens/{token} {
+      allow read: if false; // tokens are private; only the backend reads them
+      allow create, update: if signedIn()
+                            && request.resource.data.email == request.auth.token.email;
+      allow delete: if signedIn()
+                    && resource.data.email == request.auth.token.email;
+    }
+
+    // Manual broadcast messages written from admin.html. Fiorella creates
+    // them; a Cloud Function reacts and sends the push to everyone.
+    match /notifications/{noteId} {
+      allow read: if signedIn();
+      allow create: if isFiorella();
+      allow update, delete: if false;
+    }
+
     // Bookings: any signed-in user can read and write.
     match /bookings/{bookingId} {
       allow read, write: if signedIn();

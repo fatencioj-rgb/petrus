@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Petrus</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2d0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Petrus FOH">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -272,6 +277,19 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
     <a href="somm-admin.html" style="display:inline-block;background:var(--green);color:var(--cream);text-decoration:none;padding:10px 20px;border-radius:6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Sommelier Admin →</a>
   </div>
 
+  <!-- ── Send a notification to the whole team ───────────────────── -->
+  <div style="background:#fff;border:1px solid #e7ddc9;border-radius:10px;padding:22px;margin-bottom:30px;">
+    <h2 style="font-family:var(--serif);font-size:22px;color:var(--green);margin-bottom:4px;">Notify the team</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:16px;">Send a push notification to everyone who has the app installed with notifications enabled.</p>
+    <input id="notifTitle" placeholder="Title (e.g. Reminder)" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-family:var(--sans);font-size:14px;margin-bottom:10px;outline:none;">
+    <textarea id="notifBody" placeholder="Write your message…" rows="3" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-family:var(--sans);font-size:14px;resize:vertical;outline:none;margin-bottom:12px;"></textarea>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <button onclick="sendBroadcast()" id="notifSendBtn" style="background:var(--green);color:var(--cream);border:none;padding:11px 24px;border-radius:6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Send notification</button>
+      <button onclick="petrusEnablePush && petrusEnablePush()" style="background:transparent;color:#888;border:1px solid #ddd;padding:11px 18px;border-radius:6px;font-size:11px;letter-spacing:.5px;cursor:pointer;">Enable on this device</button>
+      <span id="notifStatus" style="font-size:12px;color:#5c1a1a;"></span>
+    </div>
+  </div>
+
   <!-- Stats -->
   <div class="stats">
     <div class="stat-card">
@@ -348,10 +366,43 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="auth.js"></script>
+<script src="push.js"></script>
 
 <script>
 const PAGE_SIZE = 50;
+
+// ── Send a manual broadcast notification to the whole team ──────────
+// Writes a doc to `notifications`; the notifyBroadcast Cloud Function
+// reacts and sends the push to every registered device.
+function sendBroadcast() {
+  const titleEl = document.getElementById('notifTitle');
+  const bodyEl = document.getElementById('notifBody');
+  const btn = document.getElementById('notifSendBtn');
+  const status = document.getElementById('notifStatus');
+  const title = (titleEl.value || '').trim() || 'Petrus';
+  const body = (bodyEl.value || '').trim();
+  if (!body) { status.textContent = 'Please write a message.'; return; }
+  const user = auth.currentUser;
+  if (!user) { status.textContent = 'Please sign in.'; return; }
+  btn.disabled = true; status.textContent = 'Sending…';
+  db.collection('notifications').add({
+    title: title,
+    body: body,
+    authorEmail: user.email,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    btn.disabled = false;
+    titleEl.value = ''; bodyEl.value = '';
+    status.textContent = 'Sent to the team ✓';
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  }).catch((err) => {
+    btn.disabled = false;
+    status.textContent = 'Error: ' + err.message;
+  });
+}
+
 let lastDoc = null;
 let allLogs = [];
 let currentFilters = {};
