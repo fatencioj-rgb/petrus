@@ -221,15 +221,17 @@ textarea.desc-big { min-height:120px; }
           <input id="f-allergens-extra" placeholder="Other allergens, comma-separated (optional)" oninput="renderPreview()" style="margin-top:6px;">
           <div class="hint">Tick the allergens present, or add extras separated by commas.</div>
 
-          <label>Cheese (dairy)</label>
-          <div class="ms" id="ms-cheese">
-            <button type="button" class="ms-toggle" onclick="toggleMs('ms-cheese')">
-              <span class="ms-summary placeholder" id="ms-cheese-summary">None</span>
-              <span class="ms-caret">▾</span>
-            </button>
-            <div class="ms-panel"><div class="check-grid" id="cheese-grid"></div></div>
+          <div id="cheese-block" style="display:none;">
+            <label>Cheese (dairy)</label>
+            <div class="ms" id="ms-cheese">
+              <button type="button" class="ms-toggle" onclick="toggleMs('ms-cheese')">
+                <span class="ms-summary placeholder" id="ms-cheese-summary">None</span>
+                <span class="ms-caret">▾</span>
+              </button>
+              <div class="ms-panel"><div class="check-grid" id="cheese-grid"></div></div>
+            </div>
+            <div class="hint">Only for cheeses — shown because this dish is on the Cheese menu.</div>
           </div>
-          <div class="hint">Only for cheeses — leave unticked otherwise.</div>
 
           <label>Set up (cutlery)</label>
           <div class="ms" id="ms-setup">
@@ -376,6 +378,7 @@ function initEditor(){
   ).join('');
   addKRow();
   loadDishes();
+  syncCheeseVisibility();
   updateMsSummaries();
   renderPreview();
 }
@@ -420,7 +423,20 @@ function updateMsSummaries(){
   });
 }
 // Called whenever any dropdown checkbox changes.
-function msChanged(){ updateMsSummaries(); renderPreview(); }
+function msChanged(){ syncCheeseVisibility(); updateMsSummaries(); renderPreview(); }
+
+// The Cheese (dairy) field only appears when the dish is on the "Cheese" menu.
+// When it's hidden we clear any cheese ticks so stale tags aren't saved.
+function syncCheeseVisibility(){
+  const onCheeseMenu = !!document.querySelector('#menu-grid input[value="cheese"]:checked');
+  const block = document.getElementById('cheese-block');
+  if(block) block.style.display = onCheeseMenu ? 'block' : 'none';
+  if(!onCheeseMenu){
+    document.querySelectorAll('#cheese-grid input:checked').forEach(c => c.checked = false);
+    const ms = document.getElementById('ms-cheese');
+    if(ms) ms.classList.remove('open');
+  }
+}
 
 /* ── New dish / show-hide form ── */
 // While the form is open we hide the "Dishes by menu" list so only the dish
@@ -656,6 +672,7 @@ function resetForm(){
   document.getElementById('k-rows').innerHTML = '';
   addKRow();
   setMsg('');
+  syncCheeseVisibility();
   updateMsSummaries();
   renderPreview();
 }
@@ -712,6 +729,7 @@ function editDish(id){
   (d.knowledge||[]).forEach(k => addKRow(k.title, k.text));
   if(!(d.knowledge||[]).length) addKRow();
   setMsg('');
+  syncCheeseVisibility();
   updateMsSummaries();
   renderPreview();
   window.scrollTo({top:0, behavior:'smooth'});
