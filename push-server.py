@@ -22,7 +22,10 @@ No necesita plan de pago: usa el plan gratis (Spark) de Firebase.
 
 import os
 import time
-import threading
+import warnings
+
+# Silencia un aviso cosmético de la librería (no afecta el envío).
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import firebase_admin
 from firebase_admin import credentials, firestore, messaging
@@ -30,6 +33,10 @@ from firebase_admin import credentials, firestore, messaging
 # ── Configuración ──────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KEY_PATH = os.path.join(BASE_DIR, "serviceAccountKey.json")
+
+# URL base del sitio publicado (HTTPS obligatorio para las push web).
+# Si algún día cambias de dominio, edita solo esta línea.
+SITE_URL = "https://fatencioj-rgb.github.io/petrus/"
 
 # Solo estos tres sommeliers reciben notificaciones de tareas (duties).
 DUTY_RECIPIENTS = [
@@ -61,21 +68,25 @@ def get_tokens(emails=None):
 
 
 def send(tokens, title, body, url="index.html", tag="petrus"):
-    """Envía una push a la lista de tokens y limpia los que ya no sirven."""
+    """Envía una push a la lista de tokens y limpia los que ya no sirven.
+    `url` es una página relativa (ej. 'somm-stock.html'); aquí se convierte
+    en una URL HTTPS completa, que es lo que FCM exige para webpush."""
     if not tokens:
         print(f"[push] sin dispositivos para «{title}»")
         return
 
+    full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
+
     message = messaging.MulticastMessage(
         tokens=tokens,
         notification=messaging.Notification(title=title, body=body),
-        data={"title": title, "body": body, "url": url, "tag": tag},
+        data={"title": title, "body": body, "url": full_url, "tag": tag},
         webpush=messaging.WebpushConfig(
             notification=messaging.WebpushNotification(
-                icon="icons/icon-192.png",
-                badge="icons/icon-192.png",
+                icon=SITE_URL + "icons/icon-192.png",
+                badge=SITE_URL + "icons/icon-192.png",
             ),
-            fcm_options=messaging.WebpushFCMOptions(link=url),
+            fcm_options=messaging.WebpushFCMOptions(link=full_url),
         ),
     )
 
