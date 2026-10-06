@@ -36,23 +36,11 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 /* Form header: title on the left, action buttons on the right, kept at the top. */
 .form-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
 .form-head h3 { margin:0; }
-/* Two-column form body. Short fields flow across two columns; wide fields
-   (textareas, knowledge, image) span the full width. */
-.form-grid { column-count:2; column-gap:22px; }
-.form-grid > label { break-after:avoid; -webkit-column-break-after:avoid; }
-.form-grid > label,
-.form-grid > input,
-.form-grid > select,
-.form-grid > .ms,
-.form-grid > .hint,
-.form-grid > .check,
-.form-grid > .wp-row,
-.form-grid > #cheese-block { break-inside:avoid; -webkit-column-break-inside:avoid; }
-/* Items that should take the whole width (not be split into a column). */
-.form-grid > textarea,
-.form-grid > #k-rows,
-.form-grid > .actions { column-span:all; }
-@media (max-width:720px){ .form-grid { column-count:1; } }
+/* Two-column form body with a fixed left/right split (not auto-flow), so each
+   field lands exactly where intended. */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; align-items:start; }
+.form-col { min-width:0; }
+@media (max-width:720px){ .form-grid { grid-template-columns:1fr; } }
 /* When no dish is being edited, the list spans the full width. */
 .layout.list-only { grid-template-columns:1fr; }
 /* Dish list laid out in two columns (groups flow across the columns).
@@ -236,113 +224,118 @@ textarea.desc-big { min-height:120px; }
           <input type="hidden" id="docId">
 
           <div class="form-grid">
-          <label>Name</label>
-          <input id="f-name" placeholder="e.g. Canapé Tartlet" oninput="renderPreview()">
 
-          <label>Menus</label>
-          <div class="ms" id="ms-menu">
-            <button type="button" class="ms-toggle" onclick="toggleMs('ms-menu')">
-              <span class="ms-summary placeholder" id="ms-menu-summary">Choose menus…</span>
-              <span class="ms-caret">▾</span>
-            </button>
-            <div class="ms-panel list"><div class="check-grid" id="menu-grid"></div></div>
-          </div>
-          <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
+          <!-- LEFT column: identity, menus, text and allergens -->
+          <div class="form-col">
+            <label>Name</label>
+            <input id="f-name" placeholder="e.g. Canapé Tartlet" oninput="renderPreview()">
 
-          <label>Diet</label>
-          <div class="ms" id="ms-diet">
-            <button type="button" class="ms-toggle" onclick="toggleMs('ms-diet')">
-              <span class="ms-summary placeholder" id="ms-diet-summary">Regular</span>
-              <span class="ms-caret">▾</span>
-            </button>
-            <div class="ms-panel list"><div class="check-grid" id="diet-grid"></div></div>
-          </div>
-          <div class="hint">Leave all unticked for a Regular dish; tick one or more diets.</div>
-
-          <div class="row">
-            <div>
-              <label>Course</label>
-              <select id="f-course" onchange="renderPreview()"></select>
-            </div>
-          </div>
-
-          <label>Announcement</label>
-          <textarea id="f-announce" class="announce" placeholder="What you say to the guest when presenting the dish (the speech)." oninput="renderPreview()"></textarea>
-          <div class="hint">Presented to the guest. Two lines shown; it grows if there's more. Press Enter for new lines.</div>
-
-          <label>Description</label>
-          <textarea id="f-desc" class="desc-big" placeholder="Full details of the dish." oninput="renderPreview()"></textarea>
-          <div class="hint">The dish details. Press Enter for new lines.</div>
-
-          <label>Allergens</label>
-          <div class="ms" id="ms-allergen">
-            <button type="button" class="ms-toggle" onclick="toggleMs('ms-allergen')">
-              <span class="ms-summary placeholder" id="ms-allergen-summary">Choose allergens…</span>
-              <span class="ms-caret">▾</span>
-            </button>
-            <div class="ms-panel list"><div class="check-grid" id="allergen-grid"></div></div>
-          </div>
-          <input id="f-allergens-extra" placeholder="Other allergens, comma-separated (optional)" oninput="renderPreview()" style="margin-top:6px;">
-          <div class="hint">Tick the allergens present, or add extras separated by commas.</div>
-
-          <div id="cheese-block" style="display:none;">
-            <label>Cheese (dairy)</label>
-            <div class="ms" id="ms-cheese">
-              <button type="button" class="ms-toggle" onclick="toggleMs('ms-cheese')">
-                <span class="ms-summary placeholder" id="ms-cheese-summary">None</span>
+            <label>Menus</label>
+            <div class="ms" id="ms-menu">
+              <button type="button" class="ms-toggle" onclick="toggleMs('ms-menu')">
+                <span class="ms-summary placeholder" id="ms-menu-summary">Choose menus…</span>
                 <span class="ms-caret">▾</span>
               </button>
-              <div class="ms-panel"><div class="check-grid" id="cheese-grid"></div></div>
+              <div class="ms-panel list"><div class="check-grid" id="menu-grid"></div></div>
             </div>
-            <div class="hint">Only for cheeses — shown because this dish is on the Cheese menu.</div>
+            <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
+
+            <label>Diet</label>
+            <div class="ms" id="ms-diet">
+              <button type="button" class="ms-toggle" onclick="toggleMs('ms-diet')">
+                <span class="ms-summary placeholder" id="ms-diet-summary">Regular</span>
+                <span class="ms-caret">▾</span>
+              </button>
+              <div class="ms-panel list"><div class="check-grid" id="diet-grid"></div></div>
+            </div>
+            <div class="hint">Leave all unticked for a Regular dish; tick one or more diets.</div>
+
+            <label>Course</label>
+            <select id="f-course" onchange="renderPreview()"></select>
+
+            <label>Announcement</label>
+            <textarea id="f-announce" class="announce" placeholder="What you say to the guest when presenting the dish (the speech)." oninput="renderPreview()"></textarea>
+            <div class="hint">Presented to the guest. Two lines shown; it grows if there's more. Press Enter for new lines.</div>
+
+            <label>Description</label>
+            <textarea id="f-desc" class="desc-big" placeholder="Full details of the dish." oninput="renderPreview()"></textarea>
+            <div class="hint">The dish details. Press Enter for new lines.</div>
+
+            <label>Allergens</label>
+            <div class="ms" id="ms-allergen">
+              <button type="button" class="ms-toggle" onclick="toggleMs('ms-allergen')">
+                <span class="ms-summary placeholder" id="ms-allergen-summary">Choose allergens…</span>
+                <span class="ms-caret">▾</span>
+              </button>
+              <div class="ms-panel list"><div class="check-grid" id="allergen-grid"></div></div>
+            </div>
+            <input id="f-allergens-extra" placeholder="Other allergens, comma-separated (optional)" oninput="renderPreview()" style="margin-top:6px;">
+            <div class="hint">Tick the allergens present, or add extras separated by commas.</div>
+
+            <div id="cheese-block" style="display:none;">
+              <label>Cheese (dairy)</label>
+              <div class="ms" id="ms-cheese">
+                <button type="button" class="ms-toggle" onclick="toggleMs('ms-cheese')">
+                  <span class="ms-summary placeholder" id="ms-cheese-summary">None</span>
+                  <span class="ms-caret">▾</span>
+                </button>
+                <div class="ms-panel"><div class="check-grid" id="cheese-grid"></div></div>
+              </div>
+              <div class="hint">Only for cheeses — shown because this dish is on the Cheese menu.</div>
+            </div>
           </div>
 
-          <label>Wine pairing</label>
-          <div class="wp-row">
-            <span class="wp-label">Matching wines</span>
-            <input id="f-wp-matching" placeholder="e.g. Chablis 1er Cru 2020" oninput="renderPreview()">
-          </div>
-          <div class="wp-row">
-            <span class="wp-label">Connoisseur</span>
-            <input id="f-wp-connoisseur" placeholder="Wine…" oninput="renderPreview()">
-          </div>
-          <div class="wp-row">
-            <span class="wp-label">Indulgence</span>
-            <input id="f-wp-indulgence" placeholder="Wine…" oninput="renderPreview()">
-          </div>
-          <div class="wp-row">
-            <span class="wp-label">Non alcoholic</span>
-            <input id="f-wp-nonalcoholic" placeholder="Pairing…" oninput="renderPreview()">
-          </div>
-          <div class="hint">Leave a row blank if it doesn't apply.</div>
+          <!-- RIGHT column: set up, visibility, image, wine pairing, knowledge -->
+          <div class="form-col">
+            <label>Set up (cutlery)</label>
+            <div class="ms" id="ms-setup">
+              <button type="button" class="ms-toggle" onclick="toggleMs('ms-setup')">
+                <span class="ms-summary placeholder" id="ms-setup-summary">No Set Up</span>
+                <span class="ms-caret">▾</span>
+              </button>
+              <div class="ms-panel list"><div class="check-grid" id="setup-grid"></div></div>
+            </div>
+            <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
+            <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
 
-          <label>Set up (cutlery)</label>
-          <div class="ms" id="ms-setup">
-            <button type="button" class="ms-toggle" onclick="toggleMs('ms-setup')">
-              <span class="ms-summary placeholder" id="ms-setup-summary">No Set Up</span>
-              <span class="ms-caret">▾</span>
-            </button>
-            <div class="ms-panel list"><div class="check-grid" id="setup-grid"></div></div>
+            <label>Visibility</label>
+            <label class="check" style="width:fit-content;"><input type="checkbox" id="f-hidden" onchange="renderPreview()"> Hidden (kept but not shown in Food)</label>
+
+            <label>Image</label>
+            <input type="file" id="f-image-file" accept="image/*" onchange="handleImageFile(event)" style="padding:9px 0;border:none;background:transparent;">
+            <div class="hint">Choose a photo from your device. It's resized automatically and saved with the dish.</div>
+            <div id="image-status" class="hint" style="margin-top:2px;"></div>
+            <img id="image-preview" alt="" style="display:none;max-width:100%;border-radius:8px;border:1px solid var(--border);margin-top:8px;">
+            <!-- Holds the compressed image (data URL) that gets saved to Firestore. -->
+            <input type="hidden" id="f-image">
+            <div id="image-actions" style="display:none;margin-top:8px;">
+              <button type="button" class="btn ghost small" onclick="clearImage()">Remove image</button>
+            </div>
+
+            <label>Wine pairing</label>
+            <div class="wp-row">
+              <span class="wp-label">Matching wines</span>
+              <input id="f-wp-matching" placeholder="e.g. Chablis 1er Cru 2020" oninput="renderPreview()">
+            </div>
+            <div class="wp-row">
+              <span class="wp-label">Connoisseur</span>
+              <input id="f-wp-connoisseur" placeholder="Wine…" oninput="renderPreview()">
+            </div>
+            <div class="wp-row">
+              <span class="wp-label">Indulgence</span>
+              <input id="f-wp-indulgence" placeholder="Wine…" oninput="renderPreview()">
+            </div>
+            <div class="wp-row">
+              <span class="wp-label">Non alcoholic</span>
+              <input id="f-wp-nonalcoholic" placeholder="Pairing…" oninput="renderPreview()">
+            </div>
+            <div class="hint">Leave a row blank if it doesn't apply.</div>
+
+            <label>Knowledge points</label>
+            <div id="k-rows"></div>
+            <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
           </div>
-          <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
-          <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
 
-          <label>Visibility</label>
-          <label class="check" style="width:fit-content;"><input type="checkbox" id="f-hidden" onchange="renderPreview()"> Hidden (kept but not shown in Food)</label>
-
-          <label>Image</label>
-          <input type="file" id="f-image-file" accept="image/*" onchange="handleImageFile(event)" style="padding:9px 0;border:none;background:transparent;">
-          <div class="hint">Choose a photo from your device. It's resized automatically and saved with the dish.</div>
-          <div id="image-status" class="hint" style="margin-top:2px;"></div>
-          <!-- Holds the compressed image (data URL) that gets saved to Firestore. -->
-          <input type="hidden" id="f-image">
-          <div id="image-actions" style="display:none;margin-top:8px;">
-            <button type="button" class="btn ghost small" onclick="clearImage()">Remove image</button>
-          </div>
-
-          <label>Knowledge points</label>
-          <div id="k-rows"></div>
-          <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
           </div><!-- /.form-grid -->
         </div>
       </div>
@@ -795,6 +788,7 @@ function resetForm(){
   document.getElementById('image-status').textContent = '';
   document.getElementById('image-actions').style.display = 'none';
   document.getElementById('f-image-file').value = '';
+  showImagePreview('');
   document.getElementById('k-rows').innerHTML = '';
   addKRow();
   setMsg('');
@@ -851,6 +845,7 @@ function editDish(id){
   document.getElementById('f-image-file').value = '';
   document.getElementById('image-status').textContent = existingImg ? 'Current image kept. Choose a file to replace it.' : '';
   document.getElementById('image-actions').style.display = existingImg ? 'block' : 'none';
+  showImagePreview(existingImg);
   document.getElementById('f-hidden').checked = !!d.hidden;
   document.getElementById('k-rows').innerHTML = '';
   (d.knowledge||[]).forEach(k => addKRow(k.title, k.text));
@@ -962,6 +957,7 @@ function handleImageFile(event){
       const kb = Math.round((dataUrl.length * 0.75) / 1024); // approx bytes
       status.textContent = 'Ready · ' + w + '×' + h + ' · ~' + kb + ' KB';
       document.getElementById('image-actions').style.display = 'block';
+      showImagePreview(dataUrl);
       renderPreview();
     };
     img.onerror = () => { status.textContent = 'Could not read that image.'; };
@@ -976,7 +972,16 @@ function clearImage(){
   document.getElementById('f-image-file').value = '';
   document.getElementById('image-status').textContent = '';
   document.getElementById('image-actions').style.display = 'none';
+  showImagePreview('');
   renderPreview();
+}
+
+// Show (or hide) the image thumbnail under the Image field.
+function showImagePreview(src){
+  const el = document.getElementById('image-preview');
+  if(!el) return;
+  if(src){ el.src = /^data:/i.test(src) ? src : fixImg(src); el.style.display = 'block'; }
+  else { el.removeAttribute('src'); el.style.display = 'none'; }
 }
 
 /* ── Live preview (removed from the page; kept as a safe no-op) ── */
