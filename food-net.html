@@ -362,21 +362,27 @@ function renderDishes(){
      </article>`;
   };
   const gridBlock = (dishes) => `<div class="dish-grid-inner">${dishes.map(pushCard).join('')}</div>`;
-  const hasDiet = (d, tag) => Array.isArray(d.allergies) &&
-    d.allergies.some(a => (a||'').trim().toLowerCase() === tag.toLowerCase());
 
   // Diet sub-sections only on A la carte, Prestige and Discovery (and not while searching).
   const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood'];
   const groupByDiet = !q && ['a_la_carte','prestige','discovery'].indexOf(selectedFN) >= 0;
 
+  // The diets a dish has FOR THE CURRENT MENU (per-menu model). Falls back to
+  // Regular for older dishes that have no dietByMenu entry for this menu.
+  const dietsForMenu = (d) => {
+    const dbm = d.dietByMenu && d.dietByMenu[selectedFN];
+    return Array.isArray(dbm) && dbm.length ? dbm : ['Regular'];
+  };
+  const hasDietHere = (d, tag) =>
+    dietsForMenu(d).some(x => (x||'').trim().toLowerCase() === tag.toLowerCase());
+
   if(groupByDiet){
-    // Regular flow: dishes explicitly marked "Regular", OR (for older dishes)
-    // those with no diet tag at all. A dish can be here AND in a diet section.
-    const regular = list.filter(d => hasDiet(d, 'Regular') || !DIET_SECTIONS.some(t => hasDiet(d, t)));
+    // Regular flow: dishes marked "Regular" for this menu (default for legacy).
+    const regular = list.filter(d => hasDietHere(d, 'Regular'));
     if(regular.length) html += gridBlock(regular);
     // Then one sub-section per diet; a dish can appear in several.
     DIET_SECTIONS.forEach(tag => {
-      const items = list.filter(d => hasDiet(d, tag));
+      const items = list.filter(d => hasDietHere(d, tag));
       if(!items.length) return;
       html += `<h3 class="diet-subhead">${esc(tag)}</h3>` + gridBlock(items);
     });
