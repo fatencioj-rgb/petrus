@@ -29,8 +29,12 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .page-title { font-family:var(--serif); font-size:34px; color:var(--wine); margin-bottom:4px; }
 .page-sub { color:var(--wine-soft); opacity:0.85; font-size:11px; margin-bottom:28px; }
 
-.layout { display:grid; grid-template-columns:1fr 340px; gap:28px; align-items:start; }
+.layout { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
 @media (max-width:860px){ .layout { grid-template-columns:1fr; } }
+.list-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+.list-head h3 { margin:0; }
+/* When no dish is being edited, the list spans the full width. */
+.layout.list-only { grid-template-columns:1fr; }
 
 /* Form — Calibri, compact 10px, sentence case */
 .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
@@ -174,7 +178,7 @@ textarea.desc-big { min-height:120px; }
 <body>
 
 <div class="container">
-  <a class="back-link" href="food-net.html">&larr; Food</a>
+  <a class="back-link" href="food-net.html">&larr; Back</a>
 
   <!-- Access gate -->
   <div id="gate" class="gate">
@@ -184,14 +188,13 @@ textarea.desc-big { min-height:120px; }
 
   <!-- Editor app -->
   <div id="app">
-    <h1 class="page-title">Food Editor</h1>
-    <p class="page-sub">Create, edit, hide or reorder dishes. Changes appear in Food immediately.</p>
+    <h1 class="page-title">Menu Editor</h1>
 
     <div class="topbar">
       <button type="button" class="btn" id="new-dish-btn" onclick="startNewDish()">+ New dish</button>
     </div>
 
-    <div class="layout">
+    <div class="layout list-only">
       <!-- LEFT: form (hidden until New dish / Edit) + grouped list -->
       <div>
         <div class="card" id="form-card" style="display:none;">
@@ -306,19 +309,17 @@ textarea.desc-big { min-height:120px; }
           </div>
           <div class="msg" id="msg"></div>
         </div>
-
-        <div class="card" id="list-card" style="margin-top:22px;">
-          <h3>All dishes by course (<span id="count">0</span>)</h3>
-          <input class="search" id="search" placeholder="Search…" oninput="renderGroups()">
-          <div class="hint">Every dish, grouped by course. Each dish appears once — editing it here updates it in every menu it belongs to. The tag shows which menus include it.</div>
-          <div id="groups" style="margin-top:12px;"></div>
-        </div>
       </div>
 
-      <!-- RIGHT: live preview -->
-      <div class="preview-wrap">
-        <div class="preview-label">Live preview</div>
-        <div id="preview"></div>
+      <!-- RIGHT: dish list grouped by course -->
+      <div class="card" id="list-card">
+        <div class="list-head">
+          <h3>All dishes by course (<span id="count">0</span>)</h3>
+          <button type="button" class="btn ghost small" id="toggle-hidden-btn" onclick="toggleShowHidden()">Show hidden</button>
+        </div>
+        <input class="search" id="search" placeholder="Search…" oninput="renderGroups()">
+        <div class="hint">Every dish, grouped by course. Each dish appears once — editing it here updates it in every menu it belongs to.</div>
+        <div id="groups" style="margin-top:12px;"></div>
       </div>
     </div>
   </div>
@@ -364,6 +365,15 @@ function computeMaster(menus){
 }
 
 let allDishes = []; // {id, ...data}
+let showHidden = false; // when false, hidden dishes are kept out of the list
+
+// Toggle whether hidden dishes appear in the list.
+function toggleShowHidden(){
+  showHidden = !showHidden;
+  const btn = document.getElementById('toggle-hidden-btn');
+  if(btn) btn.textContent = showHidden ? 'Hide hidden' : 'Show hidden';
+  renderGroups();
+}
 
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function nonAllergen(t){ return /^(vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
@@ -478,23 +488,22 @@ function syncCheeseVisibility(){
 }
 
 /* ── New dish / show-hide form ── */
-// While the form is open we hide the "Dishes by menu" list so only the dish
-// being edited is on screen; closing the form brings the list back.
-function showList(show){
-  const el = document.getElementById('list-card');
-  if(el) el.style.display = show ? 'block' : 'none';
+// Two-column layout: the form (left) shows only while editing/creating; the
+// dish list (right) is always visible. When no form is open, the list spans
+// the full width.
+function setFormOpen(open){
+  document.getElementById('form-card').style.display = open ? 'block' : 'none';
+  document.querySelector('.layout').classList.toggle('list-only', !open);
 }
 function startNewDish(){
   resetForm();
-  document.getElementById('form-card').style.display = 'block';
-  showList(false);
+  setFormOpen(true);
   document.getElementById('form-title').textContent = 'New dish';
   window.scrollTo({top:0, behavior:'smooth'});
   setTimeout(()=>document.getElementById('f-name').focus(), 100);
 }
 function closeForm(){
-  document.getElementById('form-card').style.display = 'none';
-  showList(true);
+  setFormOpen(false);
   resetForm();
 }
 
@@ -534,6 +543,7 @@ function renderGroups(){
   let html = '';
 
   let dishes = allDishes.slice();
+  if(!showHidden) dishes = dishes.filter(d => !d.hidden);
   if(q) dishes = dishes.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
 
   // Cheese dishes are their own group (no course subdivisions).
@@ -739,8 +749,7 @@ function resetForm(){
 function editDish(id){
   const d = allDishes.find(x => x.id === id);
   if(!d) return;
-  document.getElementById('form-card').style.display = 'block';
-  showList(false);
+  setFormOpen(true);
   document.getElementById('docId').value = id;
   document.getElementById('form-title').textContent = 'Edit: ' + (d.name||'');
   document.getElementById('f-name').value = d.name||'';
@@ -916,8 +925,9 @@ function clearImage(){
   renderPreview();
 }
 
-/* ── Live preview (mirrors food-net card) ── */
+/* ── Live preview (removed from the page; kept as a safe no-op) ── */
 function renderPreview(){
+  if(!document.getElementById('preview')) return; // preview panel no longer exists
   const d = readForm();
   const img = fixImg(d.images[0]);
   const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
