@@ -308,9 +308,9 @@ textarea.desc-big { min-height:120px; }
         </div>
 
         <div class="card" id="list-card" style="margin-top:22px;">
-          <h3>Dishes by menu (<span id="count">0</span>)</h3>
+          <h3>All dishes by course (<span id="count">0</span>)</h3>
           <input class="search" id="search" placeholder="Search…" oninput="renderGroups()">
-          <div class="hint">Drag a dish (or use ↑/↓) to reorder it within its menu. ★ = the menu that owns this dish; edits there apply everywhere.</div>
+          <div class="hint">Every dish, grouped by course. Each dish appears once — editing it here updates it in every menu it belongs to. The tag shows which menus include it.</div>
           <div id="groups" style="margin-top:12px;"></div>
         </div>
       </div>
@@ -516,58 +516,51 @@ function menuPos(d, menuId){
 }
 function masterOf(d){ return d.masterMenu || computeMaster(d.menus); }
 
-/* ── Grouped-by-menu list with drag & drop + arrow fallback ── */
+/* ── Master list grouped by COURSE ──
+   One row per dish (not per menu). Editing a dish here updates the single
+   document, so the change shows up in every menu that dish belongs to. */
+// Course display order; dishes with an unknown/empty course go to "Other".
+const COURSE_GROUP_ORDER = COURSES.slice(); // same order as the Course dropdown
+function courseGroupKey(d){
+  const c = (d.course||'').trim();
+  return COURSE_GROUP_ORDER.indexOf(c) >= 0 ? c : '';
+}
 function renderGroups(){
   const q = (document.getElementById('search').value||'').toLowerCase();
   const box = document.getElementById('groups');
   let html = '';
-  // Track which dishes land in at least one menu group, so we can surface the rest.
-  const placed = new Set();
-  MENUS.forEach(m => {
-    let items = allDishes
-      .filter(d => Array.isArray(d.menus) && d.menus.indexOf(m.id) >= 0)
-      .sort((a,b) => menuPos(a,m.id) - menuPos(b,m.id));
-    if(q) items = items.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
+
+  let dishes = allDishes.slice();
+  if(q) dishes = dishes.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
+
+  // Build the ordered list of course groups, plus an "Other" bucket at the end.
+  const groupsOrder = COURSE_GROUP_ORDER.concat(['']); // '' = Other / no course
+  groupsOrder.forEach(courseName => {
+    let items = dishes.filter(d => courseGroupKey(d) === courseName);
     if(!items.length) return;
-    items.forEach(d => placed.add(d.id));
-    html += `<div class="menu-group" data-menu="${m.id}">
-      <div class="menu-group-title">${esc(m.label)} <span class="count">${items.length}</span></div>
-      ${items.map((d,i) => dragItem(d, m.id, i, items.length)).join('')}
+    // Sort alphabetically within a course for a predictable list.
+    items.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    const title = courseName || 'Other (no course)';
+    html += `<div class="menu-group">
+      <div class="menu-group-title">${esc(title)} <span class="count">${items.length}</span></div>
+      ${items.map(d => dishRow(d)).join('')}
     </div>`;
   });
 
-  // Dishes with no menu assigned (or an unrecognised menu) never show up in the
-  // groups above, which is why some dishes appear on the Food page but can't be
-  // found here. List them in their own group so they can be edited.
-  let orphans = allDishes.filter(d => !placed.has(d.id));
-  if(q) orphans = orphans.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
-  if(orphans.length){
-    html += `<div class="menu-group" data-menu="__none__">
-      <div class="menu-group-title">Unassigned — no menu <span class="count">${orphans.length}</span></div>
-      <div class="hint" style="margin-bottom:6px;">These dishes aren't attached to any menu, so they don't appear under the menus above. Open one and tick a menu to file it.</div>
-      ${orphans.map((d,i) => dragItem(d, '__none__', i, orphans.length)).join('')}
-    </div>`;
-  }
-
   box.innerHTML = html || '<p style="opacity:.6">No dishes yet. Use “+ New dish”.</p>';
-  wireDrag();
 }
 
-function dragItem(d, menuId, i, total){
-  const isNone = menuId === '__none__';
-  const isMaster = masterOf(d) === menuId;
-  const star = isNone
-    ? ''
-    : (isMaster ? '<span class="star" title="This menu owns the dish">★</span>' : `<span class="from-tag">↳ from ${esc(MENU_LABEL[masterOf(d)]||masterOf(d))}</span>`);
+// One dish row. Shows the menus the dish belongs to, and Edit/Hide/Delete.
+function dishRow(d){
   const nameSafe = esc((d.name||'').replace(/'/g,''));
-  // Orphan dishes (no menu) can't be reordered — their arrows are disabled and
-  // drag is turned off, but Edit / Hide / Delete all work normally.
+  const menus = Array.isArray(d.menus) ? d.menus : [];
+  const menusTag = menus.length
+    ? `<span class="from-tag">in ${menus.map(id => esc(MENU_LABEL[id]||id)).join(', ')}</span>`
+    : `<span class="from-tag" style="color:#b23b2e;">no menu</span>`;
   return `
-    <div class="drag-item${d.hidden?'':''}" ${isNone?'':'draggable="true"'} data-id="${d.id}" data-menu="${menuId}"${d.hidden?' style="opacity:0.55;"':''}>
-      <div class="n">${isNone?'':'<span class="drag-handle" title="Drag to reorder">⠿</span> '}${esc(d.name||'')} ${star}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
+    <div class="drag-item" data-id="${d.id}"${d.hidden?' style="opacity:0.55;"':''}>
+      <div class="n">${esc(d.name||'')} ${menusTag}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
       <div class="mini">
-        <button title="Move up" onclick="moveInMenu('${d.id}','${menuId}',-1)" ${(isNone||i===0)?'disabled':''}>↑</button>
-        <button title="Move down" onclick="moveInMenu('${d.id}','${menuId}',1)" ${(isNone||i===total-1)?'disabled':''}>↓</button>
         <button class="hiddenbtn" title="${d.hidden?'Show':'Hide'}" onclick="toggleHidden('${d.id}')">${d.hidden?'Show':'Hide'}</button>
         <button title="Edit" onclick="editDish('${d.id}')">Edit</button>
         <button class="delbtn" title="Delete" onclick="deleteDish('${d.id}','${nameSafe}')">✕</button>
