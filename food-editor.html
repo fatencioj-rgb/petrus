@@ -33,6 +33,26 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 @media (max-width:860px){ .layout { grid-template-columns:1fr; } }
 .list-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
 .list-head h3 { margin:0; }
+/* Form header: title on the left, action buttons on the right, kept at the top. */
+.form-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+.form-head h3 { margin:0; }
+/* Two-column form body. Short fields flow across two columns; wide fields
+   (textareas, knowledge, image) span the full width. */
+.form-grid { column-count:2; column-gap:22px; }
+.form-grid > label { break-after:avoid; -webkit-column-break-after:avoid; }
+.form-grid > label,
+.form-grid > input,
+.form-grid > select,
+.form-grid > .ms,
+.form-grid > .hint,
+.form-grid > .check,
+.form-grid > .wp-row,
+.form-grid > #cheese-block { break-inside:avoid; -webkit-column-break-inside:avoid; }
+/* Items that should take the whole width (not be split into a column). */
+.form-grid > textarea,
+.form-grid > #k-rows,
+.form-grid > .actions { column-span:all; }
+@media (max-width:720px){ .form-grid { column-count:1; } }
 /* When no dish is being edited, the list spans the full width. */
 .layout.list-only { grid-template-columns:1fr; }
 /* Dish list laid out in two columns (groups flow across the columns).
@@ -204,9 +224,18 @@ textarea.desc-big { min-height:120px; }
       <!-- LEFT: form (hidden until New dish / Edit) + grouped list -->
       <div>
         <div class="card" id="form-card" style="display:none;">
-          <h3 id="form-title">New dish</h3>
+          <div class="form-head">
+            <h3 id="form-title">New dish</h3>
+            <div class="actions">
+              <button type="button" class="btn" id="save-btn" onclick="saveDish(false)">Save dish</button>
+              <button type="button" class="btn" id="save-notify-btn" onclick="saveDish(true)" style="background:#5c1a1a;color:#faf7f1;">Save &amp; Notify team</button>
+              <button type="button" class="btn ghost" onclick="closeForm()">Cancel</button>
+            </div>
+          </div>
+          <div class="msg" id="msg"></div>
           <input type="hidden" id="docId">
 
+          <div class="form-grid">
           <label>Name</label>
           <input id="f-name" placeholder="e.g. Canapé Tartlet" oninput="renderPreview()">
 
@@ -307,13 +336,7 @@ textarea.desc-big { min-height:120px; }
           <label>Knowledge points</label>
           <div id="k-rows"></div>
           <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
-
-          <div class="actions">
-            <button type="button" class="btn" id="save-btn" onclick="saveDish(false)">Save dish</button>
-            <button type="button" class="btn" id="save-notify-btn" onclick="saveDish(true)" style="background:#5c1a1a;color:#faf7f1;">Save &amp; Notify team</button>
-            <button type="button" class="btn ghost" onclick="closeForm()">Cancel</button>
-          </div>
-          <div class="msg" id="msg"></div>
+          </div><!-- /.form-grid -->
         </div>
       </div>
 
@@ -498,8 +521,17 @@ function syncCheeseVisibility(){
 // dish list (right) is always visible. When no form is open, the list spans
 // the full width.
 function setFormOpen(open){
+  // While editing: show only the form (hide the list). When closed: show the
+  // full-width list in two columns.
   document.getElementById('form-card').style.display = open ? 'block' : 'none';
-  document.querySelector('.layout').classList.toggle('list-only', !open);
+  const listCard = document.getElementById('list-card');
+  if(listCard) listCard.style.display = open ? 'none' : 'block';
+  // Layout is always a single column now (form and list never show together);
+  // the two-column effect lives inside each (form-grid / #groups).
+  document.querySelector('.layout').classList.add('list-only');
+  // Also hide the top "+ New dish" button while editing to avoid confusion.
+  const topbar = document.querySelector('.topbar');
+  if(topbar) topbar.style.display = open ? 'none' : '';
 }
 function startNewDish(){
   resetForm();
