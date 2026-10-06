@@ -82,8 +82,9 @@ def send(tokens, heading, body, url="index.html", tag="petrus"):
 
     full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
 
-    # Cuerpo final: "Encabezado\nmensaje". Si no hay encabezado, solo el mensaje.
-    full_body = (f"{heading}\n{body}" if heading and body
+    # Cuerpo final en UNA sola línea (iOS/Safari descarta pushes con '\n').
+    # Formato: "Encabezado — mensaje". Si no hay encabezado, solo el mensaje.
+    full_body = (f"{heading} — {body}" if heading and body
                  else (heading or body or ""))
 
     message = messaging.MulticastMessage(
