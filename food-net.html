@@ -50,7 +50,12 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .tab.active { background:var(--wine); border-color:var(--wine); color:#fff; font-weight:600; }
 
 /* ── Dish cards ── */
-.dish-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
+/* Outer container is a plain block; the actual card grid is .dish-grid-inner,
+   so we can place diet sub-section headings between grids. */
+.dish-grid { display:block; }
+.dish-grid-inner { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
+.diet-subhead { font-family:var(--serif); font-size:24px; color:var(--wine); margin:30px 0 14px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.diet-subhead:first-child { margin-top:0; }
 .dish-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 18px rgba(92,26,26,0.06); cursor:pointer; transition:transform .15s, box-shadow .15s; }
 .dish-card:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(92,26,26,0.14); }
 /* Edit pencil overlaid on the dish image (only shown to editors) */
@@ -333,14 +338,21 @@ function renderDishes(){
   } else {
     list = dishesForMenu(selectedFN);
   }
-  currentList = list; // remember for the modal
   if(!list.length){
+    currentList = [];
     grid.innerHTML = q
       ? `<p style="opacity:.6">No dishes match “${esc(q)}”.</p>`
       : '<p style="opacity:.6">No dishes in this menu yet.</p>';
     return;
   }
-  grid.innerHTML = list.map((d, i) => {
+
+  // currentList is the flat sequence of rendered cards (so the modal/pencil
+  // index lines up even when a dish appears in more than one diet section).
+  currentList = [];
+  let html = '';
+  const pushCard = (d) => {
+    const i = currentList.length;
+    currentList.push(d);
     const pencil = canEdit
       ? `<button class="dish-edit-btn" title="Edit this dish" onclick="editDishFromCard(event, ${i})" aria-label="Edit dish">✎</button>`
       : '';
@@ -348,7 +360,30 @@ function renderDishes(){
        <div class="dish-media-wrap">${dishMediaHtml(d)}${pencil}</div>
        <div class="dish-body">${dishBodyHtml(d, i)}</div>
      </article>`;
-  }).join('');
+  };
+  const gridBlock = (dishes) => `<div class="dish-grid-inner">${dishes.map(pushCard).join('')}</div>`;
+  const hasDiet = (d, tag) => Array.isArray(d.allergies) &&
+    d.allergies.some(a => (a||'').trim().toLowerCase() === tag.toLowerCase());
+
+  // Diet sub-sections only on A la carte, Prestige and Discovery (and not while searching).
+  const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood'];
+  const groupByDiet = !q && ['a_la_carte','prestige','discovery'].indexOf(selectedFN) >= 0;
+
+  if(groupByDiet){
+    // Regular dishes first (those with no diet tag), ungrouped.
+    const regular = list.filter(d => !DIET_SECTIONS.some(t => hasDiet(d, t)));
+    if(regular.length) html += gridBlock(regular);
+    // Then one sub-section per diet; a dish can appear in several.
+    DIET_SECTIONS.forEach(tag => {
+      const items = list.filter(d => hasDiet(d, tag));
+      if(!items.length) return;
+      html += `<h3 class="diet-subhead">${esc(tag)}</h3>` + gridBlock(items);
+    });
+  } else {
+    html = gridBlock(list);
+  }
+
+  grid.innerHTML = html;
 }
 
 // The list currently shown in the grid, so the modal can look up a dish by index.

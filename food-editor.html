@@ -250,7 +250,14 @@ textarea.desc-big { min-height:120px; }
           <div class="hint">Which menus include this dish. It always shows under "All dishes".</div>
 
           <label>Diet</label>
-          <select id="f-diet" onchange="renderPreview()"></select>
+          <div class="ms" id="ms-diet">
+            <button type="button" class="ms-toggle" onclick="toggleMs('ms-diet')">
+              <span class="ms-summary placeholder" id="ms-diet-summary">Regular</span>
+              <span class="ms-caret">▾</span>
+            </button>
+            <div class="ms-panel list"><div class="check-grid" id="diet-grid"></div></div>
+          </div>
+          <div class="hint">Leave all unticked for a Regular dish; tick one or more diets.</div>
 
           <div class="row">
             <div>
@@ -364,10 +371,8 @@ textarea.desc-big { min-height:120px; }
 <script>
 const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local'];
 const STANDARD_ALLERGENS = ['Celery','Crustacean','Egg','Fish','Gluten','Milk','Mollusc','Mustard','Nuts','Sesame','Soya','Sulphites'];
-// 'Regular' is the default (no special diet). The others are stored as tags.
-const DIET_OPTIONS = ['Regular','Vegan','Vegetarian','Pescatarian','No seafood'];
-// Tags that count as a diet (everything except the default 'Regular').
-const DIET_TAGS = DIET_OPTIONS.filter(d => d !== 'Regular');
+// Diet tags a dish can have (multiple allowed). No tags = a "Regular" dish.
+const DIET_TAGS = ['Vegetarian','Pescatarian','No seafood'];
 const CHEESE_TAGS = ['Pasteurised','Unpasteurised','Thermised'];
 // All non-allergen tags recognised across the three groups (for editDish routing).
 const NON_ALLERGEN_TAGS = DIET_TAGS.concat(CHEESE_TAGS);
@@ -435,9 +440,10 @@ function initEditor(){
   document.getElementById('f-course').innerHTML =
     '<option value="">— Choose a course —</option>' +
     COURSES.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  // Diet dropdown — single choice, 'Regular' is the default.
-  document.getElementById('f-diet').innerHTML =
-    DIET_OPTIONS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  // Diet checkboxes (multiple allowed; none ticked = Regular).
+  document.getElementById('diet-grid').innerHTML = DIET_TAGS.map(a =>
+    `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="msChanged()"> ${esc(a)}</label>`
+  ).join('');
   // Allergen checkboxes (allergens only)
   document.getElementById('allergen-grid').innerHTML = STANDARD_ALLERGENS.map(a =>
     `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="msChanged()"> ${esc(a)}</label>`
@@ -467,6 +473,7 @@ function initEditor(){
 // the toggle button's label in sync with what's ticked.
 const MS_CONFIG = {
   'ms-menu':     { grid:'menu-grid',     placeholder:'Choose menus…',     empty:'Choose menus…', labelFor:(v)=>MENU_LABEL[v]||v },
+  'ms-diet':     { grid:'diet-grid',     placeholder:'Regular',           empty:'Regular' },
   'ms-allergen': { grid:'allergen-grid', placeholder:'Choose allergens…', empty:'Choose allergens…' },
   'ms-cheese':   { grid:'cheese-grid',   placeholder:'None',              empty:'None' },
   'ms-setup':    { grid:'setup-grid',    placeholder:'No Set Up',         empty:'No Set Up' },
@@ -739,9 +746,8 @@ function readKRows(){
 /* ── Read / write form ── */
 function readForm(){
   const checkedAllergens = [...document.querySelectorAll('#allergen-grid input:checked')].map(c=>c.value);
-  // Diet is a single dropdown; 'Regular' means no diet tag is stored.
-  const dietVal = document.getElementById('f-diet').value;
-  const checkedDiet = (dietVal && dietVal !== 'Regular') ? [dietVal] : [];
+  // Diet checkboxes (multiple allowed). None ticked = Regular (no tag stored).
+  const checkedDiet = [...document.querySelectorAll('#diet-grid input:checked')].map(c=>c.value);
   const checkedCheese = [...document.querySelectorAll('#cheese-grid input:checked')].map(c=>c.value);
   const extra = (document.getElementById('f-allergens-extra').value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const setupChecked = [...document.querySelectorAll('#setup-grid input:checked')].map(c=>c.value);
@@ -775,7 +781,6 @@ function resetForm(){
   document.getElementById('form-title').textContent = 'New dish';
   document.getElementById('f-name').value = '';
   document.getElementById('f-course').value = '';
-  document.getElementById('f-diet').value = 'Regular';
   document.getElementById('f-announce').value = '';
   document.getElementById('f-desc').value = '';
   document.getElementById('f-allergens-extra').value = '';
@@ -786,7 +791,7 @@ function resetForm(){
   document.getElementById('f-wp-nonalcoholic').value = '';
   document.getElementById('f-image').value = '';
   document.getElementById('f-hidden').checked = false;
-  document.querySelectorAll('#allergen-grid input:checked, #cheese-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
+  document.querySelectorAll('#allergen-grid input:checked, #diet-grid input:checked, #cheese-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
   document.getElementById('image-status').textContent = '';
   document.getElementById('image-actions').style.display = 'none';
   document.getElementById('f-image-file').value = '';
@@ -815,9 +820,7 @@ function editDish(id){
   document.getElementById('f-wp-nonalcoholic').value = wp.nonAlcoholic || '';
   // Route existing tags into allergens / diet / cheese; unknowns go to extra.
   const extras = [];
-  document.querySelectorAll('#allergen-grid input, #cheese-grid input').forEach(c=>c.checked=false);
-  document.getElementById('f-diet').value = 'Regular'; // default; overridden below if a diet tag is present
-  const dietLower = DIET_TAGS.map(t=>t.toLowerCase());
+  document.querySelectorAll('#allergen-grid input, #diet-grid input, #cheese-grid input').forEach(c=>c.checked=false);
   const tickIn = (gridId, value) => {
     const box = [...document.querySelectorAll(gridId+' input')].find(c => c.value.toLowerCase() === value.toLowerCase());
     if(box){ box.checked = true; return true; }
@@ -826,8 +829,7 @@ function editDish(id){
   (d.allergies||[]).forEach(a => {
     const v = (a||'').trim(); if(!v) return;
     if(tickIn('#allergen-grid', v)) return;
-    const di = dietLower.indexOf(v.toLowerCase());
-    if(di >= 0){ document.getElementById('f-diet').value = DIET_TAGS[di]; return; }
+    if(tickIn('#diet-grid', v)) return;   // diet checkboxes (multiple allowed)
     if(tickIn('#cheese-grid', v)) return;
     extras.push(a);
   });
