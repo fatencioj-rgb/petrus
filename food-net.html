@@ -219,7 +219,7 @@ function firstImage(d){
 }
 function nonAllergen(tag){
   // Diet + cheese/dairy tags are not allergens.
-  return /^(vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
+  return /^(regular|vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
 }
 
 /* ── Menus / dishes ── */
@@ -370,8 +370,9 @@ function renderDishes(){
   const groupByDiet = !q && ['a_la_carte','prestige','discovery'].indexOf(selectedFN) >= 0;
 
   if(groupByDiet){
-    // Regular dishes first (those with no diet tag), ungrouped.
-    const regular = list.filter(d => !DIET_SECTIONS.some(t => hasDiet(d, t)));
+    // Regular flow: dishes explicitly marked "Regular", OR (for older dishes)
+    // those with no diet tag at all. A dish can be here AND in a diet section.
+    const regular = list.filter(d => hasDiet(d, 'Regular') || !DIET_SECTIONS.some(t => hasDiet(d, t)));
     if(regular.length) html += gridBlock(regular);
     // Then one sub-section per diet; a dish can appear in several.
     DIET_SECTIONS.forEach(tag => {

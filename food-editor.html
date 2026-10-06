@@ -366,11 +366,14 @@ textarea.desc-big { min-height:120px; }
 <script>
 const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local'];
 const STANDARD_ALLERGENS = ['Celery','Crustacean','Egg','Fish','Gluten','Milk','Mollusc','Mustard','Nuts','Sesame','Soya','Sulphites'];
-// Diet tags a dish can have (multiple allowed). No tags = a "Regular" dish.
+// Diet options a dish can have (multiple allowed, combinable). 'Regular' means
+// it also belongs in the normal (unrestricted) flow of the menu.
+const DIET_OPTIONS = ['Regular','Vegetarian','Pescatarian','No seafood'];
+// Tags that create their own sub-section on the Food page (Regular does not).
 const DIET_TAGS = ['Vegetarian','Pescatarian','No seafood'];
 const CHEESE_TAGS = ['Pasteurised','Unpasteurised','Thermised'];
 // All non-allergen tags recognised across the three groups (for editDish routing).
-const NON_ALLERGEN_TAGS = DIET_TAGS.concat(CHEESE_TAGS);
+const NON_ALLERGEN_TAGS = DIET_OPTIONS.concat(CHEESE_TAGS);
 const MENUS = [
   {id:'canapes_amuse', label:'Canapés & Amuse bouche'},
   {id:'a_la_carte', label:'A la carte'},
@@ -405,7 +408,7 @@ function toggleShowHidden(){
 }
 
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function nonAllergen(t){ return /^(vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
+function nonAllergen(t){ return /^(regular|vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
 function fixImg(path){
   if(!path) return '';
   if(/^data:/i.test(path)) return path;               // uploaded image (data URL)
@@ -435,8 +438,8 @@ function initEditor(){
   document.getElementById('f-course').innerHTML =
     '<option value="">— Choose a course —</option>' +
     COURSES.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  // Diet checkboxes (multiple allowed; none ticked = Regular).
-  document.getElementById('diet-grid').innerHTML = DIET_TAGS.map(a =>
+  // Diet checkboxes (multiple allowed, combinable; includes Regular).
+  document.getElementById('diet-grid').innerHTML = DIET_OPTIONS.map(a =>
     `<label class="check"><input type="checkbox" value="${esc(a)}" onchange="msChanged()"> ${esc(a)}</label>`
   ).join('');
   // Allergen checkboxes (allergens only)
