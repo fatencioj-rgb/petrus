@@ -53,6 +53,15 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .dish-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
 .dish-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 18px rgba(92,26,26,0.06); cursor:pointer; transition:transform .15s, box-shadow .15s; }
 .dish-card:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(92,26,26,0.14); }
+/* Edit pencil overlaid on the dish image (only shown to editors) */
+.dish-media-wrap { position:relative; }
+.dish-edit-btn {
+  position:absolute; top:10px; right:10px; z-index:3;
+  width:32px; height:32px; border-radius:50%; border:1px solid var(--border);
+  background:rgba(255,255,255,0.92); color:var(--wine); font-size:15px; line-height:1;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(92,26,26,0.18);
+}
+.dish-edit-btn:hover { background:#fff; border-color:var(--wine); }
 
 /* ── Dish modal (pop-up detail view) ── */
 .dish-modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(58,34,38,0.55); backdrop-filter:blur(2px); display:none; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; }
@@ -314,14 +323,15 @@ function renderDishes(){
   if(title) title.textContent = 'The Menu';
   if(sub) sub.textContent = 'Every dish, with descriptions and knowledge points. Filter by menu below.';
 
-  let list = dishesForMenu(selectedFN);
-  // Apply the dish search filter (by name or description).
   const q = (searchBox ? searchBox.value : '').trim().toLowerCase();
+  let list;
   if(q){
-    list = list.filter(d =>
-      (d.name||'').toLowerCase().includes(q) ||
-      (d.desc||'').toLowerCase().includes(q)
-    );
+    // Search runs across the WHOLE menu (every dish), not just the active tab.
+    list = FN_DISHES.filter(d => !d.hidden)
+      .filter(d => (d.name||'').toLowerCase().includes(q) || (d.desc||'').toLowerCase().includes(q))
+      .sort(byCourseThen(d => d.order || 0));
+  } else {
+    list = dishesForMenu(selectedFN);
   }
   currentList = list; // remember for the modal
   if(!list.length){
@@ -330,16 +340,32 @@ function renderDishes(){
       : '<p style="opacity:.6">No dishes in this menu yet.</p>';
     return;
   }
-  grid.innerHTML = list.map((d, i) =>
-    `<article class="dish-card" onclick="openDishModal(${i})">
-       ${dishMediaHtml(d)}
+  grid.innerHTML = list.map((d, i) => {
+    const pencil = canEdit
+      ? `<button class="dish-edit-btn" title="Edit this dish" onclick="editDishFromCard(event, ${i})" aria-label="Edit dish">✎</button>`
+      : '';
+    return `<article class="dish-card" onclick="openDishModal(${i})">
+       <div class="dish-media-wrap">${dishMediaHtml(d)}${pencil}</div>
        <div class="dish-body">${dishBodyHtml(d, i)}</div>
-     </article>`
-  ).join('');
+     </article>`;
+  }).join('');
 }
 
 // The list currently shown in the grid, so the modal can look up a dish by index.
 let currentList = [];
+
+// Who may edit dishes — the pencil icon on each card only shows for these.
+const FN_EDITORS = ['fiorella@petrus.local','milena@petrus.local'];
+let canEdit = false;
+
+// Open a dish straight in the editor (used by the pencil icon on each card).
+function editDishFromCard(ev, i){
+  ev.stopPropagation();            // don't open the read-only modal
+  const d = currentList[i];
+  if(!d) return;
+  const id = d.id || d.docId || '';
+  window.location.href = 'food-editor.html' + (id ? ('?edit=' + encodeURIComponent(id)) : '');
+}
 
 function dishMediaHtml(d){
   const img = firstImage(d);
@@ -495,7 +521,7 @@ function loadFromFirestore(){
     db.collection('dishes').get()
       .then(snap => {
         if(snap.empty){ resolve(false); return; }
-        FN_DISHES = snap.docs.map(doc => doc.data())
+        FN_DISHES = snap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()))
           .sort((a,b) => (a.order||0) - (b.order||0));
         usingFirestore = true;
         resolve(true);
@@ -511,9 +537,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const tryLoad = () => loadFromFirestore().then(ok => { if(ok) renderAll(); });
   if(typeof auth !== 'undefined'){
     auth.onAuthStateChanged((user) => {
-      // Show the editor link only to Fiorella.
+      // Editors (Fiorella & Milena) see the top link and the per-card pencil.
+      canEdit = !!(user && FN_EDITORS.indexOf(user.email) >= 0);
       var w = document.getElementById('editorLink');
-      if(w) w.style.display = (user && user.email === 'fiorella@petrus.local') ? 'inline-block' : 'none';
+      if(w) w.style.display = canEdit ? 'inline-block' : 'none';
+      renderDishes();   // re-render so pencils appear/disappear with the role
       tryLoad();
     });
   } else {

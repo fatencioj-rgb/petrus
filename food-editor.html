@@ -546,11 +546,25 @@ function closeForm(){
 }
 
 /* ── Load dishes from Firestore ── */
+// If the page was opened with ?edit=<dishId> (from the pencil on the Food
+// page), open that dish's form automatically. Runs once.
+let _openedFromUrl = false;
+function maybeOpenFromUrl(){
+  if(_openedFromUrl) return;
+  const id = new URLSearchParams(window.location.search).get('edit');
+  if(!id) return;
+  if(allDishes.find(x => x.id === id)){
+    _openedFromUrl = true;
+    editDish(id);
+  }
+}
+
 function loadDishes(){
   const done = (snap) => {
     allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
     document.getElementById('count').textContent = allDishes.length;
     renderGroups();
+    maybeOpenFromUrl();   // if we arrived via ?edit=<id>, open that dish
   };
   db.collection('dishes').orderBy('order').get().then(done).catch(() => {
     db.collection('dishes').get().then(done);
