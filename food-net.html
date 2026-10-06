@@ -33,7 +33,15 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .section-sub { color:var(--wine-soft); opacity:0.85; font-size:14px; margin-bottom:24px; }
 
 /* ── Menu tabs (filter within the Menus section) ── */
-.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+/* Dish search box under the tabs */
+.fn-search {
+  width:100%; max-width:360px; display:block; margin-bottom:24px;
+  padding:10px 14px; border:1px solid var(--border); border-radius:20px;
+  background:var(--surface); color:var(--text); font-family:var(--sans); font-size:13px; outline:none;
+}
+.fn-search:focus { border-color:var(--wine); }
+.fn-search::placeholder { color:var(--wine-soft); opacity:0.6; }
 .tab {
   background:transparent; border:1px solid var(--border); border-radius:20px; color:var(--wine-soft);
   font-family:var(--sans); font-size:12px; letter-spacing:0.5px; padding:8px 16px; cursor:pointer; transition:all 0.2s;
@@ -124,6 +132,7 @@ tr:last-child td { border-bottom:none; }
     <h2 class="section-title" id="fn-section-title">The Menu</h2>
     <p class="section-sub" id="fn-section-sub">Every dish, with descriptions and knowledge points. Filter by menu below.</p>
     <div class="tabs" id="fn-menu-tabs"></div>
+    <input type="search" id="fn-search" class="fn-search" placeholder="Search a dish…" oninput="renderDishes()" aria-label="Search a dish">
 
     <!-- Dishes grid (shown for every menu tab) -->
     <div class="dish-grid" id="fn-dish-grid"></div>
@@ -274,11 +283,14 @@ function renderDishes(){
   const title = document.getElementById('fn-section-title');
   const sub = document.getElementById('fn-section-sub');
 
+  const searchBox = document.getElementById('fn-search');
+
   // Allergy reference is its own tab: show the table, hide the dish grid.
   if(selectedFN === 'allergens'){
     grid.style.display = 'none';
     allergyWrap.style.display = 'block';
     supplierGrid.style.display = 'none';
+    if(searchBox) searchBox.style.display = 'none';
     if(title) title.textContent = 'Allergy Reference';
     if(sub) sub.textContent = 'Complete allergen listing for every dish.';
     renderAllergies();
@@ -289,6 +301,7 @@ function renderDishes(){
     grid.style.display = 'none';
     allergyWrap.style.display = 'none';
     supplierGrid.style.display = '';
+    if(searchBox) searchBox.style.display = 'none';
     if(title) title.textContent = 'Our Producers';
     if(sub) sub.textContent = 'Know who grows and catches our ingredients — these are the stories guests want to hear.';
     renderSuppliers();
@@ -297,12 +310,26 @@ function renderDishes(){
   grid.style.display = '';
   allergyWrap.style.display = 'none';
   supplierGrid.style.display = 'none';
+  if(searchBox) searchBox.style.display = 'block';
   if(title) title.textContent = 'The Menu';
   if(sub) sub.textContent = 'Every dish, with descriptions and knowledge points. Filter by menu below.';
 
-  const list = dishesForMenu(selectedFN);
+  let list = dishesForMenu(selectedFN);
+  // Apply the dish search filter (by name or description).
+  const q = (searchBox ? searchBox.value : '').trim().toLowerCase();
+  if(q){
+    list = list.filter(d =>
+      (d.name||'').toLowerCase().includes(q) ||
+      (d.desc||'').toLowerCase().includes(q)
+    );
+  }
   currentList = list; // remember for the modal
-  if(!list.length){ grid.innerHTML = '<p style="opacity:.6">No dishes in this menu yet.</p>'; return; }
+  if(!list.length){
+    grid.innerHTML = q
+      ? `<p style="opacity:.6">No dishes match “${esc(q)}”.</p>`
+      : '<p style="opacity:.6">No dishes in this menu yet.</p>';
+    return;
+  }
   grid.innerHTML = list.map((d, i) =>
     `<article class="dish-card" onclick="openDishModal(${i})">
        ${dishMediaHtml(d)}
