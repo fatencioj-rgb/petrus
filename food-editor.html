@@ -525,6 +525,9 @@ function courseGroupKey(d){
   const c = (d.course||'').trim();
   return COURSE_GROUP_ORDER.indexOf(c) >= 0 ? c : '';
 }
+function isCheeseDish(d){
+  return Array.isArray(d.menus) && d.menus.indexOf('cheese') >= 0;
+}
 function renderGroups(){
   const q = (document.getElementById('search').value||'').toLowerCase();
   const box = document.getElementById('groups');
@@ -533,12 +536,15 @@ function renderGroups(){
   let dishes = allDishes.slice();
   if(q) dishes = dishes.filter(d => (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
 
-  // Build the ordered list of course groups, plus an "Other" bucket at the end.
+  // Cheese dishes are their own group (no course subdivisions).
+  const cheeseDishes = dishes.filter(isCheeseDish);
+  const rest = dishes.filter(d => !isCheeseDish(d));
+
+  // Non-cheese dishes grouped by course, plus an "Other" bucket at the end.
   const groupsOrder = COURSE_GROUP_ORDER.concat(['']); // '' = Other / no course
   groupsOrder.forEach(courseName => {
-    let items = dishes.filter(d => courseGroupKey(d) === courseName);
+    let items = rest.filter(d => courseGroupKey(d) === courseName);
     if(!items.length) return;
-    // Sort alphabetically within a course for a predictable list.
     items.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     const title = courseName || 'Other (no course)';
     html += `<div class="menu-group">
@@ -546,6 +552,15 @@ function renderGroups(){
       ${items.map(d => dishRow(d)).join('')}
     </div>`;
   });
+
+  // Cheese group last — all cheeses together, no subdivisions.
+  if(cheeseDishes.length){
+    cheeseDishes.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    html += `<div class="menu-group">
+      <div class="menu-group-title">Cheese <span class="count">${cheeseDishes.length}</span></div>
+      ${cheeseDishes.map(d => dishRow(d)).join('')}
+    </div>`;
+  }
 
   box.innerHTML = html || '<p style="opacity:.6">No dishes yet. Use “+ New dish”.</p>';
 }
