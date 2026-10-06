@@ -349,12 +349,13 @@ const MENUS = [
   {id:'discovery', label:'Discovery'},
   {id:'cheese', label:'Cheese'},
   {id:'new_dishes', label:'New Dishes'},
+  {id:'petit_fours', label:'Petit fours'},
 ];
 const COURSES = ['Canapé','Amuse bouche','Starter 1','Starter 2','Main course 1','Main course 2','Pre dessert','Dessert','Petit fours'];
 // Cutlery types derived from all existing dishes.
 const CUTLERY = ['Starter Fork','Starter Knife','Main Fork','Steak Knife','Fish Knife','Fish Spoon','Sauce Spoon','Soup Spoon','Dessert Spoon','Teaspoon','Butter Knife','Side plate'];
 // Master-menu priority: the highest one a dish belongs to "owns" it (★).
-const MASTER_PRIORITY = ['prestige','discovery','lunch','cheese','new_dishes','canapes_amuse','a_la_carte'];
+const MASTER_PRIORITY = ['prestige','discovery','lunch','cheese','new_dishes','canapes_amuse','petit_fours','a_la_carte'];
 const MENU_LABEL = MENUS.reduce((o,m)=>{o[m.id]=m.label;return o;},{});
 function computeMaster(menus){
   const list = Array.isArray(menus) ? menus : [];

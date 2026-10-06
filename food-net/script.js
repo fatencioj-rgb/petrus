@@ -1273,6 +1273,11 @@ const menuDefinitions = [
     id: 'new_dishes',
     label: 'New Dishes',
     description: 'Recently added dishes to feature once they have been included in this menu.'
+  },
+  {
+    id: 'petit_fours',
+    label: 'Petit fours',
+    description: 'Petit fours served at the end of the meal.'
   }
 ];
 
