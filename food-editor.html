@@ -35,6 +35,12 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .list-head h3 { margin:0; }
 /* When no dish is being edited, the list spans the full width. */
 .layout.list-only { grid-template-columns:1fr; }
+/* Dish list laid out in two columns (groups flow across the columns).
+   Only when the list is full-width (no form open); keeps a single column
+   while editing so the narrow right panel stays readable. */
+.layout.list-only #groups { column-count:2; column-gap:22px; }
+.layout.list-only #groups .menu-group { break-inside:avoid; -webkit-column-break-inside:avoid; }
+@media (max-width:720px){ .layout.list-only #groups { column-count:1; } }
 
 /* Form — Calibri, compact 10px, sentence case */
 .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
