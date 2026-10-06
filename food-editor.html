@@ -540,41 +540,48 @@ function renderGroups(){
   const cheeseDishes = dishes.filter(isCheeseDish);
   const rest = dishes.filter(d => !isCheeseDish(d));
 
+  // Within each group, order by the dish's global `order` (set by dragging),
+  // falling back to name so new dishes have a stable spot.
+  const byOrder = (a,b) => (a.order||0) - (b.order||0) || (a.name||'').localeCompare(b.name||'');
+
   // Non-cheese dishes grouped by course, plus an "Other" bucket at the end.
   const groupsOrder = COURSE_GROUP_ORDER.concat(['']); // '' = Other / no course
   groupsOrder.forEach(courseName => {
     let items = rest.filter(d => courseGroupKey(d) === courseName);
     if(!items.length) return;
-    items.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    items.sort(byOrder);
     const title = courseName || 'Other (no course)';
+    const groupKey = courseName || '__other__';
     html += `<div class="menu-group">
       <div class="menu-group-title">${esc(title)} <span class="count">${items.length}</span></div>
-      ${items.map(d => dishRow(d)).join('')}
+      ${items.map(d => dishRow(d, groupKey)).join('')}
     </div>`;
   });
 
   // Cheese group last — all cheeses together, no subdivisions.
   if(cheeseDishes.length){
-    cheeseDishes.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    cheeseDishes.sort(byOrder);
     html += `<div class="menu-group">
       <div class="menu-group-title">Cheese <span class="count">${cheeseDishes.length}</span></div>
-      ${cheeseDishes.map(d => dishRow(d)).join('')}
+      ${cheeseDishes.map(d => dishRow(d, '__cheese__')).join('')}
     </div>`;
   }
 
   box.innerHTML = html || '<p style="opacity:.6">No dishes yet. Use “+ New dish”.</p>';
+  wireDrag();
 }
 
-// One dish row. Shows the menus the dish belongs to, and Edit/Hide/Delete.
-function dishRow(d){
+// One dish row. Draggable within its course group. Shows menus + Edit/Hide/Delete.
+// `group` is the course key the row belongs to, so drag only reorders within it.
+function dishRow(d, group){
   const nameSafe = esc((d.name||'').replace(/'/g,''));
   const menus = Array.isArray(d.menus) ? d.menus : [];
   const menusTag = menus.length
     ? `<span class="from-tag">in ${menus.map(id => esc(MENU_LABEL[id]||id)).join(', ')}</span>`
     : `<span class="from-tag" style="color:#b23b2e;">no menu</span>`;
   return `
-    <div class="drag-item" data-id="${d.id}"${d.hidden?' style="opacity:0.55;"':''}>
-      <div class="n">${esc(d.name||'')} ${menusTag}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
+    <div class="drag-item" draggable="true" data-id="${d.id}" data-group="${esc(group)}"${d.hidden?' style="opacity:0.55;"':''}>
+      <div class="n"><span class="drag-handle" title="Drag to reorder">⠿</span> ${esc(d.name||'')} ${menusTag}${d.hidden?' <span class="from-tag">(hidden)</span>':''}</div>
       <div class="mini">
         <button class="hiddenbtn" title="${d.hidden?'Show':'Hide'}" onclick="toggleHidden('${d.id}')">${d.hidden?'Show':'Hide'}</button>
         <button title="Edit" onclick="editDish('${d.id}')">Edit</button>
@@ -593,30 +600,21 @@ function toggleHidden(id){
     .catch(err => setMsg('Error: ' + err.message, 'err'));
 }
 
-/* Arrow reorder — renumber the whole menu so moves always apply */
-function moveInMenu(id, menuId, dir){
-  const items = allDishes
-    .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
-    .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
-  const idx = items.findIndex(d => d.id === id);
-  const target = idx + dir;
-  if(idx < 0 || target < 0 || target >= items.length) return;
-  const tmp = items[idx]; items[idx] = items[target]; items[target] = tmp;
-  persistMenuOrder(items, menuId);
-}
-
-/* Drag & drop reorder within a menu group */
-let dragId = null, dragMenu = null;
+/* ── Drag & drop reorder within a course group ──
+   Dragging only works within the same group (same data-group). On drop we
+   rebuild each dish's global `order` from the on-screen order of ALL rows, so
+   the sequence you see is exactly what the Food page uses (within each course). */
+let dragId = null, dragGroup = null;
 function wireDrag(){
-  document.querySelectorAll('.drag-item').forEach(el => {
+  document.querySelectorAll('#groups .drag-item').forEach(el => {
     el.addEventListener('dragstart', e => {
-      dragId = el.dataset.id; dragMenu = el.dataset.menu;
+      dragId = el.dataset.id; dragGroup = el.dataset.group;
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
     el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('.dragover').forEach(x=>x.classList.remove('dragover')); });
     el.addEventListener('dragover', e => {
-      if(el.dataset.menu !== dragMenu) return; // only within the same menu
+      if(el.dataset.group !== dragGroup) return; // only within the same course group
       e.preventDefault();
       el.classList.add('dragover');
     });
@@ -624,31 +622,34 @@ function wireDrag(){
     el.addEventListener('drop', e => {
       e.preventDefault();
       el.classList.remove('dragover');
-      if(el.dataset.menu !== dragMenu || el.dataset.id === dragId) return;
-      dropReorder(dragId, el.dataset.id, dragMenu);
+      if(el.dataset.group !== dragGroup || el.dataset.id === dragId) return;
+      dropReorder(dragId, el.dataset.id);
     });
   });
 }
 
-function dropReorder(fromId, toId, menuId){
-  const items = allDishes
-    .filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0)
-    .sort((a,b) => menuPos(a,menuId) - menuPos(b,menuId));
-  const from = items.findIndex(d => d.id === fromId);
-  const to = items.findIndex(d => d.id === toId);
-  if(from < 0 || to < 0) return;
-  const [moved] = items.splice(from, 1);
-  items.splice(to, 0, moved);
-  persistMenuOrder(items, menuId);
+// Move the dragged row to just before the drop-target row in the DOM, then
+// persist a fresh global `order` for every dish from the new on-screen order.
+function dropReorder(fromId, toId){
+  const box = document.getElementById('groups');
+  const fromEl = box.querySelector(`.drag-item[data-id="${fromId}"]`);
+  const toEl = box.querySelector(`.drag-item[data-id="${toId}"]`);
+  if(!fromEl || !toEl || fromEl.dataset.group !== toEl.dataset.group) return;
+  // Insert before or after depending on direction.
+  const rows = [...box.querySelectorAll('.drag-item')];
+  const movingDown = rows.indexOf(fromEl) < rows.indexOf(toEl);
+  toEl.parentNode.insertBefore(fromEl, movingDown ? toEl.nextSibling : toEl);
+  persistOrderFromDom();
 }
 
-function persistMenuOrder(items, menuId){
+function persistOrderFromDom(){
+  const ids = [...document.querySelectorAll('#groups .drag-item')].map(el => el.dataset.id);
   const now = firebase.firestore.FieldValue.serverTimestamp();
-  const writes = items.map((d, i) => {
-    d.menuOrder = Object.assign({}, d.menuOrder, { [menuId]: i });
-    return db.collection('dishes').doc(d.id).update({ ['menuOrder.'+menuId]: i, updatedAt: now });
+  const writes = ids.map((id, i) => {
+    const d = allDishes.find(x => x.id === id);
+    if(d) d.order = i;              // keep local state in sync
+    return db.collection('dishes').doc(id).update({ order: i, updatedAt: now });
   });
-  renderGroups(); // optimistic
   Promise.all(writes)
     .then(() => setMsg('Order updated.', 'ok'))
     .catch(err => { setMsg('Error: ' + err.message, 'err'); loadDishes(); });
