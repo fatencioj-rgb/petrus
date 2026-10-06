@@ -41,6 +41,8 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; align-items:start; }
 .form-col { min-width:0; }
 @media (max-width:720px){ .form-grid { grid-template-columns:1fr; } }
+/* Small image thumbnail in the form (doesn't take over the column). */
+.img-thumb { width:160px; height:120px; object-fit:cover; border-radius:8px; border:1px solid var(--border); margin-top:8px; display:block; }
 /* When no dish is being edited, the list spans the full width. */
 .layout.list-only { grid-template-columns:1fr; }
 /* Dish list laid out in two columns (groups flow across the columns).
@@ -283,10 +285,11 @@ textarea.desc-big { min-height:120px; }
               </div>
               <div class="hint">Only for cheeses — shown because this dish is on the Cheese menu.</div>
             </div>
-          </div>
 
-          <!-- RIGHT column: set up, visibility, image, wine pairing, knowledge -->
-          <div class="form-col">
+            <label>Knowledge points</label>
+            <div id="k-rows"></div>
+            <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
+
             <label>Set up (cutlery)</label>
             <div class="ms" id="ms-setup">
               <button type="button" class="ms-toggle" onclick="toggleMs('ms-setup')">
@@ -297,7 +300,10 @@ textarea.desc-big { min-height:120px; }
             </div>
             <input id="f-setup-extra" placeholder="Other, comma-separated (optional)" oninput="renderPreview()" style="margin-top:8px;">
             <div class="hint">Tick the pieces for this dish. Leave all unticked for "No Set Up".</div>
+          </div>
 
+          <!-- RIGHT column: visibility, image, wine pairing -->
+          <div class="form-col">
             <label>Visibility</label>
             <label class="check" style="width:fit-content;"><input type="checkbox" id="f-hidden" onchange="renderPreview()"> Hidden (kept but not shown in Food)</label>
 
@@ -305,7 +311,7 @@ textarea.desc-big { min-height:120px; }
             <input type="file" id="f-image-file" accept="image/*" onchange="handleImageFile(event)" style="padding:9px 0;border:none;background:transparent;">
             <div class="hint">Choose a photo from your device. It's resized automatically and saved with the dish.</div>
             <div id="image-status" class="hint" style="margin-top:2px;"></div>
-            <img id="image-preview" alt="" style="display:none;max-width:100%;border-radius:8px;border:1px solid var(--border);margin-top:8px;">
+            <img id="image-preview" alt="" style="display:none;" class="img-thumb">
             <!-- Holds the compressed image (data URL) that gets saved to Firestore. -->
             <input type="hidden" id="f-image">
             <div id="image-actions" style="display:none;margin-top:8px;">
@@ -330,10 +336,6 @@ textarea.desc-big { min-height:120px; }
               <input id="f-wp-nonalcoholic" placeholder="Pairing…" oninput="renderPreview()">
             </div>
             <div class="hint">Leave a row blank if it doesn't apply.</div>
-
-            <label>Knowledge points</label>
-            <div id="k-rows"></div>
-            <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
           </div>
 
           </div><!-- /.form-grid -->
