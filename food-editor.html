@@ -256,7 +256,7 @@ textarea.desc-big { min-height:120px; }
             <div class="hint">For A la carte, Lunch, Prestige and Discovery you can set the diet separately per menu. Tick the diets this dish belongs to in each. No tick = Regular.</div>
 
             <label>Course</label>
-            <select id="f-course" onchange="renderPreview()"></select>
+            <select id="f-course" onchange="syncIndulgence2(); renderPreview()"></select>
 
             <label>Announcement</label>
             <textarea id="f-announce" class="announce" placeholder="What you say to the guest when presenting the dish (the speech)." oninput="renderPreview()"></textarea>
@@ -336,6 +336,12 @@ textarea.desc-big { min-height:120px; }
               <span class="wp-label">Indulgence</span>
               <input id="f-wp-indulgence" placeholder="Wine…" oninput="renderPreview()">
               <input id="f-wp-indulgence-vintage" class="wp-vintage" placeholder="Vintage" oninput="renderPreview()">
+            </div>
+            <!-- Second Indulgence wine — only for Main course 2 dishes -->
+            <div class="wp-row" id="wp-indulgence2-row" style="display:none;">
+              <span class="wp-label">Indulgence (2nd)</span>
+              <input id="f-wp-indulgence2" placeholder="Wine…" oninput="renderPreview()">
+              <input id="f-wp-indulgence2-vintage" class="wp-vintage" placeholder="Vintage" oninput="renderPreview()">
             </div>
             <div class="wp-row">
               <span class="wp-label">Non alcoholic</span>
@@ -548,6 +554,19 @@ function renderDietByMenu(preset){
       <div class="check-grid">${checks}</div>
     </div>`;
   }).join('');
+}
+
+// The 2nd Indulgence wine row only shows for "Main course 2" dishes.
+// When hidden, its fields are cleared so stale values aren't saved.
+function syncIndulgence2(){
+  const course = (document.getElementById('f-course').value || '').trim();
+  const show = course === 'Main course 2';
+  const row = document.getElementById('wp-indulgence2-row');
+  if(row) row.style.display = show ? 'flex' : 'none';
+  if(!show){
+    document.getElementById('f-wp-indulgence2').value = '';
+    document.getElementById('f-wp-indulgence2-vintage').value = '';
+  }
 }
 
 // The Cheese (dairy) field only appears when the dish is on the "Cheese" menu.
@@ -813,6 +832,9 @@ function readForm(){
     matchingVintage:    document.getElementById('f-wp-matching-vintage').value.trim(),
     connoisseurVintage: document.getElementById('f-wp-connoisseur-vintage').value.trim(),
     indulgenceVintage:  document.getElementById('f-wp-indulgence-vintage').value.trim(),
+    // Optional 2nd Indulgence wine (only used for Main course 2 dishes).
+    indulgence2:        document.getElementById('f-wp-indulgence2').value.trim(),
+    indulgence2Vintage: document.getElementById('f-wp-indulgence2-vintage').value.trim(),
   };
   // Union of all diet tags across menus (minus 'Regular') — used for the chip
   // shown on cards and the allergy table.
@@ -840,6 +862,7 @@ function resetForm(){
   document.getElementById('form-title').textContent = 'New dish';
   document.getElementById('f-name').value = '';
   document.getElementById('f-course').value = '';
+  syncIndulgence2();
   document.getElementById('f-announce').value = '';
   document.getElementById('f-desc').value = '';
   document.getElementById('f-allergens-extra').value = '';
@@ -851,6 +874,8 @@ function resetForm(){
   document.getElementById('f-wp-matching-vintage').value = '';
   document.getElementById('f-wp-connoisseur-vintage').value = '';
   document.getElementById('f-wp-indulgence-vintage').value = '';
+  document.getElementById('f-wp-indulgence2').value = '';
+  document.getElementById('f-wp-indulgence2-vintage').value = '';
   document.getElementById('f-image').value = '';
   document.getElementById('f-hidden').checked = false;
   document.querySelectorAll('#allergen-grid input:checked, #cheese-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
@@ -875,6 +900,7 @@ function editDish(id){
   document.getElementById('form-title').textContent = 'Edit: ' + (d.name||'');
   document.getElementById('f-name').value = d.name||'';
   document.getElementById('f-course').value = d.course||'';
+  syncIndulgence2();   // show/hide the 2nd Indulgence row based on the course
   document.getElementById('f-announce').value = d.announcement||'';
   document.getElementById('f-desc').value = d.desc||'';
   const wp = d.winePairing || {};
@@ -885,6 +911,9 @@ function editDish(id){
   document.getElementById('f-wp-matching-vintage').value = wp.matchingVintage || '';
   document.getElementById('f-wp-connoisseur-vintage').value = wp.connoisseurVintage || '';
   document.getElementById('f-wp-indulgence-vintage').value = wp.indulgenceVintage || '';
+  // 2nd Indulgence wine (only relevant for Main course 2; row already toggled above).
+  document.getElementById('f-wp-indulgence2').value = (d.course==='Main course 2' && wp.indulgence2) ? wp.indulgence2 : '';
+  document.getElementById('f-wp-indulgence2-vintage').value = (d.course==='Main course 2' && wp.indulgence2Vintage) ? wp.indulgence2Vintage : '';
   // Route existing tags into allergens / cheese; diets are handled per-menu
   // below (dietByMenu). Unknown tags go to the "extra" field.
   const extras = [];

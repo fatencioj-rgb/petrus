@@ -476,6 +476,9 @@ function winePairingBlock(wp, i){
     ['Matching wines', wp.matching, wp.matchingVintage],
     ['Connoisseur', wp.connoisseur, wp.connoisseurVintage],
     ['Indulgence', wp.indulgence, wp.indulgenceVintage],
+    // Second Indulgence wine (Main course 2). Shown with no label so it reads
+    // as a second line under Indulgence.
+    ['', wp.indulgence2, wp.indulgence2Vintage],
     ['Non alcoholic', wp.nonAlcoholic, ''],
   ].filter(([,v]) => v && String(v).trim());
   if(!rows.length) return '';
