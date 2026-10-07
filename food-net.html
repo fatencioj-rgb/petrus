@@ -109,6 +109,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .wine-row { display:flex; gap:8px; font-size:13px; line-height:1.4; }
 .wine-row .wine-label { flex:0 0 110px; color:var(--wine); font-weight:600; }
 .wine-row .wine-val { color:var(--text); opacity:0.9; }
+.wine-vintage { color:var(--wine-soft); font-weight:600; white-space:nowrap; }
 
 /* ── Allergy table ── */
 .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
@@ -472,15 +473,16 @@ document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDishMo
 function winePairingBlock(wp, i){
   if(!wp || typeof wp !== 'object') return '';
   const rows = [
-    ['Matching wines', wp.matching],
-    ['Connoisseur', wp.connoisseur],
-    ['Indulgence', wp.indulgence],
-    ['Non alcoholic', wp.nonAlcoholic],
+    ['Matching wines', wp.matching, wp.matchingVintage],
+    ['Connoisseur', wp.connoisseur, wp.connoisseurVintage],
+    ['Indulgence', wp.indulgence, wp.indulgenceVintage],
+    ['Non alcoholic', wp.nonAlcoholic, ''],
   ].filter(([,v]) => v && String(v).trim());
   if(!rows.length) return '';
-  const items = rows.map(([label, v]) =>
-    `<div class="wine-row"><span class="wine-label">${esc(label)}</span><span class="wine-val">${esc(v)}</span></div>`
-  ).join('');
+  const items = rows.map(([label, v, vintage]) => {
+    const yr = (vintage && String(vintage).trim()) ? ` <span class="wine-vintage">${esc(String(vintage).trim())}</span>` : '';
+    return `<div class="wine-row"><span class="wine-label">${esc(label)}</span><span class="wine-val">${esc(v)}${yr}</span></div>`;
+  }).join('');
   return `
     <div class="knowledge">
       <button class="k-toggle" onclick="event.stopPropagation(); toggleSection('wine-${i}')">Wine pairing <span id="wine-${i}-tog">+</span></button>

@@ -191,10 +191,11 @@ textarea.desc-big { min-height:120px; }
 }
 .ms-panel.list .check:hover { background:var(--bg-soft); }
 
-/* Wine pairing: fixed rows with a label on the left and a text field on the right. */
-.wp-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
-.wp-row .wp-label { flex:0 0 130px; font-size:11px; font-weight:600; color:var(--wine); }
-.wp-row input { flex:1; }
+/* Wine pairing: label on the left, wine name field, and a separate vintage box. */
+.wp-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.wp-row .wp-label { flex:0 0 110px; font-size:11px; font-weight:600; color:var(--wine); }
+.wp-row input { flex:1; min-width:0; }
+.wp-row input.wp-vintage { flex:0 0 72px; }
 
 #app { display:none; }
 </style>
@@ -323,21 +324,24 @@ textarea.desc-big { min-height:120px; }
             <label>Wine pairing</label>
             <div class="wp-row">
               <span class="wp-label">Matching wines</span>
-              <input id="f-wp-matching" placeholder="e.g. Chablis 1er Cru 2020" oninput="renderPreview()">
+              <input id="f-wp-matching" placeholder="Wine…" oninput="renderPreview()">
+              <input id="f-wp-matching-vintage" class="wp-vintage" placeholder="Vintage" oninput="renderPreview()">
             </div>
             <div class="wp-row">
               <span class="wp-label">Connoisseur</span>
               <input id="f-wp-connoisseur" placeholder="Wine…" oninput="renderPreview()">
+              <input id="f-wp-connoisseur-vintage" class="wp-vintage" placeholder="Vintage" oninput="renderPreview()">
             </div>
             <div class="wp-row">
               <span class="wp-label">Indulgence</span>
               <input id="f-wp-indulgence" placeholder="Wine…" oninput="renderPreview()">
+              <input id="f-wp-indulgence-vintage" class="wp-vintage" placeholder="Vintage" oninput="renderPreview()">
             </div>
             <div class="wp-row">
               <span class="wp-label">Non alcoholic</span>
               <input id="f-wp-nonalcoholic" placeholder="Pairing…" oninput="renderPreview()">
             </div>
-            <div class="hint">Leave a row blank if it doesn't apply.</div>
+            <div class="hint">Leave a row blank if it doesn't apply. Put the year in its own Vintage box.</div>
           </div>
 
           </div><!-- /.form-grid -->
@@ -805,6 +809,10 @@ function readForm(){
     connoisseur: document.getElementById('f-wp-connoisseur').value.trim(),
     indulgence:  document.getElementById('f-wp-indulgence').value.trim(),
     nonAlcoholic:document.getElementById('f-wp-nonalcoholic').value.trim(),
+    // Vintages are stored separately per pairing.
+    matchingVintage:    document.getElementById('f-wp-matching-vintage').value.trim(),
+    connoisseurVintage: document.getElementById('f-wp-connoisseur-vintage').value.trim(),
+    indulgenceVintage:  document.getElementById('f-wp-indulgence-vintage').value.trim(),
   };
   // Union of all diet tags across menus (minus 'Regular') — used for the chip
   // shown on cards and the allergy table.
@@ -840,6 +848,9 @@ function resetForm(){
   document.getElementById('f-wp-connoisseur').value = '';
   document.getElementById('f-wp-indulgence').value = '';
   document.getElementById('f-wp-nonalcoholic').value = '';
+  document.getElementById('f-wp-matching-vintage').value = '';
+  document.getElementById('f-wp-connoisseur-vintage').value = '';
+  document.getElementById('f-wp-indulgence-vintage').value = '';
   document.getElementById('f-image').value = '';
   document.getElementById('f-hidden').checked = false;
   document.querySelectorAll('#allergen-grid input:checked, #cheese-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
@@ -871,6 +882,9 @@ function editDish(id){
   document.getElementById('f-wp-connoisseur').value = wp.connoisseur || '';
   document.getElementById('f-wp-indulgence').value = wp.indulgence || '';
   document.getElementById('f-wp-nonalcoholic').value = wp.nonAlcoholic || '';
+  document.getElementById('f-wp-matching-vintage').value = wp.matchingVintage || '';
+  document.getElementById('f-wp-connoisseur-vintage').value = wp.connoisseurVintage || '';
+  document.getElementById('f-wp-indulgence-vintage').value = wp.indulgenceVintage || '';
   // Route existing tags into allergens / cheese; diets are handled per-menu
   // below (dietByMenu). Unknown tags go to the "extra" field.
   const extras = [];
