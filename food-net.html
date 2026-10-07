@@ -363,9 +363,9 @@ function renderDishes(){
   };
   const gridBlock = (dishes) => `<div class="dish-grid-inner">${dishes.map(pushCard).join('')}</div>`;
 
-  // Diet sub-sections only on A la carte, Prestige and Discovery (and not while searching).
+  // Diet sub-sections only on A la carte, Lunch, Prestige and Discovery (and not while searching).
   const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood'];
-  const groupByDiet = !q && ['a_la_carte','prestige','discovery'].indexOf(selectedFN) >= 0;
+  const groupByDiet = !q && ['a_la_carte','lunch','prestige','discovery'].indexOf(selectedFN) >= 0;
 
   // The diets a dish has FOR THE CURRENT MENU (per-menu model). Falls back to
   // Regular for older dishes that have no dietByMenu entry for this menu.

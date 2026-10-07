@@ -252,7 +252,7 @@ textarea.desc-big { min-height:120px; }
 
             <label>Diet per menu</label>
             <div id="diet-by-menu"></div>
-            <div class="hint">For A la carte, Prestige and Discovery you can set the diet separately per menu. Tick the diets this dish belongs to in each. No tick = Regular.</div>
+            <div class="hint">For A la carte, Lunch, Prestige and Discovery you can set the diet separately per menu. Tick the diets this dish belongs to in each. No tick = Regular.</div>
 
             <label>Course</label>
             <select id="f-course" onchange="renderPreview()"></select>
@@ -374,7 +374,7 @@ const DIET_OPTIONS = ['Regular','Vegetarian','Pescatarian','No seafood'];
 // Tags that create their own sub-section on the Food page (Regular does not).
 const DIET_TAGS = ['Vegetarian','Pescatarian','No seafood'];
 // Menus that use the per-menu diet grouping (and show a diet selector).
-const DIET_MENUS = ['a_la_carte','prestige','discovery'];
+const DIET_MENUS = ['a_la_carte','lunch','prestige','discovery'];
 const CHEESE_TAGS = ['Pasteurised','Unpasteurised','Thermised'];
 // All non-allergen tags recognised across the three groups (for editDish routing).
 const NON_ALLERGEN_TAGS = DIET_OPTIONS.concat(CHEESE_TAGS);
@@ -531,7 +531,7 @@ function renderDietByMenu(preset){
     .filter(id => DIET_MENUS.indexOf(id) >= 0)
     .sort((a,b) => DIET_MENUS.indexOf(a) - DIET_MENUS.indexOf(b));
   if(!tickedMenus.length){
-    box.innerHTML = '<div class="hint" style="margin:0;">Tick A la carte, Prestige or Discovery above to set diets per menu.</div>';
+    box.innerHTML = '<div class="hint" style="margin:0;">Tick A la carte, Lunch, Prestige or Discovery above to set diets per menu.</div>';
     return;
   }
   box.innerHTML = tickedMenus.map(menuId => {
