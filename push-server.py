@@ -130,56 +130,90 @@ def send(tokens, heading, body, url="index.html", tag="petrus"):
 # Para no notificar documentos viejos al arrancar, marcamos el momento de
 # inicio y solo reaccionamos a documentos ADDED después de arrancar.
 
-_started_at = time.time()
+# ── Anti-duplicados ──────────────────────────────────────────────────────
+# Guardamos una "firma" de cada aviso ya enviado. Mientras el servidor viva,
+# nunca reenvía la misma firma, pase lo que pase con reconexiones o snapshots.
+#   • notifications / duties / 86 → firma = id del documento
+#   • dishes → firma = id + notifyAt (así, si editas el MISMO plato otra vez
+#     con "Save & Notify", cambia notifyAt y sí vuelve a avisar; pero las
+#     reconexiones, que repiten el mismo notifyAt, NO reenvían).
+_sent = set()
 
 
-def _is_new(change):
-    """True si el documento se acaba de crear (ADDED), no al cargar inicial."""
-    return change.type.name == "ADDED"
+def _seed_already_sent():
+    """Al arrancar, marca TODO lo existente como ya enviado, para no
+    reenviar historial viejo. Solo se notificará lo creado de aquí en adelante."""
+    try:
+        for doc in db.collection("notifications").stream():
+            _sent.add("notif:" + doc.id)
+        for doc in db.collection("somm_duties").stream():
+            _sent.add("duty:" + doc.id)
+        for doc in db.collection("somm_stock").stream():
+            _sent.add("86:" + doc.id)
+        for doc in db.collection("dishes").stream():
+            d = doc.to_dict() or {}
+            _sent.add("dish:" + doc.id + ":" + _notify_stamp(d))
+        print(f"[push] historial marcado ({len(_sent)} elementos); "
+              f"solo se avisará lo nuevo.")
+    except Exception as e:
+        print(f"[push] aviso: no se pudo precargar historial: {e}")
+
+
+def _notify_stamp(d):
+    """Firma del 'notifyAt' de un plato (para distinguir re-notificaciones)."""
+    na = d.get("notifyAt")
+    try:
+        return str(na.timestamp()) if na else "0"
+    except Exception:
+        return str(na)
+
+
+def _once(key):
+    """True solo la primera vez que se ve esta firma."""
+    if key in _sent:
+        return False
+    _sent.add(key)
+    return True
 
 
 def on_notifications(col_snapshot, changes, read_time):
     for change in changes:
-        if not _is_new(change):
+        if change.type.name != "ADDED":
             continue
-        d = change.document.to_dict() or {}
-        # Evita reenviar lo que ya existía antes de arrancar el servidor.
-        created = d.get("createdAt")
-        if created and created.timestamp() < _started_at - 5:
+        doc = change.document
+        if not _once("notif:" + doc.id):
             continue
+        d = doc.to_dict() or {}
         title = d.get("title") or ""
         body = d.get("body") or d.get("message") or ""
-        # Si el título es un placeholder genérico, no lo repetimos como encabezado.
         heading = "" if title.strip().lower() in ("", "petrus", "petrus foh") else title
         send(get_tokens(None), heading, body, url="index.html", tag="broadcast")
 
 
 def on_dishes(col_snapshot, changes, read_time):
     for change in changes:
-        # Platos pueden ser ADDED o MODIFIED (editar un plato existente).
         if change.type.name not in ("ADDED", "MODIFIED"):
             continue
-        d = change.document.to_dict() or {}
+        doc = change.document
+        d = doc.to_dict() or {}
         if not d.get("notifyTeam"):
             continue
-        notify_at = d.get("notifyAt")
-        # Solo si el "notificar" es reciente (evita avisos viejos al arrancar).
-        if notify_at and notify_at.timestamp() < _started_at - 5:
+        # Firma = id + notifyAt. Una reconexión repite la misma firma → no reenvía.
+        if not _once("dish:" + doc.id + ":" + _notify_stamp(d)):
             continue
         name = d.get("name") or "A dish"
-        title = "Dish updated"
         body = f"{name} has been updated on the menu."
-        send(get_tokens(None), title, body, url="food-net.html", tag="dish")
+        send(get_tokens(None), "Dish updated", body, url="food-net.html", tag="dish")
 
 
 def on_duties(col_snapshot, changes, read_time):
     for change in changes:
-        if not _is_new(change):
+        if change.type.name != "ADDED":
             continue
-        d = change.document.to_dict() or {}
-        created = d.get("createdAt")
-        if created and created.timestamp() < _started_at - 5:
+        doc = change.document
+        if not _once("duty:" + doc.id):
             continue
+        d = doc.to_dict() or {}
         text = d.get("text") or "A new task has been assigned."
         assignee = f" ({d.get('assignee')})" if d.get("assignee") else ""
         send(get_tokens(DUTY_RECIPIENTS), "New task",
@@ -188,13 +222,13 @@ def on_duties(col_snapshot, changes, read_time):
 
 def on_stock(col_snapshot, changes, read_time):
     for change in changes:
-        if not _is_new(change):
+        if change.type.name != "ADDED":
             continue
-        d = change.document.to_dict() or {}
+        doc = change.document
+        d = doc.to_dict() or {}
         if d.get("tag") != "86":
             continue
-        created = d.get("createdAt")
-        if created and created.timestamp() < _started_at - 5:
+        if not _once("86:" + doc.id):
             continue
         name = d.get("name") or "An item"
         vintage = f"{d.get('vintage')} " if d.get("vintage") else ""
@@ -242,6 +276,10 @@ def main():
     print("  Escuchando: notifications, dishes, somm_duties, somm_stock")
     print("  Déjalo corriendo. Ctrl+C para detener.")
     print("=" * 60)
+
+    # Marca todo lo existente como ya enviado ANTES de escuchar, para que al
+    # arrancar no se reenvíe historial. Solo avisará lo creado de aquí en más.
+    _seed_already_sent()
 
     subscribe()
 
