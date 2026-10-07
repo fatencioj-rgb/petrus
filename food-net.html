@@ -220,7 +220,7 @@ function firstImage(d){
 }
 function nonAllergen(tag){
   // Diet + cheese/dairy tags are not allergens.
-  return /^(regular|vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
+  return /^(regular|vegetarian|vegan|pescatarian|no seafood|gluten free|pasteurised|unpasteurised|thermised)$/i.test((tag||'').trim());
 }
 
 /* ── Menus / dishes ── */
@@ -365,7 +365,7 @@ function renderDishes(){
   const gridBlock = (dishes) => `<div class="dish-grid-inner">${dishes.map(pushCard).join('')}</div>`;
 
   // Diet sub-sections only on A la carte, Lunch, Prestige and Discovery (and not while searching).
-  const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood'];
+  const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood','Gluten free'];
   const groupByDiet = !q && ['a_la_carte','lunch','prestige','discovery'].indexOf(selectedFN) >= 0;
 
   // The diets a dish has FOR THE CURRENT MENU (per-menu model). Falls back to

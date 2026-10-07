@@ -386,9 +386,9 @@ const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local'];
 const STANDARD_ALLERGENS = ['Celery','Crustacean','Egg','Fish','Gluten','Milk','Mollusc','Mustard','Nuts','Sesame','Soya','Sulphites'];
 // Diet options a dish can have (multiple allowed, combinable). 'Regular' means
 // it also belongs in the normal (unrestricted) flow of the menu.
-const DIET_OPTIONS = ['Regular','Vegetarian','Pescatarian','No seafood'];
+const DIET_OPTIONS = ['Regular','Vegetarian','Pescatarian','No seafood','Gluten free'];
 // Tags that create their own sub-section on the Food page (Regular does not).
-const DIET_TAGS = ['Vegetarian','Pescatarian','No seafood'];
+const DIET_TAGS = ['Vegetarian','Pescatarian','No seafood','Gluten free'];
 // Menus that use the per-menu diet grouping (and show a diet selector).
 const DIET_MENUS = ['a_la_carte','lunch','prestige','discovery'];
 const CHEESE_TAGS = ['Pasteurised','Unpasteurised','Thermised'];
@@ -428,7 +428,7 @@ function toggleShowHidden(){
 }
 
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function nonAllergen(t){ return /^(regular|vegetarian|vegan|pescatarian|no seafood|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
+function nonAllergen(t){ return /^(regular|vegetarian|vegan|pescatarian|no seafood|gluten free|pasteurised|unpasteurised|thermised)$/i.test((t||'').trim()); }
 function fixImg(path){
   if(!path) return '';
   if(/^data:/i.test(path)) return path;               // uploaded image (data URL)
