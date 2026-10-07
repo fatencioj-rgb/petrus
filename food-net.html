@@ -480,6 +480,7 @@ function winePairingBlock(wp, i){
     // as a second line under Indulgence.
     ['', wp.indulgence2, wp.indulgence2Vintage],
     ['Non alcoholic', wp.nonAlcoholic, ''],
+    ['Lunch wine', wp.lunch, wp.lunchVintage],
   ].filter(([,v]) => v && String(v).trim());
   if(!rows.length) return '';
   const items = rows.map(([label, v, vintage]) => {

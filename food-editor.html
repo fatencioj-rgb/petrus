@@ -347,6 +347,12 @@ textarea.desc-big { min-height:120px; }
               <span class="wp-label">Non alcoholic</span>
               <input id="f-wp-nonalcoholic" placeholder="Pairing…" oninput="renderPreview()">
             </div>
+            <!-- Lunch wine — only for dishes on the Lunch menu -->
+            <div class="wp-row" id="wp-lunch-row" style="display:none;">
+              <span class="wp-label">Lunch wine</span>
+              <input id="f-wp-lunch" placeholder="Wine…" oninput="renderPreview()">
+              <input id="f-wp-lunch-vintage" class="wp-vintage" placeholder="Vintage" oninput="renderPreview()">
+            </div>
             <div class="hint">Leave a row blank if it doesn't apply. Put the year in its own Vintage box.</div>
           </div>
 
@@ -473,6 +479,7 @@ function initEditor(){
   loadDishes();
   renderDietByMenu({});
   syncCheeseVisibility();
+  syncLunchWine();
   updateMsSummaries();
   renderPreview();
 }
@@ -517,7 +524,7 @@ function updateMsSummaries(){
   });
 }
 // Called whenever any dropdown checkbox changes.
-function msChanged(){ renderDietByMenu(); syncCheeseVisibility(); updateMsSummaries(); renderPreview(); }
+function msChanged(){ renderDietByMenu(); syncCheeseVisibility(); syncLunchWine(); updateMsSummaries(); renderPreview(); }
 
 /* ── Diet per menu ──
    For each ticked menu in DIET_MENUS we show a row of diet checkboxes. The
@@ -554,6 +561,18 @@ function renderDietByMenu(preset){
       <div class="check-grid">${checks}</div>
     </div>`;
   }).join('');
+}
+
+// The "Lunch wine" row only shows when the dish is on the Lunch menu.
+// When hidden, its fields are cleared so stale values aren't saved.
+function syncLunchWine(){
+  const onLunch = !!document.querySelector('#menu-grid input[value="lunch"]:checked');
+  const row = document.getElementById('wp-lunch-row');
+  if(row) row.style.display = onLunch ? 'flex' : 'none';
+  if(!onLunch){
+    document.getElementById('f-wp-lunch').value = '';
+    document.getElementById('f-wp-lunch-vintage').value = '';
+  }
 }
 
 // The 2nd Indulgence wine row only shows for "Main course 2" dishes.
@@ -835,6 +854,9 @@ function readForm(){
     // Optional 2nd Indulgence wine (only used for Main course 2 dishes).
     indulgence2:        document.getElementById('f-wp-indulgence2').value.trim(),
     indulgence2Vintage: document.getElementById('f-wp-indulgence2-vintage').value.trim(),
+    // Optional Lunch wine (only used for dishes on the Lunch menu).
+    lunch:              document.getElementById('f-wp-lunch').value.trim(),
+    lunchVintage:       document.getElementById('f-wp-lunch-vintage').value.trim(),
   };
   // Union of all diet tags across menus (minus 'Regular') — used for the chip
   // shown on cards and the allergy table.
@@ -876,10 +898,13 @@ function resetForm(){
   document.getElementById('f-wp-indulgence-vintage').value = '';
   document.getElementById('f-wp-indulgence2').value = '';
   document.getElementById('f-wp-indulgence2-vintage').value = '';
+  document.getElementById('f-wp-lunch').value = '';
+  document.getElementById('f-wp-lunch-vintage').value = '';
   document.getElementById('f-image').value = '';
   document.getElementById('f-hidden').checked = false;
   document.querySelectorAll('#allergen-grid input:checked, #cheese-grid input:checked, #menu-grid input:checked, #setup-grid input:checked').forEach(c=>c.checked=false);
   renderDietByMenu({});   // clear per-menu diet selectors
+  syncLunchWine();        // hide the Lunch wine row (no menus ticked)
   document.getElementById('image-status').textContent = '';
   document.getElementById('image-actions').style.display = 'none';
   document.getElementById('f-image-file').value = '';
@@ -945,6 +970,10 @@ function editDish(id){
   document.getElementById('f-setup-extra').value = setupExtras.join(', ');
   document.querySelectorAll('#menu-grid input').forEach(c=>c.checked = (d.menus||[]).indexOf(c.value)>=0);
   renderDietByMenu(d.dietByMenu || {});   // build per-menu diet selectors from saved data
+  syncLunchWine();                        // show/hide Lunch wine row from the ticked menus
+  const onLunch = (d.menus||[]).indexOf('lunch') >= 0;
+  document.getElementById('f-wp-lunch').value = (onLunch && wp.lunch) ? wp.lunch : '';
+  document.getElementById('f-wp-lunch-vintage').value = (onLunch && wp.lunchVintage) ? wp.lunchVintage : '';
   const existingImg = (d.images && d.images[0]) || '';
   document.getElementById('f-image').value = existingImg;
   document.getElementById('f-image-file').value = '';
