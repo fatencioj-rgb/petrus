@@ -581,7 +581,7 @@ document.addEventListener('keydown', (e) => {
 // Everyone signed-in can read. Fiorella & Milena can add/edit.
 // Only Fiorella can delete. Each note shows a subtle author · date pill.
 let NOTES_USER = null;
-function isManager(user){ return user && (user.email==='fiorella@petrus.local' || user.email==='milena@petrus.local'); }
+function isManager(user){ return user && (user.email==='fiorella@petrus.local' || user.email==='milena@petrus.local' || user.email==='orson@petrus.local'); }
 function isFiorella(user){ return user && user.email==='fiorella@petrus.local'; }
 function escNote(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtDate(ts){

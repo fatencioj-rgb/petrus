@@ -11,7 +11,8 @@ service cloud.firestore {
     }
     function isManager() {
       return signedIn() && (request.auth.token.email == 'fiorella@petrus.local'
-                         || request.auth.token.email == 'milena@petrus.local');
+                         || request.auth.token.email == 'milena@petrus.local'
+                         || request.auth.token.email == 'orson@petrus.local');
     }
 
     // Dishes: any signed-in user can read; Fiorella and Milena can write.

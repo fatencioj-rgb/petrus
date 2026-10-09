@@ -43,6 +43,7 @@ DUTY_RECIPIENTS = [
     "fiorella@petrus.local",
     "christian@petrus.local",
     "milena@petrus.local",
+    "orson@petrus.local",
 ]
 
 # ── Inicializar Firebase ───────────────────────────────────────────────

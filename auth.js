@@ -33,6 +33,7 @@ var PETRUS_ACCESS = {
   'christian@petrus.local':['training','sommeliers'],
   'liza@petrus.local':     ['training','operations'],
   'milena@petrus.local':   ['training','sommeliers','operations'],
+  'orson@petrus.local':    ['training','sommeliers','operations'],
   'fiorella@petrus.local': ['training','sommeliers','operations','admin'],
 };
 
@@ -44,6 +45,7 @@ function isPetrusGuest(user){
 var PETRUS_TEAM = [
   { email:'fiorella@petrus.local', name:'Fiorella' },
   { email:'milena@petrus.local',   name:'Milena' },
+  { email:'orson@petrus.local',    name:'Orson' },
   { email:'christian@petrus.local',name:'Christian' },
   { email:'liza@petrus.local',     name:'Liza' },
   { email:'tanvir@petrus.local',   name:'Tanvir' },

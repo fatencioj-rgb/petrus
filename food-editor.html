@@ -263,8 +263,17 @@ textarea.desc-big { min-height:120px; }
             <div class="hint">Presented to the guest. Two lines shown; it grows if there's more. Press Enter for new lines.</div>
 
             <label>Description</label>
-            <textarea id="f-desc" class="desc-big" placeholder="Full details of the dish." oninput="renderPreview()"></textarea>
-            <div class="hint">The dish details. Press Enter for new lines.</div>
+            <div class="rte-toolbar">
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteCmd('bold')" title="Bold" style="font-weight:700;">B</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteCmd('italic')" title="Italic" style="font-style:italic;">I</button>
+              <span class="rte-sep"></span>
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteColor('#3a2226')" title="Black text"><span class="rte-dot" style="background:#3a2226;"></span></button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteColor('#5c1a1a')" title="Bordeaux text"><span class="rte-dot" style="background:#5c1a1a;"></span></button>
+            </div>
+            <div id="f-desc-rte" class="desc-big rte" contenteditable="true" data-placeholder="Full details of the dish." oninput="syncDescFromRte()"></div>
+            <!-- Hidden source of truth (HTML) kept in sync with the editor above. -->
+            <textarea id="f-desc" style="display:none;"></textarea>
+            <div class="hint">Select text, then use B / I or a colour. Press Enter for new lines.</div>
 
             <label>Allergens</label>
             <div class="ms" id="ms-allergen">
@@ -382,7 +391,7 @@ textarea.desc-big { min-height:120px; }
 <script src="auth.js"></script>
 <script src="push.js"></script>
 <script>
-const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local'];
+const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local'];
 const STANDARD_ALLERGENS = ['Celery','Crustacean','Egg','Fish','Gluten','Milk','Mollusc','Mustard','Nuts','Sesame','Soya','Sulphites'];
 // Diet options a dish can have (multiple allowed, combinable). 'Regular' means
 // it also belongs in the normal (unrestricted) flow of the menu.
