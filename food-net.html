@@ -201,6 +201,42 @@ let FN_DISHES = [];
 let usingFirestore = false;
 
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Render the Description allowing only safe formatting (bold, italic, line
+// breaks, and text colour). Everything else is escaped so no unsafe HTML runs.
+function safeDesc(s){
+  const raw = String(s==null?'':s);
+  // If it looks like plain text (no tags), just escape + keep line breaks.
+  if(!/[<]/.test(raw)) return esc(raw).replace(/\n/g,'<br>');
+  // Build an element, then walk it keeping only allowed tags/attributes.
+  const ALLOWED = { 'B':[], 'STRONG':[], 'I':[], 'EM':[], 'U':[], 'BR':[], 'DIV':[], 'P':[], 'SPAN':['color','font-weight','font-style'], 'FONT':['color'] };
+  const tmp = document.createElement('div');
+  tmp.innerHTML = raw;
+  const clean = (node) => {
+    let out = '';
+    node.childNodes.forEach(ch => {
+      if(ch.nodeType === 3){ out += esc(ch.nodeValue); return; }      // text
+      if(ch.nodeType !== 1) return;                                   // skip comments etc.
+      const tag = ch.tagName;
+      if(!ALLOWED[tag]){ out += clean(ch); return; }                  // drop tag, keep contents
+      if(tag === 'BR'){ out += '<br>'; return; }
+      // Preserve only whitelisted inline styles (colour / bold / italic).
+      const styles = [];
+      if(ch.style){
+        if(ALLOWED[tag].indexOf('color')>=0 && ch.style.color) styles.push('color:'+ch.style.color);
+        if(ALLOWED[tag].indexOf('font-weight')>=0 && ch.style.fontWeight) styles.push('font-weight:'+ch.style.fontWeight);
+        if(ALLOWED[tag].indexOf('font-style')>=0 && ch.style.fontStyle) styles.push('font-style:'+ch.style.fontStyle);
+      }
+      const style = styles.length ? ` style="${esc(styles.join(';'))}"` : '';
+      const inner = clean(ch);
+      // Treat block tags as line-makers.
+      if(tag === 'DIV' || tag === 'P'){ out += inner + '<br>'; }
+      else out += `<${tag.toLowerCase()}${style}>${inner}</${tag.toLowerCase()}>`;
+    });
+    return out;
+  };
+  return clean(tmp).replace(/(<br>)+$/,''); // trim trailing breaks
+}
 function fixImg(path){
   if(!path) return '';
   if(/^data:/i.test(path)) return path;                    // uploaded image (data URL)
@@ -444,7 +480,7 @@ function dishBodyHtml(d, prefix){
   return `
     <div class="dish-name">${esc(d.name)}</div>
     ${announceBlock}
-    <div class="dish-desc">${esc(d.desc||'').replace(/\n/g,'<br>')}</div>
+    <div class="dish-desc">${safeDesc(d.desc)}</div>
     ${chips ? `<div class="chips">${chips}</div>` : ''}
     ${setupBlock}
     ${wineBlock}

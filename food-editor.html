@@ -43,6 +43,15 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 @media (max-width:720px){ .form-grid { grid-template-columns:1fr; } }
 /* Small image thumbnail in the form (doesn't take over the column). */
 .img-thumb { width:160px; height:120px; object-fit:cover; border-radius:8px; border:1px solid var(--border); margin-top:8px; display:block; }
+/* Rich-text toolbar + editable Description */
+.rte-toolbar { display:flex; align-items:center; gap:4px; margin-bottom:4px; }
+.rte-toolbar button { width:28px; height:26px; border:1px solid var(--border); background:#fff; color:var(--text); border-radius:5px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; }
+.rte-toolbar button:hover { border-color:var(--wine); }
+.rte-sep { width:1px; height:18px; background:var(--border); margin:0 3px; }
+.rte-dot { width:14px; height:14px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.15); }
+.rte { min-height:120px; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:#fff; font-family:var(--sans); font-size:11px; line-height:1.45; color:var(--text); outline:none; overflow:auto; }
+.rte:focus { border-color:var(--wine); }
+.rte:empty::before { content:attr(data-placeholder); color:var(--wine-soft); opacity:0.55; }
 /* Diet-per-menu rows */
 .dbm-row { border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:8px; }
 .dbm-menu { font-weight:600; color:var(--wine); font-size:11px; margin-bottom:5px; }
@@ -572,6 +581,31 @@ function renderDietByMenu(preset){
   }).join('');
 }
 
+/* ── Rich-text Description ──
+   The visible editor is a contenteditable div; the hidden #f-desc textarea
+   holds the HTML and stays the source of truth for readForm/editDish. */
+function rteCmd(cmd){
+  document.getElementById('f-desc-rte').focus();
+  document.execCommand(cmd, false, null);
+  syncDescFromRte();
+}
+function rteColor(color){
+  document.getElementById('f-desc-rte').focus();
+  document.execCommand('foreColor', false, color);
+  syncDescFromRte();
+}
+function syncDescFromRte(){
+  const rte = document.getElementById('f-desc-rte');
+  document.getElementById('f-desc').value = rte.innerHTML.trim();
+  renderPreview();
+}
+// Load HTML (or plain text) into the editable Description.
+function setDescHtml(html){
+  const rte = document.getElementById('f-desc-rte');
+  rte.innerHTML = html || '';
+  document.getElementById('f-desc').value = rte.innerHTML.trim();
+}
+
 // The "Lunch wine" row only shows when the dish is on the Lunch menu.
 // When hidden, its fields are cleared so stale values aren't saved.
 function syncLunchWine(){
@@ -895,7 +929,7 @@ function resetForm(){
   document.getElementById('f-course').value = '';
   syncIndulgence2();
   document.getElementById('f-announce').value = '';
-  document.getElementById('f-desc').value = '';
+  setDescHtml('');
   document.getElementById('f-allergens-extra').value = '';
   document.getElementById('f-setup-extra').value = '';
   document.getElementById('f-wp-matching').value = '';
@@ -936,7 +970,7 @@ function editDish(id){
   document.getElementById('f-course').value = d.course||'';
   syncIndulgence2();   // show/hide the 2nd Indulgence row based on the course
   document.getElementById('f-announce').value = d.announcement||'';
-  document.getElementById('f-desc').value = d.desc||'';
+  setDescHtml(d.desc||'');
   const wp = d.winePairing || {};
   document.getElementById('f-wp-matching').value = wp.matching || '';
   document.getElementById('f-wp-connoisseur').value = wp.connoisseur || '';
