@@ -49,7 +49,7 @@ body { font-family:var(--sans); background:var(--bg); color:var(--text); min-hei
 .rte-toolbar button:hover { border-color:var(--wine); }
 .rte-sep { width:1px; height:18px; background:var(--border); margin:0 3px; }
 .rte-dot { width:14px; height:14px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.15); }
-.rte { min-height:120px; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:#fff; font-family:var(--sans); font-size:11px; line-height:1.45; color:var(--text); outline:none; overflow:auto; }
+.rte { display:block; width:100%; box-sizing:border-box; min-height:120px; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:#fff; font-family:var(--sans); font-size:11px; line-height:1.45; color:var(--text); outline:none; overflow:auto; white-space:pre-wrap; }
 .rte:focus { border-color:var(--wine); }
 .rte:empty::before { content:attr(data-placeholder); color:var(--wine-soft); opacity:0.55; }
 /* Diet-per-menu rows */
