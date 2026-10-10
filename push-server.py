@@ -91,7 +91,9 @@ def send(tokens, heading, text, url="index.html", tag="petrus"):
 
     full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
     heading = (heading or "Petrus FOH").strip()
-    body = (text or "").strip()
+    # iOS descarta las push con saltos de línea: los reemplazamos por espacios.
+    heading = " ".join(heading.split())
+    body = " ".join((text or "").split())
 
     # SOLO `data` (sin `notification`): el service worker arma la notificación
     # usando data.title como título y data.body como cuerpo.
@@ -157,6 +159,8 @@ def _seed_already_sent():
         for doc in db.collection("dishes").stream():
             d = doc.to_dict() or {}
             _sent.add("dish:" + doc.id + ":" + _notify_stamp(d))
+        for doc in db.collection("notes").stream():
+            _sent.add("note:" + doc.id)
         print(f"[push] historial marcado ({len(_sent)} elementos); "
               f"solo se avisará lo nuevo.")
     except Exception as e:
@@ -260,64 +264,118 @@ def on_stock(col_snapshot, changes, read_time):
              f"{vintage}{name}{where}", url="somm-stock.html", tag="86")
 
 
-# ── Suscripciones + reconexión ───────────────────────────────────────────
-# Los listeners de Firestore de larga duración a veces se "duermen" y dejan
-# de recibir eventos sin avisar. Para evitarlo, cada cierto tiempo cerramos
-# y volvemos a abrir las suscripciones, manteniendo la conexión fresca.
+def on_notes(col_snapshot, changes, read_time):
+    """Notas de la página de inicio (colección `notes`).
+      • recipients == ['all']  → notifica a TODOS.
+      • recipients == [emails] → notifica SOLO a esas personas.
+    El autor NO se notifica a sí mismo (ya sabe lo que escribió)."""
+    for change in changes:
+        if change.type.name != "ADDED":
+            continue
+        doc = change.document
+        if not _once("note:" + doc.id):
+            continue
+        d = doc.to_dict() or {}
+        text = (d.get("text") or "").replace("\n", " ").strip()
+        if not text:
+            continue
+        author_email = (d.get("authorEmail") or "").lower()
+        author = _author_from_email(author_email) or "Petrus"
+        recipients = d.get("recipients") or []
+        if not isinstance(recipients, list):
+            recipients = []
 
-RESUBSCRIBE_SECONDS = 15 * 60  # re-suscribir cada 15 minutos
+        if "all" in recipients:
+            # A todos (menos el propio autor).
+            targets = None  # None = todos
+            emails_filter = None
+        else:
+            # Solo a los destinatarios indicados.
+            emails_filter = [str(e).lower() for e in recipients]
+            targets = emails_filter
 
-_watches = []
-
-
-def subscribe():
-    """Abre las 4 suscripciones y guarda sus handles."""
-    global _watches
-    _watches = [
-        db.collection("notifications").on_snapshot(on_notifications),
-        db.collection("dishes").on_snapshot(on_dishes),
-        db.collection("somm_duties").on_snapshot(on_duties),
-        db.collection("somm_stock").on_snapshot(on_stock),
-    ]
+        tokens = _tokens_excluding(targets, author_email)
+        send(tokens, author, text, url="index.html", tag="note")
 
 
-def unsubscribe():
-    """Cierra las suscripciones actuales."""
-    global _watches
-    for w in _watches:
-        try:
-            w.unsubscribe()
-        except Exception:
-            pass
-    _watches = []
+def _tokens_excluding(emails, exclude_email):
+    """Tokens para `emails` (None = todos), excluyendo al autor."""
+    out = []
+    for doc in db.collection("push_tokens").stream():
+        d = doc.to_dict() or {}
+        tok = d.get("token")
+        em = (d.get("email") or "").lower()
+        if not tok:
+            continue
+        if em == (exclude_email or ""):
+            continue  # no notificar al autor
+        if emails is None or em in emails:
+            out.append(tok)
+    return out
+
+
+# ── Sondeo periódico (polling) ────────────────────────────────────────────
+# En vez de depender de listeners en tiempo real (que a veces se "duermen"),
+# consultamos Firestore cada POLL_SECONDS buscando documentos nuevos y los
+# enviamos. Es simple y MUY fiable. La deduplicación por ID (_once) evita
+# que algo se envíe dos veces.
+
+POLL_SECONDS = 15
+
+
+def _poll_once():
+    """Revisa las 4 colecciones y procesa lo que no se haya enviado aún.
+    Reutiliza exactamente la misma lógica que los handlers, simulando un
+    cambio de tipo ADDED/MODIFIED por cada documento."""
+    class _Change:
+        def __init__(self, doc, kind="ADDED"):
+            self.document = doc
+            class _T:  # imita change.type.name
+                name = kind
+            self.type = _T()
+
+    # notifications → ADDED
+    docs = list(db.collection("notifications").stream())
+    on_notifications(None, [_Change(d, "ADDED") for d in docs], None)
+
+    # dishes → tratamos como MODIFIED (el handler ya filtra notifyTeam + firma)
+    docs = list(db.collection("dishes").stream())
+    on_dishes(None, [_Change(d, "MODIFIED") for d in docs], None)
+
+    # somm_duties → ADDED
+    docs = list(db.collection("somm_duties").stream())
+    on_duties(None, [_Change(d, "ADDED") for d in docs], None)
+
+    # somm_stock → ADDED
+    docs = list(db.collection("somm_stock").stream())
+    on_stock(None, [_Change(d, "ADDED") for d in docs], None)
+
+    # notes (notas de inicio) → ADDED
+    docs = list(db.collection("notes").stream())
+    on_notes(None, [_Change(d, "ADDED") for d in docs], None)
 
 
 def main():
     print("=" * 60)
     print("  Petrus FOH — Servidor de notificaciones (gratis)")
     print("  Proyecto: petrus-foh")
-    print("  Escuchando: notifications, dishes, somm_duties, somm_stock")
+    print(f"  Revisando cada {POLL_SECONDS}s: notifications, dishes, "
+          "somm_duties, somm_stock")
     print("  Déjalo corriendo. Ctrl+C para detener.")
     print("=" * 60)
 
-    # Marca todo lo existente como ya enviado ANTES de escuchar, para que al
+    # Marca todo lo existente como ya enviado ANTES de empezar, para que al
     # arrancar no se reenvíe historial. Solo avisará lo creado de aquí en más.
     _seed_already_sent()
 
-    subscribe()
-
     try:
-        last = time.time()
         while True:
-            time.sleep(1)
-            # Refresca las suscripciones periódicamente para que no se duerman.
-            if time.time() - last >= RESUBSCRIBE_SECONDS:
-                unsubscribe()
-                subscribe()
-                last = time.time()
-                print("[push] conexión refrescada")
+            try:
+                _poll_once()
+            except Exception as e:
+                print(f"[push] error en sondeo (se reintenta): {e}")
+            time.sleep(POLL_SECONDS)
     except KeyboardInterrupt:
-        unsubscribe()
         print("\n[push] Detenido.")
 
 
