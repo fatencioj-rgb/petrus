@@ -286,32 +286,13 @@ def on_notes(col_snapshot, changes, read_time):
             recipients = []
 
         if "all" in recipients:
-            # A todos (menos el propio autor).
-            targets = None  # None = todos
-            emails_filter = None
+            # A todos, INCLUIDO el autor (Opción B).
+            tokens = get_tokens(None)
         else:
             # Solo a los destinatarios indicados.
             emails_filter = [str(e).lower() for e in recipients]
-            targets = emails_filter
-
-        tokens = _tokens_excluding(targets, author_email)
+            tokens = get_tokens(emails_filter)
         send(tokens, author, text, url="index.html", tag="note")
-
-
-def _tokens_excluding(emails, exclude_email):
-    """Tokens para `emails` (None = todos), excluyendo al autor."""
-    out = []
-    for doc in db.collection("push_tokens").stream():
-        d = doc.to_dict() or {}
-        tok = d.get("token")
-        em = (d.get("email") or "").lower()
-        if not tok:
-            continue
-        if em == (exclude_email or ""):
-            continue  # no notificar al autor
-        if emails is None or em in emails:
-            out.append(tok)
-    return out
 
 
 # ── Sondeo periódico (polling) ────────────────────────────────────────────
