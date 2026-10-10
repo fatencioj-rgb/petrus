@@ -46,6 +46,14 @@ DUTY_RECIPIENTS = [
     "orson@petrus.local",
 ]
 
+def _author_from_email(email):
+    """'fiorella@petrus.local' → 'Fiorella'. Devuelve '' si no hay email."""
+    if not email:
+        return ""
+    name = str(email).split("@")[0].replace(".", " ").strip()
+    return name[:1].upper() + name[1:] if name else ""
+
+
 # ── Inicializar Firebase ───────────────────────────────────────────────
 cred = credentials.Certificate(KEY_PATH)
 firebase_admin.initialize_app(cred)
@@ -68,30 +76,25 @@ def get_tokens(emails=None):
     return tokens
 
 
-# Todas las notificaciones muestran este título fijo. El detalle va en el cuerpo.
-APP_TITLE = "Petrus FOH"
-
-
-def send(tokens, heading, body, url="index.html", tag="petrus"):
+def send(tokens, title, body, url="index.html", tag="petrus"):
     """Envía una push a la lista de tokens y limpia los que ya no sirven.
-    El título siempre es «Petrus FOH»; `heading` (ej. 'Dish updated') se pone
-    como primera línea del cuerpo, seguido del mensaje.
+    `title` = la línea en negrita que ve el usuario (ej. 'New Dish',
+    'from Fiorella', 'New task from Fiorella to Milena').
+    `body`  = el detalle (nombre del plato, texto del mensaje/tarea…).
+    iOS siempre antepone 'Petrus FOH' arriba (nombre de la app); no se puede
+    quitar, por eso el title ya NO debe repetir 'Petrus FOH'.
     `url` es una página relativa; aquí se convierte en URL HTTPS completa."""
     if not tokens:
-        print(f"[push] sin dispositivos para «{heading}»")
+        print(f"[push] sin dispositivos para «{title}»")
         return
 
     full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
-
-    # Cuerpo final en UNA sola línea (iOS/Safari descarta pushes con '\n').
-    # Formato: "Encabezado — mensaje". Si no hay encabezado, solo el mensaje.
-    full_body = (f"{heading} — {body}" if heading and body
-                 else (heading or body or ""))
+    body = body or ""
 
     message = messaging.MulticastMessage(
         tokens=tokens,
-        notification=messaging.Notification(title=APP_TITLE, body=full_body),
-        data={"title": APP_TITLE, "body": full_body, "url": full_url, "tag": tag},
+        notification=messaging.Notification(title=title, body=body),
+        data={"title": title, "body": body, "url": full_url, "tag": tag},
         webpush=messaging.WebpushConfig(
             notification=messaging.WebpushNotification(
                 icon=SITE_URL + "icons/icon-192.png",
@@ -123,7 +126,7 @@ def send(tokens, heading, body, url="index.html", tag="petrus"):
                     dead += 1
                 except Exception:
                     pass
-    print(f"[push] «{heading or body}» → {resp.success_count} enviadas, "
+    print(f"[push] «{title}» → {resp.success_count} enviadas, "
           f"{resp.failure_count} fallidas, {dead} tokens limpiados")
 
 
@@ -185,10 +188,10 @@ def on_notifications(col_snapshot, changes, read_time):
         if not _once("notif:" + doc.id):
             continue
         d = doc.to_dict() or {}
-        title = d.get("title") or ""
-        body = d.get("body") or d.get("message") or ""
-        heading = "" if title.strip().lower() in ("", "petrus", "petrus foh") else title
-        send(get_tokens(None), heading, body, url="index.html", tag="broadcast")
+        body = d.get("body") or d.get("message") or d.get("title") or ""
+        # Mensaje manual (admin): sale como "from <quien lo envió>".
+        author = _author_from_email(d.get("authorEmail")) or "Fiorella"
+        send(get_tokens(None), f"from {author}", body, url="index.html", tag="broadcast")
 
 
 def on_dishes(col_snapshot, changes, read_time):
@@ -203,8 +206,18 @@ def on_dishes(col_snapshot, changes, read_time):
         if not _once("dish:" + doc.id + ":" + _notify_stamp(d)):
             continue
         name = d.get("name") or "A dish"
-        body = f"{name} has been updated on the menu."
-        send(get_tokens(None), "Dish updated", body, url="food-net.html", tag="dish")
+        # Nuevo vs actualizado: si createdAt y updatedAt coinciden (± unos
+        # segundos), es nuevo. Si no, es una actualización.
+        title = "Dish Updated"
+        ca, ua = d.get("createdAt"), d.get("updatedAt")
+        try:
+            if ca and ua and abs(ca.timestamp() - ua.timestamp()) < 5:
+                title = "New Dish"
+            elif ca and not ua:
+                title = "New Dish"
+        except Exception:
+            pass
+        send(get_tokens(None), title, name, url="food-net.html", tag="dish")
 
 
 def on_duties(col_snapshot, changes, read_time):
@@ -216,17 +229,20 @@ def on_duties(col_snapshot, changes, read_time):
             continue
         d = doc.to_dict() or {}
         text = d.get("text") or ""
+        author = (d.get("author") or "").strip() or "Someone"
         if d.get("isMessage"):
-            # Mensaje libre: "Fiorella has a message: ..."
-            author = (d.get("author") or "Someone")
-            send(get_tokens(DUTY_RECIPIENTS), f"{author} has a message",
+            # Mensaje libre → título "from Fiorella".
+            send(get_tokens(DUTY_RECIPIENTS), f"from {author}",
                  text, url="sommeliers.html", tag="duty")
         else:
-            # Tarea normal.
-            text = text or "A new task has been assigned."
-            assignee = f" ({d.get('assignee')})" if d.get("assignee") else ""
-            send(get_tokens(DUTY_RECIPIENTS), "New task",
-                 f"{text}{assignee}", url="sommeliers.html", tag="duty")
+            # Tarea → título "New task from Fiorella to <asignado>".
+            assignee = (d.get("assignee") or "").strip()
+            title = f"New task from {author}"
+            if assignee:
+                title += f" to {assignee}"
+            send(get_tokens(DUTY_RECIPIENTS), title,
+                 text or "A new task has been assigned.",
+                 url="sommeliers.html", tag="duty")
 
 
 def on_stock(col_snapshot, changes, read_time):
@@ -241,9 +257,9 @@ def on_stock(col_snapshot, changes, read_time):
             continue
         name = d.get("name") or "An item"
         vintage = f"{d.get('vintage')} " if d.get("vintage") else ""
-        where = f" — {d.get('location')}" if d.get("location") else ""
+        where = f" ({d.get('location')})" if d.get("location") else ""
         send(get_tokens(None), "86",
-             f"{vintage}{name} is 86{where}.", url="somm-stock.html", tag="86")
+             f"{vintage}{name}{where}", url="somm-stock.html", tag="86")
 
 
 # ── Suscripciones + reconexión ───────────────────────────────────────────
