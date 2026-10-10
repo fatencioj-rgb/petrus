@@ -99,15 +99,15 @@ def send(tokens, heading, text, url="index.html", tag="petrus"):
     else:
         body = heading or text
 
+    # IMPORTANTE: enviamos SOLO `data` (sin `notification`). Así FCM no
+    # muestra nada por su cuenta; el service worker (firebase-messaging-sw.js)
+    # es el único que construye la notificación, con título fijo "Petrus FOH"
+    # y el cuerpo. Esto evita el doble título / el "from Petrus FOH" fantasma.
     message = messaging.MulticastMessage(
         tokens=tokens,
-        notification=messaging.Notification(title=APP_TITLE, body=body),
         data={"title": APP_TITLE, "body": body, "url": full_url, "tag": tag},
         webpush=messaging.WebpushConfig(
-            notification=messaging.WebpushNotification(
-                icon=SITE_URL + "icons/icon-192.png",
-                badge=SITE_URL + "icons/icon-192.png",
-            ),
+            headers={"Urgency": "high"},
             fcm_options=messaging.WebpushFCMOptions(link=full_url),
         ),
     )

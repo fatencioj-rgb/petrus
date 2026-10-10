@@ -22,13 +22,15 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Background messages → show a notification.
+// Background messages → show ONE notification built from `data` only.
+// We send data-only messages from the server (no `notification` field), so
+// FCM does NOT auto-display anything; this handler is the single source of
+// truth. Title is always "Petrus FOH"; the detail goes in the body.
 messaging.onBackgroundMessage(function (payload) {
-  const n = payload.notification || {};
   const data = payload.data || {};
-  const title = n.title || data.title || 'Petrus';
+  const title = 'Petrus FOH';
   const options = {
-    body: n.body || data.body || '',
+    body: data.body || '',
     icon: 'icons/icon-192.png',
     badge: 'icons/icon-192.png',
     tag: data.tag || 'petrus-notification',
