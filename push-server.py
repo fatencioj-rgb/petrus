@@ -215,10 +215,18 @@ def on_duties(col_snapshot, changes, read_time):
         if not _once("duty:" + doc.id):
             continue
         d = doc.to_dict() or {}
-        text = d.get("text") or "A new task has been assigned."
-        assignee = f" ({d.get('assignee')})" if d.get("assignee") else ""
-        send(get_tokens(DUTY_RECIPIENTS), "New task",
-             f"{text}{assignee}", url="sommeliers.html", tag="duty")
+        text = d.get("text") or ""
+        if d.get("isMessage"):
+            # Mensaje libre: "Fiorella has a message: ..."
+            author = (d.get("author") or "Someone")
+            send(get_tokens(DUTY_RECIPIENTS), f"{author} has a message",
+                 text, url="sommeliers.html", tag="duty")
+        else:
+            # Tarea normal.
+            text = text or "A new task has been assigned."
+            assignee = f" ({d.get('assignee')})" if d.get("assignee") else ""
+            send(get_tokens(DUTY_RECIPIENTS), "New task",
+                 f"{text}{assignee}", url="sommeliers.html", tag="duty")
 
 
 def on_stock(col_snapshot, changes, read_time):

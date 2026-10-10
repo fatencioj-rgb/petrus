@@ -95,9 +95,11 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
         <option value="Fiorella">Fiorella</option>
         <option value="Christian">Christian</option>
         <option value="Milena">Milena</option>
+        <option value="Orson">Orson</option>
         <option value="First in">First in</option>
       </select>
-      <span style="cursor:pointer;padding:4px 10px;background:var(--green);color:#fff;border-radius:4px;font-size:9px" onclick="addQuickTask()">+</span>
+      <span title="Add as a task (needs an assignee)" style="cursor:pointer;padding:4px 10px;background:var(--green);color:#fff;border-radius:4px;font-size:9px" onclick="addQuickTask()">+ Task</span>
+      <span title="Send a message to the team (no assignee needed)" style="cursor:pointer;padding:4px 10px;background:var(--gold);color:#fff;border-radius:4px;font-size:9px" onclick="addQuickMessage()">Message</span>
     </div>
   </div>
   <div class="profiles">
@@ -277,6 +279,28 @@ function addQuickTask(){
   author=author.charAt(0).toUpperCase()+author.slice(1);
   db.collection('somm_duties').add({
     text:text,author:author,assignee:assignee,
+    date:new Date().toISOString().slice(0,10),
+    done:false,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    input.value='';
+    document.getElementById('quickAssign').value='';
+    loadFeed();
+  });
+}
+
+// Send a plain MESSAGE (not a task). No assignee needed. Shows in the feed as
+// "X has a message: ..." and notifies the sommeliers with the same wording.
+function addQuickMessage(){
+  var input=document.getElementById('quickTask');
+  var text=input.value.trim();
+  if(!text)return;
+  var who=firebase.auth().currentUser;
+  var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+  db.collection('somm_duties').add({
+    text:text,author:author,assignee:'',
+    isMessage:true,
     date:new Date().toISOString().slice(0,10),
     done:false,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -529,6 +553,14 @@ function renderFeed(feed){
       var aName2=d.author.charAt(0).toUpperCase()+d.author.slice(1);
       h+='<span class="f-tag wast">Wastage</span>';
       h+='<span class="f-text"><span class="f-author">'+aName2+'</span> logged wastage: <span class="f-highlight">"'+d.name+'"</span> '+d.qty+' '+d.unit+'</span>';
+    }else if(f.type==='duty' && d.isMessage){
+      // A plain message (not a task): "X has a message: ..."
+      var msgAuthor=(d.author||'').charAt(0).toUpperCase()+(d.author||'').slice(1);
+      var msgText=(d.text||'').replace(/\n/g,'<br>');
+      h+='<span class="f-tag" style="background:#fcf0d8;color:#8a6d1a">Message</span>';
+      h+='<span class="f-text"><span class="f-author">'+msgAuthor+'</span> has a message: <span class="f-highlight">'+msgText+'</span> <span style="cursor:pointer;padding:2px 8px;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:4px;font-size:8px;margin-left:6px" onclick="markDutyDone(\''+f.id+'\')">Clear</span>';
+      if(_isAdmin)h+=' <span style="cursor:pointer;color:#ccc;font-size:10px;margin-left:4px" onclick="deleteDuty(\''+f.id+'\')">&times;</span>';
+      h+='</span>';
     }else if(f.type==='duty'){
       var aName3=(d.assignee||'').charAt(0).toUpperCase()+(d.assignee||'').slice(1);
       var assignLabel=d.assignee?'<span class="f-author">'+aName3+'</span> needs to':'Pending:';
