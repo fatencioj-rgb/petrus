@@ -76,25 +76,33 @@ def get_tokens(emails=None):
     return tokens
 
 
-def send(tokens, title, body, url="index.html", tag="petrus"):
-    """Envía una push a la lista de tokens y limpia los que ya no sirven.
-    `title` = la línea en negrita que ve el usuario (ej. 'New Dish',
-    'from Fiorella', 'New task from Fiorella to Milena').
-    `body`  = el detalle (nombre del plato, texto del mensaje/tarea…).
-    iOS siempre antepone 'Petrus FOH' arriba (nombre de la app); no se puede
-    quitar, por eso el title ya NO debe repetir 'Petrus FOH'.
+# El TÍTULO (línea en negrita) siempre es "Petrus FOH". Lo descriptivo
+# (from Fiorella, New Dish, etc.) va en el CUERPO, en una sola línea.
+APP_TITLE = "Petrus FOH"
+
+
+def send(tokens, heading, text, url="index.html", tag="petrus"):
+    """Envía una push. El título es siempre «Petrus FOH». El cuerpo se arma
+    como "heading: text" en una sola línea (iOS descarta pushes con saltos).
+      • heading = 'from Fiorella', 'New Dish', 'New task from Fiorella to Milena', '86'
+      • text    = el mensaje / nombre del plato / producto
     `url` es una página relativa; aquí se convierte en URL HTTPS completa."""
     if not tokens:
-        print(f"[push] sin dispositivos para «{title}»")
+        print(f"[push] sin dispositivos para «{heading}»")
         return
 
     full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
-    body = body or ""
+    heading = (heading or "").strip()
+    text = (text or "").strip()
+    if heading and text:
+        body = f"{heading}: {text}"
+    else:
+        body = heading or text
 
     message = messaging.MulticastMessage(
         tokens=tokens,
-        notification=messaging.Notification(title=title, body=body),
-        data={"title": title, "body": body, "url": full_url, "tag": tag},
+        notification=messaging.Notification(title=APP_TITLE, body=body),
+        data={"title": APP_TITLE, "body": body, "url": full_url, "tag": tag},
         webpush=messaging.WebpushConfig(
             notification=messaging.WebpushNotification(
                 icon=SITE_URL + "icons/icon-192.png",
@@ -126,7 +134,7 @@ def send(tokens, title, body, url="index.html", tag="petrus"):
                     dead += 1
                 except Exception:
                     pass
-    print(f"[push] «{title}» → {resp.success_count} enviadas, "
+    print(f"[push] «{heading}» → {resp.success_count} enviadas, "
           f"{resp.failure_count} fallidas, {dead} tokens limpiados")
 
 
