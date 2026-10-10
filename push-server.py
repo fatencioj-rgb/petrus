@@ -76,36 +76,28 @@ def get_tokens(emails=None):
     return tokens
 
 
-# El TÍTULO (línea en negrita) siempre es "Petrus FOH". Lo descriptivo
-# (from Fiorella, New Dish, etc.) va en el CUERPO, en una sola línea.
-APP_TITLE = "Petrus FOH"
-
-
 def send(tokens, heading, text, url="index.html", tag="petrus"):
-    """Envía una push. El título es siempre «Petrus FOH». El cuerpo se arma
-    como "heading: text" en una sola línea (iOS descarta pushes con saltos).
-      • heading = 'from Fiorella', 'New Dish', 'New task from Fiorella to Milena', '86'
-      • text    = el mensaje / nombre del plato / producto
+    """Envía una push.
+    En iPhone, Apple SIEMPRE pone 'Petrus FOH' arriba y 'from Petrus FOH' en el
+    medio (no se puede quitar). El TÍTULO que controlamos (negrita, bajo el
+    nombre de la app) lo usamos para el `heading` descriptivo:
+      • heading = 'Fiorella', 'Milena', 'New Dish', 'Dish Updated',
+                  'New task to Milena', '86'
+      • text    = el mensaje / nombre del plato / producto (va en el cuerpo)
     `url` es una página relativa; aquí se convierte en URL HTTPS completa."""
     if not tokens:
         print(f"[push] sin dispositivos para «{heading}»")
         return
 
     full_url = url if url.startswith("http") else (SITE_URL + url.lstrip("/"))
-    heading = (heading or "").strip()
-    text = (text or "").strip()
-    if heading and text:
-        body = f"{heading}: {text}"
-    else:
-        body = heading or text
+    heading = (heading or "Petrus FOH").strip()
+    body = (text or "").strip()
 
-    # IMPORTANTE: enviamos SOLO `data` (sin `notification`). Así FCM no
-    # muestra nada por su cuenta; el service worker (firebase-messaging-sw.js)
-    # es el único que construye la notificación, con título fijo "Petrus FOH"
-    # y el cuerpo. Esto evita el doble título / el "from Petrus FOH" fantasma.
+    # SOLO `data` (sin `notification`): el service worker arma la notificación
+    # usando data.title como título y data.body como cuerpo.
     message = messaging.MulticastMessage(
         tokens=tokens,
-        data={"title": APP_TITLE, "body": body, "url": full_url, "tag": tag},
+        data={"title": heading, "body": body, "url": full_url, "tag": tag},
         webpush=messaging.WebpushConfig(
             headers={"Urgency": "high"},
             fcm_options=messaging.WebpushFCMOptions(link=full_url),
@@ -197,9 +189,9 @@ def on_notifications(col_snapshot, changes, read_time):
             continue
         d = doc.to_dict() or {}
         body = d.get("body") or d.get("message") or d.get("title") or ""
-        # Mensaje manual (admin): sale como "from <quien lo envió>".
+        # Mensaje manual (admin): título = NOMBRE de quien lo envió.
         author = _author_from_email(d.get("authorEmail")) or "Fiorella"
-        send(get_tokens(None), f"from {author}", body, url="index.html", tag="broadcast")
+        send(get_tokens(None), author, body, url="index.html", tag="broadcast")
 
 
 def on_dishes(col_snapshot, changes, read_time):
@@ -239,15 +231,13 @@ def on_duties(col_snapshot, changes, read_time):
         text = d.get("text") or ""
         author = (d.get("author") or "").strip() or "Someone"
         if d.get("isMessage"):
-            # Mensaje libre → título "from Fiorella".
-            send(get_tokens(DUTY_RECIPIENTS), f"from {author}",
+            # Mensaje libre → título = NOMBRE de quien lo envía.
+            send(get_tokens(DUTY_RECIPIENTS), author,
                  text, url="sommeliers.html", tag="duty")
         else:
-            # Tarea → título "New task from Fiorella to <asignado>".
+            # Tarea → título "New task to <asignado>".
             assignee = (d.get("assignee") or "").strip()
-            title = f"New task from {author}"
-            if assignee:
-                title += f" to {assignee}"
+            title = f"New task to {assignee}" if assignee else "New task"
             send(get_tokens(DUTY_RECIPIENTS), title,
                  text or "A new task has been assigned.",
                  url="sommeliers.html", tag="duty")

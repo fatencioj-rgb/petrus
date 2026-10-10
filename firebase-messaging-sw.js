@@ -37,7 +37,9 @@ self.addEventListener('activate', function (event) {
 // truth. Title is always "Petrus FOH"; the detail goes in the body.
 messaging.onBackgroundMessage(function (payload) {
   const data = payload.data || {};
-  const title = 'Petrus FOH';
+  // The title we control is the descriptive label (Fiorella, New Dish, 86…).
+  // iOS still shows the app name + "from Petrus FOH" around it (unavoidable).
+  const title = data.title || 'Petrus FOH';
   const options = {
     body: data.body || '',
     icon: 'icons/icon-192.png',
