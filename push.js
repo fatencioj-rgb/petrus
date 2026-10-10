@@ -68,6 +68,9 @@ var PETRUS_VAPID_KEY = "BNldmwYVZAyMgyin7lZsAU0yKYsEbX2dniA2aSKjmNTtkGtXv5XqwFJ2
     // Register the SW at the site base so its scope covers all pages.
     navigator.serviceWorker.register(BASE + 'firebase-messaging-sw.js', { scope: BASE })
       .then(function (registration) {
+        // Fuerza al navegador a buscar una versión nueva del service worker
+        // CADA vez que se abre la app. Así se actualiza sin reinstalar.
+        try { registration.update(); } catch (e) {}
         return Notification.requestPermission().then(function (permission) {
           if (permission !== 'granted') {
             say('Notifications permission was not granted (' + permission + '). '

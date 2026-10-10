@@ -22,6 +22,15 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Activarse de inmediato cuando hay una versión nueva, sin esperar a que se
+// cierren todas las pestañas. Esto permite actualizar el SW SIN reinstalar.
+self.addEventListener('install', function (event) {
+  self.skipWaiting();
+});
+self.addEventListener('activate', function (event) {
+  event.waitUntil(self.clients.claim());
+});
+
 // Background messages → show ONE notification built from `data` only.
 // We send data-only messages from the server (no `notification` field), so
 // FCM does NOT auto-display anything; this handler is the single source of
