@@ -63,7 +63,9 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 .ord-result .cat { font-size:9px; color:#aaa; margin-left:6px; }
 .ord-form { display:none; gap:8px; align-items:center; flex-wrap:wrap; background:var(--pink); border-radius:8px; padding:10px 12px; margin-bottom:12px; }
 .ord-form.show { display:flex; }
-.ord-form .picked { font-size:12px; font-weight:600; color:var(--green); flex:1 1 100%; }
+.ord-form .picked { font-size:12px; font-weight:600; color:var(--green); flex:1 1 100%; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.ord-form .picked .picked-x { color:#c0392b; cursor:pointer; font-size:16px; font-weight:400; opacity:0.6; }
+.ord-form .picked .picked-x:hover { opacity:1; }
 .ord-form input[type=number] { width:70px; padding:6px 8px; border:1px solid #ddd; border-radius:5px; font-size:12px; }
 .ord-form select { padding:6px 8px; border:1px solid #ddd; border-radius:5px; font-size:11px; background:#fff; }
 .ord-form .buy-chk { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--green); font-weight:600; cursor:pointer; }
@@ -158,7 +160,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       </div>
 
       <div class="ord-form" id="ordForm">
-        <div class="picked" id="ordPicked"></div>
+        <div class="picked"><span id="ordPicked"></span><span class="picked-x" onclick="ordClearPick()" title="Change product">&times;</span></div>
         <input type="number" id="ordQty" min="1" value="1" placeholder="Qty">
         <select id="ordUrgency"></select>
         <button class="ord-add-btn" onclick="ordAddItem()">Add</button>
@@ -468,12 +470,21 @@ function ordPick(ev,i){
   document.getElementById('ordPicked').textContent=p.name;
   document.getElementById('ordForm').className='ord-form show';
   box.className='ord-results'; box.innerHTML='';
-  document.getElementById('ordSearch').value=p.name;
+  // Limpiamos el buscador para no mostrar el nombre dos veces.
+  document.getElementById('ordSearch').value='';
   ordFillUrgency();
   document.getElementById('ordQty').focus();
 }
 
 function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Cancela el producto elegido y vuelve a dejar listo el buscador.
+function ordClearPick(){
+  ORD_PICKED=null;
+  document.getElementById('ordForm').className='ord-form';
+  document.getElementById('ordSearch').value='';
+  document.getElementById('ordSearch').focus();
+}
 
 function ordAddItem(){
   if(!ORD_PICKED){ return; }
