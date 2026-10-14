@@ -69,6 +69,8 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 .ord-form input[type=number] { width:70px; padding:6px 8px; border:1px solid #ddd; border-radius:5px; font-size:12px; }
 .ord-form select { padding:6px 8px; border:1px solid #ddd; border-radius:5px; font-size:11px; background:#fff; }
 .ord-form .buy-chk { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--green); font-weight:600; cursor:pointer; }
+.ord-form .kitchen-chk { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--green); font-weight:600; cursor:pointer; }
+.ord-row .nm .kitchen-tag { font-size:9px; color:#888; font-weight:400; font-style:italic; margin-left:5px; }
 .ord-add-btn { padding:6px 14px; background:var(--green); color:#fff; border:none; border-radius:5px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; }
 .ord-list { list-style:none; }
 .ord-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f5f0e8; font-size:12px; }
@@ -163,6 +165,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
         <div class="picked"><span id="ordPicked"></span><span class="picked-x" onclick="ordClearPick()" title="Change product">&times;</span></div>
         <input type="number" id="ordQty" min="1" value="1" placeholder="Qty">
         <select id="ordUrgency"></select>
+        <label class="kitchen-chk"><input type="checkbox" id="ordKitchen"> Kitchen</label>
         <button class="ord-add-btn" onclick="ordAddItem()">Add</button>
       </div>
 
@@ -492,12 +495,13 @@ function ordAddItem(){
   var sel=document.getElementById('ordUrgency');
   var urgency=sel.value;
   var urgencyLabel=sel.options[sel.selectedIndex].text;
+  var kitchen=!!(document.getElementById('ordKitchen')||{}).checked;
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
   author=author.charAt(0).toUpperCase()+author.slice(1);
   db.collection('somm_orders').add({
     name:ORD_PICKED.name, category:ORD_PICKED.category||'',
-    qty:qty, urgency:urgency, urgencyLabel:urgencyLabel,
+    qty:qty, urgency:urgency, urgencyLabel:urgencyLabel, kitchen:kitchen,
     author:author, done:false,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(){
@@ -506,6 +510,7 @@ function ordAddItem(){
     document.getElementById('ordForm').className='ord-form';
     document.getElementById('ordSearch').value='';
     document.getElementById('ordQty').value='1';
+    document.getElementById('ordKitchen').checked=false;
     ordLoadList();
   }).catch(function(e){ ordMsg('Error: '+e.message); });
 }
@@ -533,7 +538,7 @@ function ordRenderList(){
     var d=it.data;
     var cls=d.urgency==='urgent'?'urgent':(d.urgency==='this'?'this':'next');
     h+='<li class="ord-row">';
-    h+='<span class="nm">'+escHtml(d.name)+'</span>';
+    h+='<span class="nm">'+escHtml(d.name)+(d.kitchen?'<span class="kitchen-tag">(Kitchen)</span>':'')+'</span>';
     h+='<span class="qty">x'+(d.qty||1)+'</span>';
     h+='<span class="ord-urg '+cls+'">'+escHtml(d.urgencyLabel||d.urgency)+'</span>';
     h+='<span class="ord-del" title="Remove" onclick="ordRemove(\''+it.id+'\')">&times;</span>';
@@ -556,7 +561,7 @@ function ordSendToMilena(){
   if(ORD_ITEMS.length===0){ ordMsg('List is empty'); return; }
   var lines=ORD_ITEMS.map(function(it){
     var d=it.data;
-    return d.name+' x'+(d.qty||1)+' ('+(d.urgencyLabel||d.urgency)+')';
+    return d.name+(d.kitchen?' (Kitchen)':'')+' x'+(d.qty||1)+' ('+(d.urgencyLabel||d.urgency)+')';
   });
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
