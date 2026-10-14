@@ -43,7 +43,8 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 .f-tag.duty { background:#cce5ff; color:#004085; }
 .feed-empty { text-align:center; color:#ccc; font-size:11px; padding:10px 0; }
 /* Orders / supplier list (collapsible) */
-.orders-box { text-align:left; background:#fff; border:1px solid #e8e0d4; border-radius:10px; padding:0; margin-bottom:30px; overflow:hidden; }
+.orders-box { text-align:left; background:#fff; border:1px solid #e8e0d4; border-radius:10px; padding:0; margin-bottom:30px; }
+.orders-box:not(.open){ overflow:hidden; }
 .orders-head { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:16px 20px; user-select:none; }
 .orders-head .ttl { font-family:var(--serif); font-size:18px; color:var(--green); display:flex; align-items:center; gap:8px; }
 .orders-head .ttl .dot { width:8px; height:8px; border-radius:50%; background:var(--gold); }
@@ -54,7 +55,7 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 .ord-search-wrap { position:relative; margin-bottom:12px; }
 .ord-search { width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:6px; font-size:12px; font-family:var(--sans); outline:none; }
 .ord-search:focus { border-color:var(--gold); }
-.ord-results { position:absolute; top:calc(100% + 2px); left:0; right:0; z-index:40; background:#fff; border:1px solid #e0d8c8; border-radius:6px; max-height:200px; overflow:auto; box-shadow:0 8px 24px rgba(0,0,0,0.12); display:none; }
+.ord-results { position:absolute; top:calc(100% + 2px); left:0; right:0; z-index:60; background:#fff; border:1px solid #e0d8c8; border-radius:6px; max-height:240px; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; box-shadow:0 8px 24px rgba(0,0,0,0.12); display:none; }
 .ord-results.show { display:block; }
 .ord-result { padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f5f0e8; }
 .ord-result:last-child { border-bottom:none; }
@@ -159,7 +160,6 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       <div class="ord-form" id="ordForm">
         <div class="picked" id="ordPicked"></div>
         <input type="number" id="ordQty" min="1" value="1" placeholder="Qty">
-        <label class="buy-chk"><input type="checkbox" id="ordBuy" checked> Buy</label>
         <select id="ordUrgency"></select>
         <button class="ord-add-btn" onclick="ordAddItem()">Add</button>
       </div>
@@ -409,12 +409,13 @@ function ordLoadCatalog(){
   }).catch(function(e){console.error('catalog',e);});
 }
 
-// Calcula el lunes de la semana siguiente (p.ej. "Next week · Mon 20 Oct").
+// Martes de la SEMANA SIGUIENTE (semana que empieza el próximo lunes).
+// Ej.: si hoy es sáb 11-oct, next week = martes 21-oct.
 function ordNextWeekLabel(){
   var d=new Date();
-  var day=d.getDay();                 // 0=Dom ... 1=Lun
-  var daysUntilNextMon=((8-day)%7)||7; // siguiente lunes (nunca hoy)
-  d.setDate(d.getDate()+daysUntilNextMon);
+  var day=d.getDay();                     // 0=Dom,1=Lun,...,6=Sáb
+  var daysToNextMon=((8-day)%7)||7;        // lunes de la próxima semana
+  d.setDate(d.getDate()+daysToNextMon+1);  // +1 día = martes
   var txt=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   return 'Next week · '+txt;
 }
@@ -448,7 +449,9 @@ function ordSearchInput(){
   }
   var h='';
   matches.forEach(function(p,i){
-    h+='<div class="ord-result" onclick="ordPick('+i+')" data-i="'+i+'">'+
+    // onmousedown/ontouchstart (no onclick): se dispara ANTES de que el
+    // "clic fuera" cierre la lista, y permite hacer scroll sin que se cierre.
+    h+='<div class="ord-result" onmousedown="ordPick(event,'+i+')" ontouchend="ordPick(event,'+i+')" data-i="'+i+'">'+
        escHtml(p.name)+(p.category?'<span class="cat">'+escHtml(p.category)+'</span>':'')+'</div>';
   });
   box._matches=matches;
@@ -456,7 +459,8 @@ function ordSearchInput(){
   box.className='ord-results show';
 }
 
-function ordPick(i){
+function ordPick(ev,i){
+  if(ev){ try{ ev.preventDefault(); }catch(e){} }
   var box=document.getElementById('ordResults');
   var p=(box._matches||[])[i];
   if(!p)return;
@@ -474,7 +478,6 @@ function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/
 function ordAddItem(){
   if(!ORD_PICKED){ return; }
   var qty=parseInt((document.getElementById('ordQty')||{}).value,10)||1;
-  var buy=!!(document.getElementById('ordBuy')||{}).checked;
   var sel=document.getElementById('ordUrgency');
   var urgency=sel.value;
   var urgencyLabel=sel.options[sel.selectedIndex].text;
@@ -483,7 +486,7 @@ function ordAddItem(){
   author=author.charAt(0).toUpperCase()+author.slice(1);
   db.collection('somm_orders').add({
     name:ORD_PICKED.name, category:ORD_PICKED.category||'',
-    qty:qty, buy:buy, urgency:urgency, urgencyLabel:urgencyLabel,
+    qty:qty, urgency:urgency, urgencyLabel:urgencyLabel,
     author:author, done:false,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(){
@@ -492,7 +495,6 @@ function ordAddItem(){
     document.getElementById('ordForm').className='ord-form';
     document.getElementById('ordSearch').value='';
     document.getElementById('ordQty').value='1';
-    document.getElementById('ordBuy').checked=true;
     ordLoadList();
   }).catch(function(e){ ordMsg('Error: '+e.message); });
 }
@@ -520,7 +522,7 @@ function ordRenderList(){
     var d=it.data;
     var cls=d.urgency==='urgent'?'urgent':(d.urgency==='this'?'this':'next');
     h+='<li class="ord-row">';
-    h+='<span class="nm">'+(d.buy?'<span class="ord-urg this" style="margin-right:6px">Buy</span>':'')+escHtml(d.name)+'</span>';
+    h+='<span class="nm">'+escHtml(d.name)+'</span>';
     h+='<span class="qty">x'+(d.qty||1)+'</span>';
     h+='<span class="ord-urg '+cls+'">'+escHtml(d.urgencyLabel||d.urgency)+'</span>';
     h+='<span class="ord-del" title="Remove" onclick="ordRemove(\''+it.id+'\')">&times;</span>';
@@ -543,7 +545,7 @@ function ordSendToMilena(){
   if(ORD_ITEMS.length===0){ ordMsg('List is empty'); return; }
   var lines=ORD_ITEMS.map(function(it){
     var d=it.data;
-    return (d.buy?'Buy ':'')+d.name+' x'+(d.qty||1)+' ('+(d.urgencyLabel||d.urgency)+')';
+    return d.name+' x'+(d.qty||1)+' ('+(d.urgencyLabel||d.urgency)+')';
   });
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
@@ -561,14 +563,17 @@ function ordSendToMilena(){
   }).catch(function(e){ ordMsg('Error: '+e.message); });
 }
 
-// Cerrar el desplegable de resultados al hacer clic fuera.
-document.addEventListener('click',function(e){
+// Cerrar el desplegable de resultados solo al tocar/clic FUERA del buscador.
+// Usamos mousedown/touchstart (no click) para no cerrarlo durante el scroll.
+function ordMaybeClose(e){
   var wrap=document.querySelector('.ord-search-wrap');
   if(wrap && !wrap.contains(e.target)){
     var box=document.getElementById('ordResults');
     if(box) box.className='ord-results';
   }
-});
+}
+document.addEventListener('mousedown',ordMaybeClose);
+document.addEventListener('touchstart',ordMaybeClose,{passive:true});
 
 function loadCarousel(){
   db.collection('somm_messages').get().then(function(snap){
