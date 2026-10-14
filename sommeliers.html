@@ -72,17 +72,23 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 .ord-form .kitchen-chk { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--green); font-weight:600; cursor:pointer; }
 .ord-row .nm .kitchen-tag { font-size:9px; color:#888; font-weight:400; font-style:italic; margin-left:5px; }
 .ord-add-btn { padding:6px 14px; background:var(--green); color:#fff; border:none; border-radius:5px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; }
-.ord-list { list-style:none; }
-.ord-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f5f0e8; font-size:12px; }
+.ord-list { }
+.ord-group-title { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--green); margin:14px 0 4px; padding-bottom:3px; border-bottom:1px solid #ece3d4; }
+.ord-group-title.urgent { color:#721c24; }
+.ord-group-title.this { color:#856404; }
+.ord-group-title.next { color:#155724; }
+.ord-group-title.unassigned { color:#999; }
+.ord-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid #f5f0e8; font-size:12px; }
 .ord-row:last-child { border-bottom:none; }
-.ord-row .nm { flex:1; }
-.ord-row .qty { font-weight:600; color:var(--green); }
-.ord-urg { font-size:8px; padding:2px 7px; border-radius:10px; font-weight:600; text-transform:uppercase; white-space:nowrap; }
-.ord-urg.urgent { background:#f8d7da; color:#721c24; }
-.ord-urg.this { background:#fff3cd; color:#856404; }
-.ord-urg.next { background:#d4edda; color:#155724; }
-.ord-del { color:#ccc; cursor:pointer; font-size:14px; }
+.ord-row .ord-chk { flex:0 0 auto; }
+.ord-row .nm { flex:1; color:#2c2c2c; }         /* negro, no bold */
+.ord-row .kitchen-tag { font-size:9px; color:#888; font-style:italic; margin-left:5px; }
+.ord-del { color:#ccc; cursor:pointer; font-size:14px; flex:0 0 auto; }
 .ord-del:hover { color:#c0392b; }
+.ord-assign-bar { display:none; align-items:center; gap:8px; background:#f3ece0; border-radius:8px; padding:8px 12px; margin-bottom:10px; font-size:11px; color:var(--green); }
+.ord-assign-bar.show { display:flex; }
+.ord-assign-bar select { padding:5px 8px; border:1px solid #ddd; border-radius:5px; font-size:11px; background:#fff; }
+.ord-assign-btn { padding:5px 12px; background:var(--green); color:#fff; border:none; border-radius:5px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; }
 .ord-actions { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid #f0ebe5; }
 .ord-send-btn { padding:7px 16px; background:var(--gold); color:#fff; border:none; border-radius:6px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; }
 .ord-send-btn:hover { background:var(--green); }
@@ -164,12 +170,18 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       <div class="ord-form" id="ordForm">
         <div class="picked"><span id="ordPicked"></span><span class="picked-x" onclick="ordClearPick()" title="Change product">&times;</span></div>
         <input type="number" id="ordQty" min="1" value="1" placeholder="Qty">
-        <select id="ordUrgency"></select>
         <label class="kitchen-chk"><input type="checkbox" id="ordKitchen"> Kitchen</label>
         <button class="ord-add-btn" onclick="ordAddItem()">Add</button>
       </div>
 
-      <ul class="ord-list" id="ordList"></ul>
+      <!-- Barra de accion para los productos seleccionados -->
+      <div class="ord-assign-bar" id="ordAssignBar">
+        <span id="ordSelCount">0 selected</span>
+        <select id="ordAssignWhen"></select>
+        <button class="ord-assign-btn" onclick="ordAssignSelected()">Set date</button>
+      </div>
+
+      <div class="ord-list" id="ordList"></div>
 
       <div class="ord-actions">
         <button class="ord-send-btn" onclick="ordSendToMilena()">Notify list</button>
@@ -425,15 +437,23 @@ function ordNextWeekLabel(){
   return 'Next week · '+txt;
 }
 
-// Rellena el desplegable de urgencia (la fecha de "next week" es dinámica).
+// Rellena el desplegable de la BARRA de asignar fecha (next week dinámico).
 function ordFillUrgency(){
-  var sel=document.getElementById('ordUrgency');
+  var sel=document.getElementById('ordAssignWhen');
   if(!sel)return;
   var nextLabel=ordNextWeekLabel();
   sel.innerHTML=
     '<option value="urgent">Urgent</option>'+
     '<option value="this">This week</option>'+
-    '<option value="next" data-label="'+nextLabel+'">'+nextLabel+'</option>';
+    '<option value="next">'+nextLabel+'</option>';
+}
+
+// Etiqueta legible para cada urgencia.
+function ordUrgencyLabel(urg){
+  if(urg==='urgent')return 'Urgent';
+  if(urg==='this')return 'This week';
+  if(urg==='next')return ordNextWeekLabel();
+  return 'Unassigned';
 }
 
 function toggleOrders(){
@@ -475,7 +495,6 @@ function ordPick(ev,i){
   box.className='ord-results'; box.innerHTML='';
   // Limpiamos el buscador para no mostrar el nombre dos veces.
   document.getElementById('ordSearch').value='';
-  ordFillUrgency();
   document.getElementById('ordQty').focus();
 }
 
@@ -489,23 +508,20 @@ function ordClearPick(){
   document.getElementById('ordSearch').focus();
 }
 
+// Agregar: solo cantidad + nombre (+ Kitchen). Sin fecha todavía → 'unassigned'.
 function ordAddItem(){
   if(!ORD_PICKED){ return; }
   var qty=parseInt((document.getElementById('ordQty')||{}).value,10)||1;
-  var sel=document.getElementById('ordUrgency');
-  var urgency=sel.value;
-  var urgencyLabel=sel.options[sel.selectedIndex].text;
   var kitchen=!!(document.getElementById('ordKitchen')||{}).checked;
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
   author=author.charAt(0).toUpperCase()+author.slice(1);
   db.collection('somm_orders').add({
     name:ORD_PICKED.name, category:ORD_PICKED.category||'',
-    qty:qty, urgency:urgency, urgencyLabel:urgencyLabel, kitchen:kitchen,
+    qty:qty, urgency:'unassigned', kitchen:kitchen,
     author:author, done:false,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(){
-    // Reset del formulario
     ORD_PICKED=null;
     document.getElementById('ordForm').className='ord-form';
     document.getElementById('ordSearch').value='';
@@ -515,39 +531,86 @@ function ordAddItem(){
   }).catch(function(e){ ordMsg('Error: '+e.message); });
 }
 
+var ORD_SELECTED = {};  // {id:true} seleccionados
+
 function ordLoadList(){
   db.collection('somm_orders').where('done','==',false).get().then(function(snap){
     ORD_ITEMS=[];
     snap.forEach(function(doc){ ORD_ITEMS.push({id:doc.id,data:doc.data()}); });
-    // Orden: urgent → this → next, luego por fecha.
-    var rank={urgent:0,this:1,next:2};
-    ORD_ITEMS.sort(function(a,b){
-      var ra=rank[a.data.urgency]!==undefined?rank[a.data.urgency]:9;
-      var rb=rank[b.data.urgency]!==undefined?rank[b.data.urgency]:9;
-      return ra-rb;
-    });
+    // Limpiar seleccionados que ya no existen
+    var ids={}; ORD_ITEMS.forEach(function(it){ids[it.id]=true;});
+    Object.keys(ORD_SELECTED).forEach(function(k){ if(!ids[k]) delete ORD_SELECTED[k]; });
     ordRenderList();
   });
 }
 
+// Agrupa por urgencia y renderiza con casillas de selección.
 function ordRenderList(){
-  var ul=document.getElementById('ordList');
-  if(ORD_ITEMS.length===0){ ul.innerHTML='<li class="feed-empty">No items yet</li>'; return; }
-  var h='';
+  var wrap=document.getElementById('ordList');
+  if(ORD_ITEMS.length===0){ wrap.innerHTML='<div class="feed-empty">No items yet</div>'; ordUpdateBar(); return; }
+
+  var groups=[
+    {key:'unassigned', title:'Unassigned', cls:'unassigned'},
+    {key:'urgent',     title:'Urgent',     cls:'urgent'},
+    {key:'this',       title:'This week',  cls:'this'},
+    {key:'next',       title:ordNextWeekLabel(), cls:'next'}
+  ];
+  var byKey={unassigned:[],urgent:[],this:[],next:[]};
   ORD_ITEMS.forEach(function(it){
-    var d=it.data;
-    var cls=d.urgency==='urgent'?'urgent':(d.urgency==='this'?'this':'next');
-    h+='<li class="ord-row">';
-    h+='<span class="nm">'+escHtml(d.name)+(d.kitchen?'<span class="kitchen-tag">(Kitchen)</span>':'')+'</span>';
-    h+='<span class="qty">x'+(d.qty||1)+'</span>';
-    h+='<span class="ord-urg '+cls+'">'+escHtml(d.urgencyLabel||d.urgency)+'</span>';
-    h+='<span class="ord-del" title="Remove" onclick="ordRemove(\''+it.id+'\')">&times;</span>';
-    h+='</li>';
+    var u=it.data.urgency||'unassigned';
+    if(!byKey[u])u='unassigned';
+    byKey[u].push(it);
   });
-  ul.innerHTML=h;
+
+  var h='';
+  groups.forEach(function(g){
+    var items=byKey[g.key];
+    if(items.length===0)return;
+    h+='<div class="ord-group-title '+g.cls+'">'+escHtml(g.title)+'</div>';
+    items.forEach(function(it){
+      var d=it.data;
+      var checked=ORD_SELECTED[it.id]?'checked':'';
+      h+='<div class="ord-row">';
+      h+='<input type="checkbox" class="ord-chk" '+checked+' onchange="ordToggleSel(\''+it.id+'\',this.checked)">';
+      h+='<span class="nm">'+(d.qty||1)+' '+escHtml(d.name)+(d.kitchen?'<span class="kitchen-tag">(Kitchen)</span>':'')+'</span>';
+      h+='<span class="ord-del" title="Remove" onclick="ordRemove(\''+it.id+'\')">&times;</span>';
+      h+='</div>';
+    });
+  });
+  wrap.innerHTML=h;
+  ordUpdateBar();
+}
+
+function ordToggleSel(id,on){
+  if(on)ORD_SELECTED[id]=true; else delete ORD_SELECTED[id];
+  ordUpdateBar();
+}
+
+// Muestra/oculta la barra de asignar fecha según cuántos haya seleccionados.
+function ordUpdateBar(){
+  var n=Object.keys(ORD_SELECTED).length;
+  var bar=document.getElementById('ordAssignBar');
+  document.getElementById('ordSelCount').textContent=n+' selected';
+  bar.className='ord-assign-bar'+(n>0?' show':'');
+}
+
+// Asigna la fecha elegida a todos los seleccionados → se agrupan.
+function ordAssignSelected(){
+  var ids=Object.keys(ORD_SELECTED);
+  if(ids.length===0)return;
+  var urgency=document.getElementById('ordAssignWhen').value;
+  var batch=db.batch();
+  ids.forEach(function(id){
+    batch.update(db.collection('somm_orders').doc(id),{urgency:urgency});
+  });
+  batch.commit().then(function(){
+    ORD_SELECTED={};
+    ordLoadList();
+  }).catch(function(e){ ordMsg('Error: '+e.message); });
 }
 
 function ordRemove(id){
+  delete ORD_SELECTED[id];
   db.collection('somm_orders').doc(id).delete().then(ordLoadList);
 }
 
@@ -559,14 +622,22 @@ function ordMsg(t){
 // Envía la lista actual SOLO a Milena (crea un mensaje dirigido a ella).
 function ordSendToMilena(){
   if(ORD_ITEMS.length===0){ ordMsg('List is empty'); return; }
-  var lines=ORD_ITEMS.map(function(it){
-    var d=it.data;
-    return d.name+(d.kitchen?' (Kitchen)':'')+' x'+(d.qty||1)+' ('+(d.urgencyLabel||d.urgency)+')';
+  // Agrupado por fecha para que Milena lo vea ordenado.
+  var order=['urgent','this','next','unassigned'];
+  var byKey={urgent:[],this:[],next:[],unassigned:[]};
+  ORD_ITEMS.forEach(function(it){
+    var u=it.data.urgency||'unassigned'; if(!byKey[u])u='unassigned';
+    byKey[u].push((it.data.qty||1)+' '+it.data.name+(it.data.kitchen?' (Kitchen)':''));
+  });
+  var parts=[];
+  order.forEach(function(k){
+    if(byKey[k].length===0)return;
+    parts.push(ordUrgencyLabel(k)+': '+byKey[k].join(', '));
   });
   var who=firebase.auth().currentUser;
   var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
   author=author.charAt(0).toUpperCase()+author.slice(1);
-  var text='Order list:\n'+lines.join('\n');
+  var text='Order list — '+parts.join(' | ');
   // Nota dirigida solo a Milena → el servidor la notifica solo a ella.
   db.collection('notes').add({
     text:text,
