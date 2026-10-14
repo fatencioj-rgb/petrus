@@ -94,6 +94,7 @@ service cloud.firestore {
     match /somm_recipes/{docId}          { allow read, write: if signedIn(); }
     match /somm_pairings/{docId}         { allow read, write: if signedIn(); }
     match /somm_stocktake/{docId}        { allow read, write: if signedIn(); }
+    match /somm_orders/{docId}           { allow read, write: if signedIn(); }
     match /product_catalog/{docId}       { allow read, write: if signedIn(); }
     match /viniv_reports/{docId}         { allow read, write: if signedIn(); }
 

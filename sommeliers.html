@@ -42,6 +42,46 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
 .f-tag.wast { background:#e2d6f3; color:#4a235a; }
 .f-tag.duty { background:#cce5ff; color:#004085; }
 .feed-empty { text-align:center; color:#ccc; font-size:11px; padding:10px 0; }
+/* Orders / supplier list (collapsible) */
+.orders-box { text-align:left; background:#fff; border:1px solid #e8e0d4; border-radius:10px; padding:0; margin-bottom:30px; overflow:hidden; }
+.orders-head { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:16px 20px; user-select:none; }
+.orders-head .ttl { font-family:var(--serif); font-size:18px; color:var(--green); display:flex; align-items:center; gap:8px; }
+.orders-head .ttl .dot { width:8px; height:8px; border-radius:50%; background:var(--gold); }
+.orders-head .chev { color:var(--gold); font-size:14px; transition:transform 0.3s; }
+.orders-box.open .orders-head .chev { transform:rotate(180deg); }
+.orders-body { display:none; padding:0 20px 18px; }
+.orders-box.open .orders-body { display:block; animation:fadeSlideIn 0.3s ease; }
+.ord-search-wrap { position:relative; margin-bottom:12px; }
+.ord-search { width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:6px; font-size:12px; font-family:var(--sans); outline:none; }
+.ord-search:focus { border-color:var(--gold); }
+.ord-results { position:absolute; top:calc(100% + 2px); left:0; right:0; z-index:40; background:#fff; border:1px solid #e0d8c8; border-radius:6px; max-height:200px; overflow:auto; box-shadow:0 8px 24px rgba(0,0,0,0.12); display:none; }
+.ord-results.show { display:block; }
+.ord-result { padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f5f0e8; }
+.ord-result:last-child { border-bottom:none; }
+.ord-result:hover { background:var(--pink); }
+.ord-result .cat { font-size:9px; color:#aaa; margin-left:6px; }
+.ord-form { display:none; gap:8px; align-items:center; flex-wrap:wrap; background:var(--pink); border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+.ord-form.show { display:flex; }
+.ord-form .picked { font-size:12px; font-weight:600; color:var(--green); flex:1 1 100%; }
+.ord-form input[type=number] { width:70px; padding:6px 8px; border:1px solid #ddd; border-radius:5px; font-size:12px; }
+.ord-form select { padding:6px 8px; border:1px solid #ddd; border-radius:5px; font-size:11px; background:#fff; }
+.ord-form .buy-chk { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--green); font-weight:600; cursor:pointer; }
+.ord-add-btn { padding:6px 14px; background:var(--green); color:#fff; border:none; border-radius:5px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; }
+.ord-list { list-style:none; }
+.ord-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f5f0e8; font-size:12px; }
+.ord-row:last-child { border-bottom:none; }
+.ord-row .nm { flex:1; }
+.ord-row .qty { font-weight:600; color:var(--green); }
+.ord-urg { font-size:8px; padding:2px 7px; border-radius:10px; font-weight:600; text-transform:uppercase; white-space:nowrap; }
+.ord-urg.urgent { background:#f8d7da; color:#721c24; }
+.ord-urg.this { background:#fff3cd; color:#856404; }
+.ord-urg.next { background:#d4edda; color:#155724; }
+.ord-del { color:#ccc; cursor:pointer; font-size:14px; }
+.ord-del:hover { color:#c0392b; }
+.ord-actions { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid #f0ebe5; }
+.ord-send-btn { padding:7px 16px; background:var(--gold); color:#fff; border:none; border-radius:6px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; }
+.ord-send-btn:hover { background:var(--green); }
+.ord-msg { font-size:10px; color:var(--green); margin-left:10px; }
 /* Buttons */
 .profiles { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
 .profile-card {
@@ -102,6 +142,37 @@ body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-heig
       <span title="Send a message to the team (no assignee needed)" style="cursor:pointer;padding:4px 10px;background:var(--gold);color:#fff;border-radius:4px;font-size:9px" onclick="addQuickMessage()">Message</span>
     </div>
   </div>
+
+  <!-- Supplier order list (collapsible) -->
+  <div class="orders-box" id="ordersBox">
+    <div class="orders-head" onclick="toggleOrders()">
+      <span class="ttl"><span class="dot"></span>Order list &mdash; suppliers</span>
+      <span class="chev">&#9662;</span>
+    </div>
+    <div class="orders-body">
+      <div class="ord-search-wrap">
+        <input class="ord-search" id="ordSearch" placeholder="Search a product&hellip;" autocomplete="off"
+          oninput="ordSearchInput()" onfocus="ordSearchInput()">
+        <div class="ord-results" id="ordResults"></div>
+      </div>
+
+      <div class="ord-form" id="ordForm">
+        <div class="picked" id="ordPicked"></div>
+        <input type="number" id="ordQty" min="1" value="1" placeholder="Qty">
+        <label class="buy-chk"><input type="checkbox" id="ordBuy" checked> Buy</label>
+        <select id="ordUrgency"></select>
+        <button class="ord-add-btn" onclick="ordAddItem()">Add</button>
+      </div>
+
+      <ul class="ord-list" id="ordList"></ul>
+
+      <div class="ord-actions">
+        <button class="ord-send-btn" onclick="ordSendToMilena()">Send list to Milena</button>
+        <span class="ord-msg" id="ordMsg"></span>
+      </div>
+    </div>
+  </div>
+
   <div class="profiles">
     <a href="somm-stock.html" class="profile-card">
       <h3>Stock</h3>
@@ -163,6 +234,9 @@ auth.onAuthStateChanged((user) => {
     loadFeed();
     loadCarousel();
     load86s();
+    ordLoadCatalog();
+    ordFillUrgency();
+    ordLoadList();
   }
 });
 
@@ -310,6 +384,191 @@ function addQuickMessage(){
     loadFeed();
   });
 }
+
+/* ══ Order list — suppliers ═══════════════════════════════════════════ */
+var ORD_CATALOG = [];      // [{name, category}]
+var ORD_PICKED = null;     // producto seleccionado
+var ORD_ITEMS = [];        // lista actual [{id,name,qty,buy,urgency,urgencyLabel}]
+
+// Carga el catálogo (wines + beverages) que se sube en Admin.
+function ordLoadCatalog(){
+  Promise.all([
+    db.collection('product_catalog').doc('wines').get(),
+    db.collection('product_catalog').doc('beverages').get()
+  ]).then(function(res){
+    var all=[];
+    res.forEach(function(doc){
+      if(doc.exists){ (doc.data().products||[]).forEach(function(p){ all.push(p); }); }
+    });
+    // Ordenar y quitar duplicados por nombre.
+    var seen={};
+    ORD_CATALOG=all.filter(function(p){
+      var k=(p.name||'').toLowerCase();
+      if(!k||seen[k])return false; seen[k]=true; return true;
+    }).sort(function(a,b){return (a.name||'')>(b.name||'')?1:-1;});
+  }).catch(function(e){console.error('catalog',e);});
+}
+
+// Calcula el lunes de la semana siguiente (p.ej. "Next week · Mon 20 Oct").
+function ordNextWeekLabel(){
+  var d=new Date();
+  var day=d.getDay();                 // 0=Dom ... 1=Lun
+  var daysUntilNextMon=((8-day)%7)||7; // siguiente lunes (nunca hoy)
+  d.setDate(d.getDate()+daysUntilNextMon);
+  var txt=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  return 'Next week · '+txt;
+}
+
+// Rellena el desplegable de urgencia (la fecha de "next week" es dinámica).
+function ordFillUrgency(){
+  var sel=document.getElementById('ordUrgency');
+  if(!sel)return;
+  var nextLabel=ordNextWeekLabel();
+  sel.innerHTML=
+    '<option value="urgent">Urgent</option>'+
+    '<option value="this">This week</option>'+
+    '<option value="next" data-label="'+nextLabel+'">'+nextLabel+'</option>';
+}
+
+function toggleOrders(){
+  document.getElementById('ordersBox').classList.toggle('open');
+}
+
+function ordSearchInput(){
+  var q=(document.getElementById('ordSearch').value||'').trim().toLowerCase();
+  var box=document.getElementById('ordResults');
+  if(!q){ box.className='ord-results'; box.innerHTML=''; return; }
+  var matches=ORD_CATALOG.filter(function(p){
+    return (p.name||'').toLowerCase().indexOf(q)>-1;
+  }).slice(0,30);
+  if(matches.length===0){
+    box.innerHTML='<div class="ord-result" style="color:#aaa;cursor:default">No matches — you can still type it manually</div>';
+    box.className='ord-results show';
+    return;
+  }
+  var h='';
+  matches.forEach(function(p,i){
+    h+='<div class="ord-result" onclick="ordPick('+i+')" data-i="'+i+'">'+
+       escHtml(p.name)+(p.category?'<span class="cat">'+escHtml(p.category)+'</span>':'')+'</div>';
+  });
+  box._matches=matches;
+  box.innerHTML=h;
+  box.className='ord-results show';
+}
+
+function ordPick(i){
+  var box=document.getElementById('ordResults');
+  var p=(box._matches||[])[i];
+  if(!p)return;
+  ORD_PICKED={name:p.name,category:p.category||''};
+  document.getElementById('ordPicked').textContent=p.name;
+  document.getElementById('ordForm').className='ord-form show';
+  box.className='ord-results'; box.innerHTML='';
+  document.getElementById('ordSearch').value=p.name;
+  ordFillUrgency();
+  document.getElementById('ordQty').focus();
+}
+
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function ordAddItem(){
+  if(!ORD_PICKED){ return; }
+  var qty=parseInt((document.getElementById('ordQty')||{}).value,10)||1;
+  var buy=!!(document.getElementById('ordBuy')||{}).checked;
+  var sel=document.getElementById('ordUrgency');
+  var urgency=sel.value;
+  var urgencyLabel=sel.options[sel.selectedIndex].text;
+  var who=firebase.auth().currentUser;
+  var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+  db.collection('somm_orders').add({
+    name:ORD_PICKED.name, category:ORD_PICKED.category||'',
+    qty:qty, buy:buy, urgency:urgency, urgencyLabel:urgencyLabel,
+    author:author, done:false,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    // Reset del formulario
+    ORD_PICKED=null;
+    document.getElementById('ordForm').className='ord-form';
+    document.getElementById('ordSearch').value='';
+    document.getElementById('ordQty').value='1';
+    document.getElementById('ordBuy').checked=true;
+    ordLoadList();
+  }).catch(function(e){ ordMsg('Error: '+e.message); });
+}
+
+function ordLoadList(){
+  db.collection('somm_orders').where('done','==',false).get().then(function(snap){
+    ORD_ITEMS=[];
+    snap.forEach(function(doc){ ORD_ITEMS.push({id:doc.id,data:doc.data()}); });
+    // Orden: urgent → this → next, luego por fecha.
+    var rank={urgent:0,this:1,next:2};
+    ORD_ITEMS.sort(function(a,b){
+      var ra=rank[a.data.urgency]!==undefined?rank[a.data.urgency]:9;
+      var rb=rank[b.data.urgency]!==undefined?rank[b.data.urgency]:9;
+      return ra-rb;
+    });
+    ordRenderList();
+  });
+}
+
+function ordRenderList(){
+  var ul=document.getElementById('ordList');
+  if(ORD_ITEMS.length===0){ ul.innerHTML='<li class="feed-empty">No items yet</li>'; return; }
+  var h='';
+  ORD_ITEMS.forEach(function(it){
+    var d=it.data;
+    var cls=d.urgency==='urgent'?'urgent':(d.urgency==='this'?'this':'next');
+    h+='<li class="ord-row">';
+    h+='<span class="nm">'+(d.buy?'<span class="ord-urg this" style="margin-right:6px">Buy</span>':'')+escHtml(d.name)+'</span>';
+    h+='<span class="qty">x'+(d.qty||1)+'</span>';
+    h+='<span class="ord-urg '+cls+'">'+escHtml(d.urgencyLabel||d.urgency)+'</span>';
+    h+='<span class="ord-del" title="Remove" onclick="ordRemove(\''+it.id+'\')">&times;</span>';
+    h+='</li>';
+  });
+  ul.innerHTML=h;
+}
+
+function ordRemove(id){
+  db.collection('somm_orders').doc(id).delete().then(ordLoadList);
+}
+
+function ordMsg(t){
+  var el=document.getElementById('ordMsg');
+  el.textContent=t; setTimeout(function(){el.textContent='';},4000);
+}
+
+// Envía la lista actual SOLO a Milena (crea un mensaje dirigido a ella).
+function ordSendToMilena(){
+  if(ORD_ITEMS.length===0){ ordMsg('List is empty'); return; }
+  var lines=ORD_ITEMS.map(function(it){
+    var d=it.data;
+    return (d.buy?'Buy ':'')+d.name+' x'+(d.qty||1)+' ('+(d.urgencyLabel||d.urgency)+')';
+  });
+  var who=firebase.auth().currentUser;
+  var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+  var text='Order list:\n'+lines.join('\n');
+  // Nota dirigida solo a Milena → el servidor la notifica solo a ella.
+  db.collection('notes').add({
+    text:text,
+    authorEmail:who.email,
+    recipients:['milena@petrus.local'],
+    source:'order-list',
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    ordMsg('Sent to Milena \u2713');
+  }).catch(function(e){ ordMsg('Error: '+e.message); });
+}
+
+// Cerrar el desplegable de resultados al hacer clic fuera.
+document.addEventListener('click',function(e){
+  var wrap=document.querySelector('.ord-search-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    var box=document.getElementById('ordResults');
+    if(box) box.className='ord-results';
+  }
+});
 
 function loadCarousel(){
   db.collection('somm_messages').get().then(function(snap){
