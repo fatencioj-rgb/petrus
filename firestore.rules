@@ -21,6 +21,12 @@ service cloud.firestore {
       allow write: if isManager();
     }
 
+    // Wines: any signed-in user can read; managers can write.
+    match /wines/{wineId} {
+      allow read: if signedIn();
+      allow write: if isManager();
+    }
+
     // Home notes with one or more recipients (array `recipients`).
     //  - 'all' in recipients  → any signed-in team member can read
     //  - an email in recipients → only those people, the author, or Fiorella
