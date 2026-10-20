@@ -1126,7 +1126,11 @@ function handleImageFile(event){
       const h = Math.round(img.height * scale);
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const ctx = canvas.getContext('2d');
+      // Fill white first so transparent PNG areas don't turn black as JPEG.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
       let dataUrl;
       try { dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY); }
       catch(err){ dataUrl = e.target.result; }
