@@ -56,7 +56,7 @@ var PETRUS_TEAM = [
 
 // Pages that belong to each section (for the URL guard).
 var SECTION_PAGES = {
-  training:   ['training.html','winelist.html','wine-pairings.html','wine-btg.html','food-net.html','food-editor.html'],
+  training:   ['training.html','winelist.html','wine-pairings.html','wine-btg.html','wine-editor.html','food-net.html','food-editor.html'],
   sommeliers: ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-recipes.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-holiday.html','somm-pairings.html','somm-sales.html','somm-viniv.html','somm-admin.html'],
   operations: ['operations.html'],
   admin:      ['admin.html'],
