@@ -5,6 +5,10 @@
 // It will redirect unauthenticated users back to index.html
 
 (function() {
+  // Resolve root-level pages correctly even from a subfolder (e.g. /operations/).
+  // BASE is the folder that holds index.html; pages in subfolders prefix with '../'.
+  var BASE = /\/operations\//.test(window.location.pathname) ? '../' : '';
+
   // Hide page content until auth is confirmed
   document.documentElement.style.opacity = '0';
   document.documentElement.style.transition = 'opacity 0.3s ease';
@@ -16,7 +20,7 @@
       var page = window.location.pathname.split('/').pop() || 'index.html';
       var guestAllowed = ['training.html', 'winelist.html', 'index.html'];
       if (isGuest && guestAllowed.indexOf(page) < 0) {
-        window.location.href = 'training.html';
+        window.location.href = BASE + 'training.html';
         return;
       }
 
@@ -34,7 +38,7 @@
         logoutLink.addEventListener('click', function(e) {
           e.preventDefault();
           petrusLogout().then(function() {
-            window.location.href = 'index.html';
+            window.location.href = BASE + 'index.html';
           });
         });
         // Replace the empty span at the end
@@ -45,7 +49,7 @@
       }
     } else {
       // Not authenticated — redirect to login
-      window.location.href = 'index.html';
+      window.location.href = BASE + 'index.html';
     }
   });
 })();

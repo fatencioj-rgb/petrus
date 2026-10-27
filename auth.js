@@ -58,7 +58,7 @@ var PETRUS_TEAM = [
 var SECTION_PAGES = {
   training:   ['training.html','winelist.html','wine-pairings.html','wine-btg.html','wine-editor.html','food-net.html','food-editor.html'],
   sommeliers: ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-recipes.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-holiday.html','somm-pairings.html','somm-sales.html','somm-viniv.html','somm-admin.html'],
-  operations: ['operations.html'],
+  operations: ['operations.html','seating.html'],
   admin:      ['admin.html'],
 };
 // Pages everyone (any signed-in user) may open.
@@ -78,6 +78,9 @@ function sectionOfPage(page){
   return null; // unknown page → not section-restricted here
 }
 
+// Root-relative base so links work from subfolders (e.g. /operations/).
+var PETRUS_BASE = /\/operations\//.test(window.location.pathname) ? '../' : '';
+
 // ── Restricted screen (shown over a page the user may not access) ──
 function showPetrusNoAccess() {
   var overlay = document.createElement('div');
@@ -88,7 +91,7 @@ function showPetrusNoAccess() {
   overlay.innerHTML =
     '<div style="font-size:40px;color:#b89650;margin-bottom:14px;">Apologies, you don\u2019t have access.</div>'
     + '<p style="font-family:\'Inter\',sans-serif;font-size:13px;letter-spacing:1px;color:#d4b87a;opacity:0.85;margin-bottom:28px;">This section is restricted for your account.</p>'
-    + '<a href="index.html" style="font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#d4b87a;border:1px solid rgba(184,150,80,0.4);border-radius:6px;padding:10px 22px;text-decoration:none;">\u2190 Back to home</a>';
+    + '<a href="' + PETRUS_BASE + 'index.html" style="font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#d4b87a;border:1px solid rgba(184,150,80,0.4);border-radius:6px;padding:10px 22px;text-decoration:none;">\u2190 Back to home</a>';
   // Try to hide the real content underneath.
   try { document.body.style.overflow = 'hidden'; } catch (e) {}
   document.body.appendChild(overlay);
