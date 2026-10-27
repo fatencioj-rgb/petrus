@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seat Plan — Petrus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#5c1a1a;--green-dark:#2d0a0a;--gold:#b89650;--gold-light:#d4b87a;
+  --cream:#faf7f1;--border:#e0d6c8;--white:#fff;
+  --table:#b89650;--chair:#5c1a1a;--fixed:#5c1a1a;
+  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Inter','Segoe UI',sans-serif;
+}
+body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1.5}
+
+/* Topbar */
+.topbar{background:var(--green-dark);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.topbar a{color:var(--gold-light);text-decoration:none;font-size:13px;letter-spacing:1px}
+.topbar a:hover{color:#fff}
+.topbar .title{font-family:var(--serif);font-size:20px;color:var(--gold);letter-spacing:2px}
+
+/* Page */
+.page{max-width:1400px;margin:0 auto;padding:24px 20px 60px}
+.page-header{text-align:center;margin-bottom:18px}
+.page-header h1{font-family:var(--serif);font-size:2rem;color:var(--green-dark);letter-spacing:2px;margin-bottom:2px}
+.page-header .sub{font-size:.72rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+
+/* Toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin-bottom:16px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.tool-group{display:flex;align-items:center;gap:8px;padding:0 10px;border-right:1px solid var(--border)}
+.tool-group:last-child{border-right:none}
+.tool-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-right:2px}
+.btn{padding:9px 16px;border:1px solid var(--border);border-radius:6px;background:var(--white);font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.5px;color:var(--green-dark);cursor:pointer;transition:all .2s}
+.btn:hover{border-color:var(--gold);background:#fdf9f2;transform:translateY(-1px)}
+.btn.primary{background:var(--green-dark);color:var(--gold-light);border-color:var(--green-dark)}
+.btn.primary:hover{background:var(--green)}
+.btn.danger{border-color:#c0392b;color:#c0392b}
+.btn.danger:hover{background:#c0392b;color:#fff}
+.seat-input{width:54px;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;text-align:center;outline:none}
+.seat-input:focus{border-color:var(--gold)}
+.counter{font-size:12px;color:var(--green);font-weight:600}
+
+/* Canvas */
+.canvas-wrap{position:relative;background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+#canvas{position:relative;width:100%;height:720px;background:
+  linear-gradient(#f5efe4 1px,transparent 1px) 0 0/100% 40px,
+  linear-gradient(90deg,#f5efe4 1px,transparent 1px) 0 0/40px 100%}
+
+/* Table unit */
+.unit{position:absolute;cursor:grab;user-select:none;touch-action:none}
+.unit.selected .seat-ring{outline:2px dashed var(--gold);outline-offset:6px;border-radius:12px}
+.unit:active{cursor:grabbing}
+.seat-ring{position:relative}
+.chair{position:absolute;border-radius:50%;background:var(--chair)}
+.table-shape{position:absolute;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-family:var(--serif);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.table-round{border-radius:50%;background:var(--table)}
+.table-rect{border-radius:8px;background:var(--table)}
+.table-label{font-size:15px;letter-spacing:1px;pointer-events:none;color:#3a2a0a}
+
+/* Fixed elements */
+.fixed-el{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-family:var(--serif);font-weight:600;background:var(--fixed);border-radius:50%;box-shadow:0 3px 12px rgba(0,0,0,.18);cursor:grab}
+.fixed-el.rect{border-radius:10px}
+
+/* Per-unit mini controls */
+.unit-ctrl{position:absolute;top:-14px;left:50%;transform:translateX(-50%);display:none;gap:4px;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:3px 6px;box-shadow:0 3px 10px rgba(0,0,0,.12);white-space:nowrap;z-index:50}
+.unit.selected .unit-ctrl{display:flex;align-items:center}
+.mini{border:none;background:var(--cream);color:var(--green-dark);width:22px;height:22px;border-radius:50%;font-size:14px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+.mini:hover{background:var(--green-dark);color:var(--gold-light)}
+.mini.x:hover{background:#c0392b;color:#fff}
+.mini-count{font-size:11px;color:var(--gold);min-width:46px;text-align:center}
+
+.hint{text-align:center;font-size:11px;color:var(--gold);margin-top:10px;opacity:.9}
+.footer{text-align:center;margin-top:30px;font-size:10px;color:rgba(92,26,26,.4);letter-spacing:1px}
+
+@media print{
+  .topbar,.toolbar,.hint,.page-header .sub{display:none!important}
+  body{background:#fff}
+  .canvas-wrap{border:none}
+  .unit-ctrl{display:none!important}
+  .unit.selected .seat-ring{outline:none}
+  #canvas{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="operations.html">&larr; Back</a>
+  <span class="title">Petrus</span>
+  <span></span>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Seat Plan</h1>
+    <p class="sub">Restaurant Floor</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="tool-group">
+      <span class="tool-label">Seats</span>
+      <input type="number" id="seatCount" class="seat-input" value="8" min="1" max="30">
+      <button class="btn primary" onclick="addTable('round')">+ Round Table</button>
+      <button class="btn" onclick="addTable('rect')">+ Long Table</button>
+    </div>
+    <div class="tool-group">
+      <span class="tool-label">Fixed</span>
+      <button class="btn" onclick="addFixed('Wine cellar','circle')">+ Wine Cellar</button>
+      <button class="btn" onclick="addFixed('Area for drinks reception','rect')">+ Zone</button>
+    </div>
+    <div class="tool-group">
+      <span class="tool-label">Edit</span>
+      <button class="btn" onclick="duplicateSelected()">Duplicate</button>
+      <button class="btn danger" onclick="deleteSelected()">Delete</button>
+    </div>
+    <div class="tool-group">
+      <span class="counter" id="totals">0 tables · 0 covers</span>
+    </div>
+    <div class="tool-group">
+      <button class="btn" onclick="window.print()">Print / PDF</button>
+      <button class="btn danger" onclick="clearAll()">Reset</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div id="canvas"></div>
+  </div>
+  <p class="hint">Click a table to select it. Drag to move. Use + / &minus; to change seats. Double-click a table number to rename it. Everything saves automatically.</p>
+
+  <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only</em></div>
+</div>
+
+<!-- Firebase + Auth + Guard ADMIN -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script src="guard.js"></script>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  Seat Plan — dynamic, draggable, saved in the browser
+// ─────────────────────────────────────────────────────────────
+var STORAGE_KEY = 'petrus_seatplan_v1';
+var canvas = document.getElementById('canvas');
+var state = { units: [], fixed: [], nextNum: 1, selectedId: null };
+var uid = function(){ return 'u' + Date.now() + Math.floor(Math.random()*1000); };
+
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateTotals(); }
+function load(){
+  try { var s = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (s && s.units) state = s; } catch(e){}
+}
+
+function updateTotals(){
+  var covers = state.units.reduce(function(a,u){return a+u.seats;},0);
+  document.getElementById('totals').textContent = state.units.length + ' tables · ' + covers + ' covers';
+}
+
+function tableDiameter(seats, shape){
+  if (shape === 'rect') return { w: Math.max(120, seats*26), h: 70 };
+  var d = Math.max(70, 44 + seats * 7);
+  return { w: d, h: d };
+}
+
+function renderUnit(u){
+  var dim = tableDiameter(u.seats, u.shape);
+  var chairD = 22, pad = chairD + 14;
+  var ringW = dim.w + pad*2, ringH = dim.h + pad*2;
+
+  var el = document.createElement('div');
+  el.className = 'unit' + (state.selectedId === u.id ? ' selected' : '');
+  el.style.left = u.x + 'px'; el.style.top = u.y + 'px';
+  el.dataset.id = u.id;
+
+  var ring = document.createElement('div');
+  ring.className = 'seat-ring';
+  ring.style.width = ringW + 'px'; ring.style.height = ringH + 'px';
+
+  if (u.shape === 'round') {
+    var cx = ringW/2, cy = ringH/2, radius = dim.w/2 + chairD*0.7;
+    for (var i=0;i<u.seats;i++){
+      var a = 2*Math.PI*i/u.seats - Math.PI/2;
+      var ch = document.createElement('div');
+      ch.className = 'chair';
+      ch.style.width = chairD+'px'; ch.style.height = chairD+'px';
+      ch.style.left = (cx + radius*Math.cos(a) - chairD/2)+'px';
+      ch.style.top  = (cy + radius*Math.sin(a) - chairD/2)+'px';
+      ring.appendChild(ch);
+    }
+  } else {
+    var perSide = Math.ceil(u.seats/2), bottomCount = u.seats - perSide;
+    layoutRectChairs(ring, perSide, pad, pad - chairD - 4, dim.w, chairD);
+    layoutRectChairs(ring, bottomCount, pad, pad + dim.h + 4, dim.w, chairD);
+  }
+
+  var t = document.createElement('div');
+  t.className = 'table-shape ' + (u.shape === 'round' ? 'table-round':'table-rect');
+  t.style.width = dim.w+'px'; t.style.height = dim.h+'px';
+  t.style.left = pad+'px'; t.style.top = pad+'px';
+  var lbl = document.createElement('span');
+  lbl.className = 'table-label'; lbl.textContent = u.label; lbl.title = 'Double-click to rename';
+  lbl.addEventListener('dblclick', function(e){
+    e.stopPropagation();
+    var v = prompt('Table name / number:', u.label);
+    if (v !== null){ u.label = v.trim() || u.label; save(); render(); }
+  });
+  t.appendChild(lbl);
+  ring.appendChild(t);
+
+  var ctrl = document.createElement('div');
+  ctrl.className = 'unit-ctrl';
+  ctrl.innerHTML =
+    '<button class="mini" data-act="minus">&minus;</button>' +
+    '<span class="mini-count">'+u.seats+' seats</span>' +
+    '<button class="mini" data-act="plus">+</button>' +
+    '<button class="mini x" data-act="del">&times;</button>';
+  ctrl.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+  ctrl.addEventListener('click', function(e){
+    var act = e.target.getAttribute('data-act'); if (!act) return;
+    e.stopPropagation();
+    if (act==='plus') u.seats = Math.min(30, u.seats+1);
+    if (act==='minus') u.seats = Math.max(1, u.seats-1);
+    if (act==='del'){ state.units = state.units.filter(function(x){return x.id!==u.id;}); state.selectedId=null; }
+    save(); render();
+  });
+
+  el.appendChild(ctrl);
+  el.appendChild(ring);
+  canvas.appendChild(el);
+  makeDraggable(el, u);
+}
+
+function layoutRectChairs(ring, count, startPad, top, width, chairD){
+  if (count <= 0) return;
+  var gap = width / count;
+  for (var i=0;i<count;i++){
+    var ch = document.createElement('div');
+    ch.className = 'chair';
+    ch.style.width = chairD+'px'; ch.style.height = chairD+'px';
+    ch.style.left = (startPad + gap*i + gap/2 - chairD/2)+'px';
+    ch.style.top = top+'px';
+    ring.appendChild(ch);
+  }
+}
+
+function renderFixed(f){
+  var el = document.createElement('div');
+  el.className = 'fixed-el' + (f.shape==='rect'?' rect':'') + (state.selectedId===f.id?' selected':'');
+  el.style.left = f.x+'px'; el.style.top = f.y+'px';
+  el.style.width = f.w+'px'; el.style.height = f.h+'px';
+  if (f.shape==='rect'){ el.style.background='transparent'; el.style.border='2px solid var(--fixed)'; el.style.color='var(--fixed)'; }
+  el.dataset.id = f.id;
+  el.innerHTML = '<span style="pointer-events:none;padding:6px">'+f.label+'</span>';
+  el.addEventListener('dblclick', function(e){
+    e.stopPropagation();
+    var v = prompt('Label:', f.label);
+    if (v!==null){ f.label = v.trim()||f.label; save(); render(); }
+  });
+  canvas.appendChild(el);
+  makeDraggable(el, f);
+}
+
+function render(){
+  canvas.innerHTML = '';
+  state.fixed.forEach(renderFixed);
+  state.units.forEach(renderUnit);
+  updateTotals();
+}
+
+function selectUnit(id){ state.selectedId = id; render(); }
+canvas.addEventListener('mousedown', function(e){ if (e.target===canvas){ state.selectedId=null; render(); } });
+
+function makeDraggable(el, model){
+  var startX, startY, origX, origY, dragging=false;
+  function down(e){
+    dragging = true; selectUnit(model.id);
+    var p = point(e); startX=p.x; startY=p.y; origX=model.x; origY=model.y;
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, {passive:false});
+    document.addEventListener('touchend', up);
+    e.preventDefault();
+  }
+  function move(e){
+    if (!dragging) return; e.preventDefault();
+    var p = point(e);
+    model.x = Math.max(0, origX + (p.x - startX));
+    model.y = Math.max(0, origY + (p.y - startY));
+    el.style.left = model.x+'px'; el.style.top = model.y+'px';
+  }
+  function up(){
+    dragging=false;
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    document.removeEventListener('touchmove', move);
+    document.removeEventListener('touchend', up);
+    save();
+  }
+  el.addEventListener('mousedown', down);
+  el.addEventListener('touchstart', down, {passive:false});
+}
+function point(e){ var t = e.touches ? e.touches[0] : e; return { x: t.clientX, y: t.clientY }; }
+
+function addTable(shape){
+  var seats = parseInt(document.getElementById('seatCount').value,10) || 8;
+  seats = Math.max(1, Math.min(30, seats));
+  var u = { id: uid(), shape: shape, seats: seats, label: String(state.nextNum++), x: 60 + Math.random()*120, y: 60 + Math.random()*120 };
+  state.units.push(u); state.selectedId = u.id; save(); render();
+}
+function addFixed(label, shape){
+  var f = shape==='circle'
+    ? { id: uid(), label: label, shape:'circle', w:150, h:150, x: canvas.clientWidth/2-75, y: 280 }
+    : { id: uid(), label: label, shape:'rect', w:200, h:90, x: canvas.clientWidth/2+120, y: 300 };
+  state.fixed.push(f); state.selectedId = f.id; save(); render();
+}
+function findSelected(){
+  return state.units.find(function(u){return u.id===state.selectedId;})
+      || state.fixed.find(function(f){return f.id===state.selectedId;});
+}
+function deleteSelected(){
+  if (!state.selectedId) return;
+  state.units = state.units.filter(function(u){return u.id!==state.selectedId;});
+  state.fixed = state.fixed.filter(function(f){return f.id!==state.selectedId;});
+  state.selectedId = null; save(); render();
+}
+function duplicateSelected(){
+  var sel = findSelected(); if (!sel) return;
+  var copy = JSON.parse(JSON.stringify(sel));
+  copy.id = uid(); copy.x += 40; copy.y += 40;
+  if (state.units.indexOf(sel) > -1){ copy.label = String(state.nextNum++); state.units.push(copy); }
+  else state.fixed.push(copy);
+  state.selectedId = copy.id; save(); render();
+}
+function clearAll(){
+  if (!confirm('Clear the whole plan? This cannot be undone.')) return;
+  state = { units: [], fixed: [], nextNum: 1, selectedId: null };
+  save(); render();
+}
+
+document.addEventListener('keydown', function(e){
+  if ((e.key==='Delete'||e.key==='Backspace') && state.selectedId && document.activeElement.tagName!=='INPUT') deleteSelected();
+});
+
+function seedDefault(){
+  state.fixed.push({ id: uid(), label:'Wine cellar', shape:'circle', w:150, h:150, x: canvas.clientWidth/2-75, y: 280 });
+  state.fixed.push({ id: uid(), label:'Cloakroom', shape:'rect', w:140, h:44, x: canvas.clientWidth-170, y: 20 });
+  state.fixed.push({ id: uid(), label:'Area for drinks reception', shape:'rect', w:190, h:90, x: canvas.clientWidth/2+130, y: 320 });
+  var seats = [12,8,10,12,11,10,10];
+  var pos = [[60,40],[260,30],[430,30],[60,260],[60,470],[20,560],[220,560]];
+  seats.forEach(function(s, i){
+    state.units.push({ id: uid(), shape:'round', seats:s, label:String(i+1), x:pos[i][0], y:pos[i][1] });
+  });
+  state.nextNum = seats.length + 1; save();
+}
+
+load();
+if (state.units.length === 0 && state.fixed.length === 0) seedDefault();
+render();
+</script>
+</body>
+</html>
