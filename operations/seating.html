@@ -53,9 +53,13 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .unit{position:absolute;cursor:grab;user-select:none;touch-action:none}
 .unit.selected .seat-ring{outline:2px dashed var(--gold);outline-offset:6px;border-radius:12px}
 .unit:active{cursor:grabbing}
-.seat-ring{position:relative}
-.chair{position:absolute;border-radius:50%;background:var(--chair)}
-.table-shape{position:absolute;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-family:var(--serif);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.seat-ring{position:relative;pointer-events:none}   /* empty gaps don't block neighbours */
+.seat-ring .chair,.seat-ring .table-shape{pointer-events:auto}
+.chair{position:absolute;border-radius:50%;background:var(--chair);cursor:grab;transition:transform .1s}
+.unit.selected .chair{box-shadow:0 0 0 2px rgba(184,150,80,.6)}
+.unit.selected .chair:hover{transform:scale(1.15)}
+.table-shape{position:absolute;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-family:var(--serif);box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:grab}
+.unit:active .table-shape{cursor:grabbing}
 .table-round{border-radius:50%;background:var(--table)}
 .table-rect{border-radius:8px;background:var(--table)}
 .table-label{font-size:15px;letter-spacing:1px;pointer-events:none;color:#3a2a0a}
@@ -114,6 +118,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
     <div class="tool-group">
       <span class="tool-label">Edit</span>
       <button class="btn" onclick="duplicateSelected()">Duplicate</button>
+      <button class="btn" onclick="resetSeats()">Reset Seats</button>
       <button class="btn danger" onclick="deleteSelected()">Delete</button>
     </div>
     <div class="tool-group">
@@ -128,7 +133,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   <div class="canvas-wrap">
     <div id="canvas"></div>
   </div>
-  <p class="hint">Click a table to select it. Drag to move. Use + / &minus; to change seats. Double-click a table number to rename it. Everything saves automatically.</p>
+  <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Double-click a table number to rename. Everything saves automatically.</p>
 
   <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only</em></div>
 </div>
@@ -181,13 +186,16 @@ function renderUnit(u){
 
   if (u.shape === 'round') {
     var cx = ringW/2, cy = ringH/2, radius = dim.w/2 + chairD*0.7;
+    // per-chair angle overrides (radians). Missing -> even distribution.
+    if (!u.angles) u.angles = [];
     for (var i=0;i<u.seats;i++){
-      var a = 2*Math.PI*i/u.seats - Math.PI/2;
+      var a = (typeof u.angles[i] === 'number') ? u.angles[i] : (2*Math.PI*i/u.seats - Math.PI/2);
       var ch = document.createElement('div');
       ch.className = 'chair';
       ch.style.width = chairD+'px'; ch.style.height = chairD+'px';
       ch.style.left = (cx + radius*Math.cos(a) - chairD/2)+'px';
       ch.style.top  = (cy + radius*Math.sin(a) - chairD/2)+'px';
+      makeChairDraggable(ch, u, i, cx, cy, radius, chairD);
       ring.appendChild(ch);
     }
   } else {
@@ -290,6 +298,55 @@ function selectUnit(id){
 }
 canvas.addEventListener('mousedown', function(e){ if (e.target===canvas){ selectUnit(null); } });
 
+// Drag a single chair around its table's ring (changes only its angle).
+function makeChairDraggable(ch, u, index, cx, cy, radius, chairD){
+  var dragging=false, raf=null, pendA=0;
+  function down(e){
+    dragging=true;
+    // keep the table selected but DON'T start a table drag
+    e.stopPropagation();
+    e.preventDefault();
+    selectUnit(u.id);
+    ch.style.cursor='grabbing';
+    ch.style.zIndex='10';
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, {passive:false});
+    document.addEventListener('touchend', up);
+  }
+  function move(e){
+    if(!dragging) return; e.preventDefault();
+    var p = point(e);
+    // angle from the table centre to the pointer, in the ring's coordinate space
+    var ringEl = ch.parentNode;
+    var rect = ringEl.getBoundingClientRect();
+    var px = p.x - rect.left - cx;
+    var py = p.y - rect.top - cy;
+    pendA = Math.atan2(py, px);
+    if (raf === null) raf = requestAnimationFrame(paint);
+  }
+  function paint(){
+    raf=null;
+    ch.style.left = (cx + radius*Math.cos(pendA) - chairD/2)+'px';
+    ch.style.top  = (cy + radius*Math.sin(pendA) - chairD/2)+'px';
+  }
+  function up(){
+    if(!dragging) return;
+    dragging=false;
+    if (raf!==null){ cancelAnimationFrame(raf); paint(); }
+    ch.style.cursor=''; ch.style.zIndex='';
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    document.removeEventListener('touchmove', move);
+    document.removeEventListener('touchend', up);
+    if (!u.angles) u.angles = [];
+    u.angles[index] = pendA;      // remember this chair's custom position
+    save();
+  }
+  ch.addEventListener('mousedown', down);
+  ch.addEventListener('touchstart', down, {passive:false});
+}
+
 function makeDraggable(el, model){
   var startX, startY, origX, origY, dragging=false, raf=null, pendX=0, pendY=0;
   function down(e){
@@ -378,6 +435,18 @@ function duplicateSelected(){
   else { state.fixed.push(copy); renderFixed(copy); }
   selectUnit(copy.id); save();
 }
+// Re-space the selected table's chairs evenly again.
+function resetSeats(){
+  var u = state.units.find(function(x){return x.id===state.selectedId;});
+  if (!u){ alert('Select a round table first.'); return; }
+  u.angles = [];
+  rerenderUnit(u);
+  state.selectedId = u.id;
+  var node = canvas.querySelector('[data-id="'+u.id+'"]');
+  if (node) node.classList.add('selected');
+  save();
+}
+
 function clearAll(){
   if (!confirm('Clear the whole plan? This cannot be undone.')) return;
   state = { units: [], fixed: [], nextNum: 1, selectedId: null };
