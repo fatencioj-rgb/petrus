@@ -26,6 +26,13 @@ service cloud.firestore {
       allow write: if canEditDishes();
     }
 
+    // Producers (Food training — supplier profiles): any signed-in user can
+    // read; the same people who edit dishes can write.
+    match /producers/{producerId} {
+      allow read: if signedIn();
+      allow write: if canEditDishes();
+    }
+
     // Wines: any signed-in user can read; managers can write.
     match /wines/{wineId} {
       allow read: if signedIn();

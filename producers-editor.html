@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producers Editor — Petrus</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2d0a0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --wine:#5c1a1a; --wine-soft:#7d3030;
+  --bg:#fdf6f8; --bg-soft:#fbeef1; --surface:#ffffff;
+  --text:#3a2226; --border:rgba(92,26,26,0.18);
+  --serif:'Cormorant Garamond','Georgia',serif;
+  --sans:'Calibri','Segoe UI',sans-serif;
+}
+body { font-family:var(--sans); background:var(--bg); color:var(--text); min-height:100vh; font-size:10px; }
+.container { max-width:1100px; margin:0 auto; padding:28px 24px 80px; }
+.back-link { display:inline-block; color:var(--wine-soft); text-decoration:none; font-size:10px; letter-spacing:0.5px; opacity:0.7; margin-bottom:22px; }
+.back-link:hover { opacity:1; }
+.page-title { font-family:var(--serif); font-size:34px; color:var(--wine); margin-bottom:4px; }
+.page-sub { color:var(--wine-soft); opacity:0.85; font-size:11px; margin-bottom:28px; }
+
+.layout { display:grid; grid-template-columns:1fr; gap:28px; align-items:start; }
+.list-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+.list-head h3 { margin:0; }
+.form-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+.form-head h3 { margin:0; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; align-items:start; }
+.form-col { min-width:0; }
+@media (max-width:720px){ .form-grid { grid-template-columns:1fr; } }
+.img-thumb { width:160px; height:120px; object-fit:cover; border-radius:8px; border:1px solid var(--border); margin-top:8px; display:block; }
+
+/* Rich-text toolbar + editable story */
+.rte-toolbar { display:flex; align-items:center; gap:4px; margin-bottom:4px; }
+.rte-toolbar button { width:28px; height:26px; border:1px solid var(--border); background:#fff; color:var(--text); border-radius:5px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; }
+.rte-toolbar button:hover { border-color:var(--wine); }
+.rte-sep { width:1px; height:18px; background:var(--border); margin:0 3px; }
+.rte-dot { width:14px; height:14px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.15); }
+.rte { display:block; width:100%; box-sizing:border-box; min-height:160px; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:#fff; font-family:var(--sans); font-size:11px; line-height:1.45; color:var(--text); outline:none; overflow:auto; white-space:pre-wrap; }
+.rte:focus { border-color:var(--wine); }
+.rte:empty::before { content:attr(data-placeholder); color:var(--wine-soft); opacity:0.55; }
+
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; box-shadow:0 4px 18px rgba(92,26,26,0.06); }
+.card h3 { font-family:var(--serif); font-size:20px; color:var(--wine); margin-bottom:14px; }
+label { display:block; font-size:11px; font-weight:600; letter-spacing:0.2px; color:var(--wine); margin:12px 0 4px; }
+input, textarea, select {
+  width:100%; padding:7px 10px; background:#fff; border:1px solid var(--border); border-radius:6px;
+  color:var(--text); font-family:var(--sans); font-size:11px; outline:none;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--wine); }
+textarea { resize:vertical; min-height:56px; line-height:1.45; }
+.hint { font-size:10px; color:var(--wine-soft); opacity:0.7; margin-top:3px; }
+
+.k-row { display:flex; gap:8px; margin-bottom:8px; align-items:flex-start; }
+.k-row input { flex:0 0 32%; }
+.k-row textarea { flex:1; min-height:40px; }
+.k-row button { flex:0 0 auto; background:transparent; border:1px solid var(--border); color:#b23b2e; border-radius:6px; padding:6px 9px; cursor:pointer; font-size:11px; }
+
+.btn { padding:9px 20px; background:var(--wine); color:#fff; border:none; border-radius:8px; font-family:var(--sans); font-size:11px; letter-spacing:0.3px; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn:hover { background:var(--wine-soft); }
+.btn.ghost { background:transparent; border:1px solid var(--border); color:var(--wine); }
+.btn.ghost:hover { border-color:var(--wine); }
+.btn.danger { background:transparent; border:1px solid rgba(178,59,46,0.55); color:#b23b2e; }
+.btn.danger:hover { background:rgba(178,59,46,0.10); }
+.btn.small { padding:5px 10px; font-size:10px; }
+.actions { display:flex; gap:10px; flex-wrap:wrap; }
+.msg { margin-top:12px; font-size:11px; min-height:16px; }
+.msg.ok { color:#4e7a2e; }
+.msg.err { color:#b23b2e; }
+
+.list-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 11px; border:1px solid var(--border); border-radius:8px; margin-bottom:7px; }
+.list-item .n { font-family:var(--serif); font-size:15px; color:var(--wine); }
+.list-item .c { font-size:10px; letter-spacing:0.3px; color:var(--wine-soft); opacity:0.7; }
+.list-actions { display:flex; gap:6px; }
+.list-actions button { background:transparent; border:1px solid var(--border); color:var(--wine); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:11px; }
+.list-actions button.delbtn { color:#b23b2e; border-color:rgba(178,59,46,0.5); }
+.search { margin-bottom:12px; }
+.topbar { display:flex; justify-content:flex-end; margin-bottom:16px; }
+
+/* Dish picker (link producer → dishes) */
+.dish-picker { border:1px solid var(--border); border-radius:8px; max-height:260px; overflow:auto; padding:8px; background:#fff; }
+.dish-pick-search { margin-bottom:8px; }
+.dish-pick-group { font-family:var(--serif); font-size:13px; color:var(--wine); margin:8px 0 4px; }
+.dish-pick-group:first-child { margin-top:0; }
+.dish-pick { display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:5px; cursor:pointer; }
+.dish-pick:hover { background:var(--bg-soft); }
+.dish-pick input { width:auto; margin:0; accent-color:var(--wine); }
+.dish-pick .dn { font-size:11px; color:var(--text); }
+.picked-summary { font-size:10px; color:var(--wine-soft); margin-top:6px; }
+
+.gate { text-align:center; padding:80px 20px; }
+.gate h1 { font-family:var(--serif); color:var(--wine); font-size:32px; margin-bottom:10px; }
+.gate p { color:var(--wine-soft); opacity:0.85; }
+.gate a { color:var(--wine); }
+
+#app { display:none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <a class="back-link" href="food-net.html">&larr; Back to Food</a>
+
+  <!-- Access gate -->
+  <div id="gate" class="gate">
+    <h1>Checking access…</h1>
+    <p>One moment.</p>
+  </div>
+
+  <!-- Editor app -->
+  <div id="app">
+    <h1 class="page-title">Producers Editor</h1>
+    <p class="page-sub">Build supplier profiles with a photo, their story and the dishes they're used in.</p>
+
+    <div class="topbar">
+      <button type="button" class="btn" id="new-btn" onclick="startNew()">+ New producer</button>
+    </div>
+
+    <div class="layout">
+      <!-- Form (hidden until New / Edit) -->
+      <div class="card" id="form-card" style="display:none;">
+        <div class="form-head">
+          <h3 id="form-title">New producer</h3>
+          <div class="actions">
+            <button type="button" class="btn" id="save-btn" onclick="saveProducer()">Save producer</button>
+            <button type="button" class="btn ghost" onclick="closeForm()">Cancel</button>
+          </div>
+        </div>
+        <div class="msg" id="msg"></div>
+        <input type="hidden" id="docId">
+
+        <div class="form-grid">
+          <!-- LEFT: identity + story + knowledge -->
+          <div class="form-col">
+            <label>Name</label>
+            <input id="f-name" placeholder="e.g. Minus 8" oninput="renderPreview()">
+
+            <label>Location / established</label>
+            <input id="f-loc" placeholder="e.g. Niagara, Ontario, Canada — Est. 1997" oninput="renderPreview()">
+            <div class="hint">Shown under the name, in small caps — like the dish course label.</div>
+
+            <label>The story</label>
+            <div class="rte-toolbar">
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteCmd('bold')" title="Bold" style="font-weight:700;">B</button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteCmd('italic')" title="Italic" style="font-style:italic;">I</button>
+              <span class="rte-sep"></span>
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteColor('#3a2226')" title="Black text"><span class="rte-dot" style="background:#3a2226;"></span></button>
+              <button type="button" onmousedown="event.preventDefault()" onclick="rteColor('#5c1a1a')" title="Bordeaux text"><span class="rte-dot" style="background:#5c1a1a;"></span></button>
+            </div>
+            <div id="f-body-rte" class="rte" contenteditable="true" data-placeholder="Who they are, where they're from, how it's made — the story the team tells guests." oninput="syncBodyFromRte()"></div>
+            <textarea id="f-body" style="display:none;"></textarea>
+            <div class="hint">Select text, then use B / I or a colour. Press Enter for new lines.</div>
+
+            <label>Knowledge points</label>
+            <div id="k-rows"></div>
+            <button type="button" class="btn ghost small" onclick="addKRow()">+ Add point</button>
+            <div class="hint">Short title + text, like on the dishes (e.g. "The name", "Solera", "Verjus").</div>
+          </div>
+
+          <!-- RIGHT: image + linked dishes -->
+          <div class="form-col">
+            <label>Photo</label>
+            <input type="file" id="f-image-file" accept="image/*" onchange="handleImageFile(event)" style="padding:9px 0;border:none;background:transparent;">
+            <div class="hint">Choose a photo from your device. It's resized automatically and saved with the producer.</div>
+            <div id="image-status" class="hint" style="margin-top:2px;"></div>
+            <img id="image-preview" alt="" style="display:none;" class="img-thumb">
+            <input type="hidden" id="f-image">
+            <div id="image-actions" style="display:none;margin-top:8px;">
+              <button type="button" class="btn ghost small" onclick="clearImage()">Remove photo</button>
+            </div>
+
+            <label>Used for — link the dishes</label>
+            <input class="dish-pick-search" id="dish-pick-search" placeholder="Search a dish to tick…" oninput="renderDishPicker()">
+            <div class="dish-picker" id="dish-picker"></div>
+            <div class="picked-summary" id="picked-summary">None selected.</div>
+            <div class="hint">Tick the dishes this producer supplies. They appear as clickable chips on the producer card and open the dish.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Existing producers list -->
+      <div class="card" id="list-card">
+        <div class="list-head">
+          <h3>Producers (<span id="count">0</span>)</h3>
+        </div>
+        <input class="search" id="search" placeholder="Search…" oninput="renderList()">
+        <div class="hint">Drag is not needed — they show in creation order. Edit updates the profile everywhere.</div>
+        <div id="list" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+const EDITOR_ALLOWED = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local','irena@petrus.local'];
+
+let allProducers = [];   // {id, ...data}
+let allDishes = [];      // {id, name, course} — for the dish picker
+let pickedDishIds = [];  // currently ticked dish ids in the form
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fixImg(path){
+  if(!path) return '';
+  if(/^data:/i.test(path)) return path;
+  if(/^https?:\/\//i.test(path)) return path;
+  let p = path.replace(/^\.?\//,'');
+  if(!/^food-net\//.test(p)) p = 'food-net/' + (/^images\//.test(p) ? p : 'images/' + p);
+  return p;
+}
+
+/* ── Access gate ── */
+auth.onAuthStateChanged((user) => {
+  const gate = document.getElementById('gate');
+  const app = document.getElementById('app');
+  if (!user) { window.location.href = 'index.html'; return; }
+  if (EDITOR_ALLOWED.indexOf(user.email) < 0) {
+    gate.innerHTML = '<h1>No access</h1><p>This editor is restricted. <a href="food-net.html">Back to Food</a></p>';
+    return;
+  }
+  if (typeof logAccess === 'function') logAccess(user, 'page_view', 'producers-editor.html');
+  gate.style.display = 'none';
+  app.style.display = 'block';
+  initEditor();
+});
+
+function initEditor(){
+  addKRow();
+  loadDishes();       // fills the dish picker
+  loadProducers();    // fills the list
+}
+
+/* ── Rich-text story ── */
+function rteCmd(cmd){ document.getElementById('f-body-rte').focus(); document.execCommand(cmd, false, null); syncBodyFromRte(); }
+function rteColor(color){ document.getElementById('f-body-rte').focus(); document.execCommand('foreColor', false, color); syncBodyFromRte(); }
+function syncBodyFromRte(){ document.getElementById('f-body').value = document.getElementById('f-body-rte').innerHTML.trim(); }
+function setBodyHtml(html){
+  const rte = document.getElementById('f-body-rte');
+  rte.innerHTML = html || '';
+  document.getElementById('f-body').value = rte.innerHTML.trim();
+}
+
+/* ── Knowledge rows ── */
+function addKRow(title, text){
+  const wrap = document.getElementById('k-rows');
+  const div = document.createElement('div');
+  div.className = 'k-row';
+  div.innerHTML = `
+    <input placeholder="Title" value="${esc(title||'')}">
+    <textarea placeholder="Text">${esc(text||'')}</textarea>
+    <button type="button" onclick="this.parentNode.remove();">✕</button>`;
+  wrap.appendChild(div);
+}
+function readKRows(){
+  return [...document.querySelectorAll('#k-rows .k-row')].map(r => ({
+    title: r.querySelector('input').value.trim(),
+    text: r.querySelector('textarea').value.trim(),
+  })).filter(k => k.title || k.text);
+}
+
+/* ── Dishes (for the picker) ── */
+const COURSE_ORDER = ['Canapé','Amuse bouche','Starter 1','Starter 2','Main course 1','Main course 2','Pre dessert','Dessert','Petit fours'];
+function courseRank(c){ const i = COURSE_ORDER.indexOf((c||'').trim()); return i<0 ? COURSE_ORDER.length : i; }
+
+function loadDishes(){
+  const done = (snap) => {
+    allDishes = snap.docs.map(d => Object.assign({id:d.id}, d.data()))
+      .filter(d => !d.hidden)
+      .sort((a,b) => courseRank(a.course)-courseRank(b.course) || (a.order||0)-(b.order||0));
+    renderDishPicker();
+  };
+  db.collection('dishes').orderBy('order').get().then(done).catch(() => {
+    db.collection('dishes').get().then(done).catch(()=>{ allDishes = []; renderDishPicker(); });
+  });
+}
+
+function renderDishPicker(){
+  const box = document.getElementById('dish-picker');
+  if(!box) return;
+  const q = (document.getElementById('dish-pick-search').value||'').toLowerCase();
+  let list = allDishes;
+  if(q) list = list.filter(d => (d.name||'').toLowerCase().includes(q));
+  if(!list.length){ box.innerHTML = '<div class="hint" style="margin:0;">No dishes found.</div>'; updatePickedSummary(); return; }
+  // Group by course for easy scanning.
+  let html = '';
+  let lastCourse = null;
+  list.forEach(d => {
+    const course = (d.course||'Other').trim() || 'Other';
+    if(course !== lastCourse){ html += `<div class="dish-pick-group">${esc(course)}</div>`; lastCourse = course; }
+    const checked = pickedDishIds.indexOf(d.id) >= 0 ? 'checked' : '';
+    html += `<label class="dish-pick">
+      <input type="checkbox" value="${esc(d.id)}" ${checked} onchange="togglePick('${esc(d.id)}', this.checked)">
+      <span class="dn">${esc(d.name||'')}</span>
+    </label>`;
+  });
+  box.innerHTML = html;
+  updatePickedSummary();
+}
+function togglePick(id, on){
+  const i = pickedDishIds.indexOf(id);
+  if(on && i<0) pickedDishIds.push(id);
+  if(!on && i>=0) pickedDishIds.splice(i,1);
+  updatePickedSummary();
+}
+function updatePickedSummary(){
+  const el = document.getElementById('picked-summary');
+  if(!el) return;
+  if(!pickedDishIds.length){ el.textContent = 'None selected.'; return; }
+  const names = pickedDishIds.map(id => { const d = allDishes.find(x=>x.id===id); return d ? d.name : '(removed dish)'; });
+  el.textContent = pickedDishIds.length + ' selected: ' + names.join(', ');
+}
+
+/* ── Producers list ── */
+function loadProducers(){
+  const done = (snap) => {
+    allProducers = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
+    document.getElementById('count').textContent = allProducers.length;
+    renderList();
+  };
+  db.collection('producers').orderBy('order').get().then(done).catch(() => {
+    db.collection('producers').get().then(done).catch(()=>{ allProducers=[]; renderList(); });
+  });
+}
+function renderList(){
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const box = document.getElementById('list');
+  let list = allProducers.slice();
+  if(q) list = list.filter(p => (p.name||'').toLowerCase().includes(q) || (p.loc||'').toLowerCase().includes(q));
+  if(!list.length){ box.innerHTML = '<p style="opacity:.6">No producers yet. Use “+ New producer”.</p>'; return; }
+  box.innerHTML = list.map(p => {
+    const nameSafe = esc((p.name||'').replace(/'/g,''));
+    const n = Array.isArray(p.linkedDishIds) ? p.linkedDishIds.length : 0;
+    return `<div class="list-item">
+      <div>
+        <div class="n">${esc(p.name||'')}</div>
+        <div class="c">${esc(p.loc||'')}${n?` · ${n} dish${n>1?'es':''} linked`:''}</div>
+      </div>
+      <div class="list-actions">
+        <button onclick="editProducer('${p.id}')">Edit</button>
+        <button class="delbtn" onclick="deleteProducer('${p.id}','${nameSafe}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Form open / close ── */
+function setFormOpen(open){
+  document.getElementById('form-card').style.display = open ? 'block' : 'none';
+  document.getElementById('list-card').style.display = open ? 'none' : 'block';
+  const topbar = document.querySelector('.topbar');
+  if(topbar) topbar.style.display = open ? 'none' : '';
+}
+function startNew(){
+  resetForm();
+  setFormOpen(true);
+  document.getElementById('form-title').textContent = 'New producer';
+  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(()=>document.getElementById('f-name').focus(), 100);
+}
+function closeForm(){ setFormOpen(false); resetForm(); }
+
+function resetForm(){
+  document.getElementById('docId').value = '';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-loc').value = '';
+  setBodyHtml('');
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-image-file').value = '';
+  document.getElementById('image-status').textContent = '';
+  document.getElementById('image-actions').style.display = 'none';
+  showImagePreview('');
+  document.getElementById('k-rows').innerHTML = '';
+  addKRow();
+  pickedDishIds = [];
+  document.getElementById('dish-pick-search').value = '';
+  renderDishPicker();
+  setMsg('');
+}
+
+function editProducer(id){
+  const p = allProducers.find(x => x.id === id);
+  if(!p) return;
+  setFormOpen(true);
+  document.getElementById('docId').value = id;
+  document.getElementById('form-title').textContent = 'Edit: ' + (p.name||'');
+  document.getElementById('f-name').value = p.name||'';
+  document.getElementById('f-loc').value = p.loc||'';
+  setBodyHtml(p.body||'');
+  const existingImg = (p.images && p.images[0]) || '';
+  document.getElementById('f-image').value = existingImg;
+  document.getElementById('f-image-file').value = '';
+  document.getElementById('image-status').textContent = existingImg ? 'Current photo kept. Choose a file to replace it.' : '';
+  document.getElementById('image-actions').style.display = existingImg ? 'block' : 'none';
+  showImagePreview(existingImg);
+  document.getElementById('k-rows').innerHTML = '';
+  (p.knowledge||[]).forEach(k => addKRow(k.title, k.text));
+  if(!(p.knowledge||[]).length) addKRow();
+  pickedDishIds = Array.isArray(p.linkedDishIds) ? p.linkedDishIds.slice() : [];
+  document.getElementById('dish-pick-search').value = '';
+  renderDishPicker();
+  setMsg('');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function readForm(){
+  const img = (document.getElementById('f-image').value||'').trim();
+  return {
+    name: document.getElementById('f-name').value.trim(),
+    loc: document.getElementById('f-loc').value.trim(),
+    body: document.getElementById('f-body').value.trim(),
+    images: img ? [img] : [],
+    knowledge: readKRows(),
+    linkedDishIds: pickedDishIds.slice(),
+  };
+}
+
+function saveProducer(){
+  const data = readForm();
+  if(!data.name){ setMsg('Please enter a name.', 'err'); return; }
+  const id = document.getElementById('docId').value;
+  const btn = document.getElementById('save-btn');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  const payload = Object.assign({}, data, { updatedAt: now });
+  let op;
+  if(id){
+    op = db.collection('producers').doc(id).update(payload);
+  } else {
+    const maxOrder = allProducers.reduce((m,p)=>Math.max(m, p.order||0), 0);
+    payload.order = maxOrder + 1;
+    payload.createdAt = now;
+    op = db.collection('producers').add(payload);
+  }
+  op.then(() => {
+    btn.disabled = false; btn.textContent = label;
+    setMsg(id ? 'Producer updated.' : 'Producer created.', 'ok');
+    closeForm();
+    loadProducers();
+  }).catch(err => {
+    btn.disabled = false; btn.textContent = label;
+    setMsg('Error: ' + err.message, 'err');
+  });
+}
+
+function deleteProducer(id, name){
+  if(!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+  db.collection('producers').doc(id).delete().then(() => {
+    setMsg('Producer deleted.', 'ok');
+    loadProducers();
+    if(document.getElementById('docId').value === id) resetForm();
+  }).catch(err => setMsg('Error: ' + err.message, 'err'));
+}
+
+function setMsg(text, cls){
+  const el = document.getElementById('msg');
+  el.textContent = text; el.className = 'msg ' + (cls||'');
+}
+
+/* ── Image upload: resize/compress in-browser, store as data URL ── */
+const IMG_MAX_W = 900, IMG_QUALITY = 0.82;
+function handleImageFile(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('image-status');
+  status.textContent = 'Processing image…';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, IMG_MAX_W / img.width);
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img, 0, 0, w, h);
+      let dataUrl;
+      try { dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY); }
+      catch(err){ dataUrl = e.target.result; }
+      document.getElementById('f-image').value = dataUrl;
+      const kb = Math.round((dataUrl.length * 0.75) / 1024);
+      status.textContent = 'Ready · ' + w + '×' + h + ' · ~' + kb + ' KB';
+      document.getElementById('image-actions').style.display = 'block';
+      showImagePreview(dataUrl);
+    };
+    img.onerror = () => { status.textContent = 'Could not read that image.'; };
+    img.src = e.target.result;
+  };
+  reader.onerror = () => { status.textContent = 'Could not read that file.'; };
+  reader.readAsDataURL(file);
+}
+function clearImage(){
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-image-file').value = '';
+  document.getElementById('image-status').textContent = '';
+  document.getElementById('image-actions').style.display = 'none';
+  showImagePreview('');
+}
+function showImagePreview(src){
+  const el = document.getElementById('image-preview');
+  if(!el) return;
+  if(src){ el.src = /^data:/i.test(src) ? src : fixImg(src); el.style.display = 'block'; }
+  else { el.removeAttribute('src'); el.style.display = 'none'; }
+}
+
+/* keep renderPreview name harmless if referenced */
+function renderPreview(){}
+</script>
+</body>
+</html>

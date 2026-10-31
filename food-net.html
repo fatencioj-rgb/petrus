@@ -128,6 +128,17 @@ tr:last-child td { border-bottom:none; }
 .supplier-used { margin-top:14px; font-size:12.5px; color:var(--wine-soft); }
 .supplier-used b { color:var(--wine); }
 
+/* ── Producer cards & modal ──
+   A producer card reuses the dish-card look (image on top, body below) so the
+   Producers tab matches the Menu tab. The location sits under the name, and
+   the dishes it's used in render as clickable chips that open the dish. */
+.prod-loc { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--wine-soft); opacity:0.85; }
+.prod-used { margin-top:4px; padding-top:10px; border-top:1px solid var(--border); }
+.prod-used-title { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--wine-soft); margin-bottom:8px; }
+.prod-dish-links { display:flex; gap:6px; flex-wrap:wrap; }
+.prod-dish-link { font-size:12px; letter-spacing:0.3px; padding:5px 11px; border-radius:12px; background:var(--bg-soft); border:1px solid var(--border); color:var(--wine); cursor:pointer; transition:all .15s; }
+.prod-dish-link:hover { background:var(--wine); color:#fff; border-color:var(--wine); }
+
 @media (max-width:600px) {
   .section-title { font-size:26px; }
 }
@@ -139,7 +150,10 @@ tr:last-child td { border-bottom:none; }
 
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:28px;">
     <a class="back-link" href="training.html">&larr; Back</a>
-    <a href="food-editor.html" id="editorLink" style="display:none;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:0.7;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:7px 14px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--wine)'" onmouseout="this.style.opacity=0.7;this.style.borderColor='var(--border)'">✎ Edit dishes</a>
+    <div style="display:flex;gap:8px;">
+      <a href="food-editor.html" id="editorLink" style="display:none;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:0.7;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:7px 14px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--wine)'" onmouseout="this.style.opacity=0.7;this.style.borderColor='var(--border)'">✎ Edit dishes</a>
+      <a href="producers-editor.html" id="producerEditorLink" style="display:none;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:0.7;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:7px 14px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--wine)'" onmouseout="this.style.opacity=0.7;this.style.borderColor='var(--border)'">✎ Edit producers</a>
+    </div>
   </div>
 
   <!-- MENUS -->
@@ -161,7 +175,8 @@ tr:last-child td { border-bottom:none; }
     </div>
 
     <!-- Producers (shown only when the Producers tab is selected) -->
-    <div class="supplier-grid" id="supplier-grid" style="display:none;"></div>
+    <!-- Same card grid as the dishes, so a producer looks like a dish card. -->
+    <div class="dish-grid-inner" id="supplier-grid" style="display:none;"></div>
   </section>
 
 
@@ -548,8 +563,15 @@ function renderAllergies(){
   }).join('');
 }
 
-/* ── Suppliers (hardcoded, from the portal) ── */
-const suppliersFN = [
+/* ── Producers ──
+   Live from the `producers` Firestore collection (edited in producers-editor.html).
+   Each producer renders as a dish-style card: image on top, name + location,
+   then a "Used for" strip of clickable chips that jump to the linked dishes.
+   Clicking the card opens a modal (same component as dishes) with the full
+   story and knowledge points.
+   If Firestore has no producers yet, we fall back to this seed list so the tab
+   is never empty. The seed uses `used` (free text); live docs use linkedDishIds. */
+const suppliersSeed = [
   { name:'Keltic Seafare', loc:'Dingwall, North of Inverness — Est. 1992',
     body:'Founded by Alasdair Hughson, Keltic sources exclusively from the North-West Highland coast of Scotland. They supply lobster, live langoustine and hand-dived scallops — each order hand-packed at their Dingwall factory and delivered within 24 to 36 hours of harvesting, ensuring everything arrives alive and fresh.',
     used:'Isle of Skye Scallops' },
@@ -564,14 +586,105 @@ const suppliersFN = [
     used:'Fish and seafood dishes' },
 ];
 
+// Producers actually rendered (from Firestore, else the seed above).
+let FN_PRODUCERS = suppliersSeed.slice();
+
+// Build the clickable "Used for" chips for a producer. A producer can link to
+// dishes by id (linkedDishIds, preferred) or keep the old free-text `used`.
+function producerUsedHtml(p){
+  const ids = Array.isArray(p.linkedDishIds) ? p.linkedDishIds : [];
+  if(ids.length){
+    const chips = ids.map(id => {
+      const idx = FN_DISHES.findIndex(d => (d.id||d.docId) === id);
+      if(idx < 0) return '';
+      const d = FN_DISHES[idx];
+      // openProducerDishModal looks the dish up fresh by id (index is only a hint).
+      return `<span class="prod-dish-link" onclick="event.stopPropagation(); openDishById('${esc(id)}')">${esc(d.name||'')}</span>`;
+    }).filter(Boolean).join('');
+    if(chips) return `<div class="prod-used"><div class="prod-used-title">Used for</div><div class="prod-dish-links">${chips}</div></div>`;
+  }
+  const txt = (p.used||'').trim();
+  return txt ? `<div class="prod-used"><div class="prod-used-title">Used for</div><div class="prod-desc" style="font-size:13px;color:var(--text);opacity:0.9;">${esc(txt)}</div></div>` : '';
+}
+
+// Inner body of a producer (shared by card and modal). `inModal` expands the
+// knowledge section open, like the dish modal does.
+function producerBodyHtml(p, prefix){
+  const know = (p.knowledge||[]).map(k =>
+    `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}</div>`).join('');
+  const knowBlock = know ? `
+    <div class="knowledge">
+      <button class="k-toggle" onclick="event.stopPropagation(); toggleSection('pknow-${prefix}')">Knowledge points <span id="pknow-${prefix}-tog">+</span></button>
+      <div class="k-list" id="pknow-${prefix}-list">${know}</div>
+    </div>` : '';
+  return `
+    <div class="dish-name">${esc(p.name||'')}</div>
+    <div class="prod-loc">${esc(p.loc||'')}</div>
+    <div class="dish-desc">${safeDesc(p.body)}</div>
+    ${producerUsedHtml(p)}
+    ${knowBlock}`;
+}
+
+function producerMediaHtml(p){
+  const img = firstImage(p);
+  const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
+  return img
+    ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">Producer</span></div>`
+    : `<div class="dish-media empty"><span class="dish-course">Producer</span></div>`;
+}
+
 function renderSuppliers(){
-  document.getElementById('supplier-grid').innerHTML = suppliersFN.map(s => `
-    <article class="supplier-card">
-      <div class="supplier-name">${esc(s.name)}</div>
-      <div class="supplier-loc">${esc(s.loc)}</div>
-      <p class="supplier-body">${esc(s.body)}</p>
-      <div class="supplier-used"><b>Used for:</b> ${esc(s.used)}</div>
+  const grid = document.getElementById('supplier-grid');
+  grid.innerHTML = FN_PRODUCERS.map((p, i) => `
+    <article class="dish-card" onclick="openProducerModal(${i})">
+      <div class="dish-media-wrap">${producerMediaHtml(p)}</div>
+      <div class="dish-body">${producerBodyHtml(p, 'card'+i)}</div>
     </article>`).join('');
+}
+
+// Open a producer in the same modal component used by dishes.
+function openProducerModal(i){
+  const p = FN_PRODUCERS[i];
+  if(!p) return;
+  const content = document.getElementById('dish-modal-content');
+  content.innerHTML = producerMediaHtml(p) + `<div class="dish-body">${producerBodyHtml(p, 'm')}</div>`;
+  document.getElementById('dish-modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+// Open a dish by its Firestore id (used by the "Used for" chips on a producer).
+function openDishById(id){
+  const idx = FN_DISHES.findIndex(d => (d.id||d.docId) === id);
+  if(idx < 0) return;
+  // Reuse the dish modal directly from the full dish list.
+  const d = FN_DISHES[idx];
+  const content = document.getElementById('dish-modal-content');
+  content.innerHTML = dishMediaHtml(d) + `<div class="dish-body">${dishBodyHtml(d, 'm')}</div>`;
+  document.getElementById('dish-modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+// Load producers from Firestore; keep the seed if the collection is empty.
+function loadProducersFromFirestore(){
+  return new Promise((resolve) => {
+    if(typeof db === 'undefined'){ resolve(false); return; }
+    db.collection('producers').orderBy('order').get()
+      .then(snap => {
+        if(snap.empty){ resolve(false); return; }
+        FN_PRODUCERS = snap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
+        resolve(true);
+      })
+      .catch(() => {
+        // No order field / index: fall back to an unordered read.
+        db.collection('producers').get()
+          .then(snap => {
+            if(snap.empty){ resolve(false); return; }
+            FN_PRODUCERS = snap.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
+            resolve(true);
+          })
+          .catch(() => resolve(false));
+      });
+  });
 }
 
 /* ── Data loading: Firestore first, local fallback ── */
@@ -618,13 +731,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render immediately with local data so the page never looks empty…
   try { FN_DISHES = localDishes(); renderAll(); } catch(e){ console.error('local render error', e); }
   // …then upgrade to Firestore data when it arrives (needs auth to be signed in).
-  const tryLoad = () => loadFromFirestore().then(ok => { if(ok) renderAll(); });
+  // Dishes load first; producers load after so their "Used for" chips can
+  // resolve dish names from FN_DISHES.
+  const tryLoad = () => loadFromFirestore().then(ok => {
+    if(ok) renderAll();
+    return loadProducersFromFirestore();
+  }).then(okProd => { if(okProd) renderSuppliers(); });
   if(typeof auth !== 'undefined'){
     auth.onAuthStateChanged((user) => {
-      // Editors (Fiorella & Milena) see the top link and the per-card pencil.
+      // Editors see the top links and the per-card pencil.
       canEdit = !!(user && FN_EDITORS.indexOf(user.email) >= 0);
       var w = document.getElementById('editorLink');
       if(w) w.style.display = canEdit ? 'inline-block' : 'none';
+      var wp = document.getElementById('producerEditorLink');
+      if(wp) wp.style.display = canEdit ? 'inline-block' : 'none';
       renderDishes();   // re-render so pencils appear/disappear with the role
       tryLoad();
     });
