@@ -609,7 +609,10 @@ function producerUsedHtml(p){
 
 // Inner body of a producer (shared by card and modal). `inModal` expands the
 // knowledge section open, like the dish modal does.
-function producerBodyHtml(p, prefix){
+// Inner body of a producer. On the card (showStory=false) we show only the
+// knowledge points and the "Used for" dishes — the full story is kept for the
+// modal (showStory=true), which opens on click.
+function producerBodyHtml(p, prefix, showStory){
   const know = (p.knowledge||[]).map(k =>
     `<div class="k-item"><b>${esc(k.title)}:</b> ${esc(k.text)}</div>`).join('');
   const knowBlock = know ? `
@@ -617,10 +620,11 @@ function producerBodyHtml(p, prefix){
       <button class="k-toggle" onclick="event.stopPropagation(); toggleSection('pknow-${prefix}')">Knowledge points <span id="pknow-${prefix}-tog">+</span></button>
       <div class="k-list" id="pknow-${prefix}-list">${know}</div>
     </div>` : '';
+  const storyBlock = showStory ? `<div class="dish-desc">${safeDesc(p.body)}</div>` : '';
   return `
     <div class="dish-name">${esc(p.name||'')}</div>
     <div class="prod-loc">${esc(p.loc||'')}</div>
-    <div class="dish-desc">${safeDesc(p.body)}</div>
+    ${storyBlock}
     ${producerUsedHtml(p)}
     ${knowBlock}`;
 }
@@ -638,7 +642,7 @@ function renderSuppliers(){
   grid.innerHTML = FN_PRODUCERS.map((p, i) => `
     <article class="dish-card" onclick="openProducerModal(${i})">
       <div class="dish-media-wrap">${producerMediaHtml(p)}</div>
-      <div class="dish-body">${producerBodyHtml(p, 'card'+i)}</div>
+      <div class="dish-body">${producerBodyHtml(p, 'card'+i, false)}</div>
     </article>`).join('');
 }
 
@@ -647,7 +651,7 @@ function openProducerModal(i){
   const p = FN_PRODUCERS[i];
   if(!p) return;
   const content = document.getElementById('dish-modal-content');
-  content.innerHTML = producerMediaHtml(p) + `<div class="dish-body">${producerBodyHtml(p, 'm')}</div>`;
+  content.innerHTML = producerMediaHtml(p) + `<div class="dish-body">${producerBodyHtml(p, 'm', true)}</div>`;
   document.getElementById('dish-modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
