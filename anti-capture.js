@@ -18,6 +18,10 @@
 
   // ── Warning toast ────────────────────────────────────────────────
   function showCaptureWarning(msg) {
+    // Stamp the signed-in user's name across the screen for a few seconds, so
+    // a capture taken right now is "signed". watermark.js provides this.
+    try { if (window.petrusShowWatermark) window.petrusShowWatermark(5000); } catch (x) {}
+
     var existing = document.getElementById('petrus-capture-warn');
     if (existing) { existing.remove(); }
     var el = document.createElement('div');

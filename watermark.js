@@ -1,41 +1,22 @@
 // ═══════════════════════════════════════════════════════════════════
-// Petrus FOH — Per-user watermark
+// Petrus FOH — On-demand per-user watermark
 // ═══════════════════════════════════════════════════════════════════
-// Overlays the signed-in user's name + today's date, tiled faintly across
-// the page. It does NOT stop screenshots — nothing can — but any capture
-// or photo of the screen is "signed" with the account that took it, which
-// is the real deterrent. Pointer events pass through, so it never blocks
-// clicks. Requires auth.js (for `auth`) to be loaded first.
+// The page stays clean (no permanent watermark). When a screenshot attempt
+// is detected (see anti-capture.js), we briefly overlay the signed-in user's
+// name + timestamp, tiled across the screen, so a capture taken at that
+// moment is "signed" with the account that took it.
+//
+// NOTE (honest limitation): a web page cannot know the exact instant a
+// screenshot is taken. This fires on the shortcut/behaviour that usually
+// accompanies a capture, so it often — but not always — lands in the image.
+// Requires auth.js (for `auth`) loaded first.
 // ═══════════════════════════════════════════════════════════════════
 
 (function () {
   'use strict';
-  if (typeof auth === 'undefined') return;
 
-  function build(label) {
-    var old = document.getElementById('petrus-watermark');
-    if (old) old.remove();
-
-    // Build a tiled SVG as the background so it repeats cheaply.
-    var text = label;
-    var svg =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">'
-      + '<text x="0" y="100" transform="rotate(-30 160 100)" '
-      + 'fill="rgba(92,26,26,0.10)" font-family="Inter,Segoe UI,sans-serif" '
-      + 'font-size="15" font-weight="500">' + text + '</text></svg>';
-    var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-
-    var el = document.createElement('div');
-    el.id = 'petrus-watermark';
-    el.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:2147483000',
-      'pointer-events:none',               // clicks go through
-      'background-image:url("' + url + '")',
-      'background-repeat:repeat',
-      'opacity:1'
-    ].join(';');
-    document.body.appendChild(el);
-  }
+  // Remember the current user's label so we can stamp instantly on demand.
+  var currentLabel = 'Petrus · Internal';
 
   function labelFor(user) {
     var name = (user.displayName) || user.email.split('@')[0].replace(/\./g, ' ');
@@ -46,14 +27,51 @@
     return name + ' · ' + date + ' ' + time;
   }
 
-  auth.onAuthStateChanged(function (user) {
-    if (!user) {
-      var el = document.getElementById('petrus-watermark');
-      if (el) el.remove();
-      return;
+  if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged(function (user) {
+      if (user) currentLabel = labelFor(user);
+    });
+  }
+
+  // Build (or refresh) the tiled watermark overlay and show it.
+  function show(durationMs) {
+    var label = currentLabel;
+    var old = document.getElementById('petrus-watermark');
+    if (old) old.remove();
+
+    var svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">'
+      + '<text x="0" y="100" transform="rotate(-30 160 100)" '
+      + 'fill="rgba(92,26,26,0.22)" font-family="Inter,Segoe UI,sans-serif" '
+      + 'font-size="15" font-weight="600">' + label + '</text></svg>';
+    var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+
+    var el = document.createElement('div');
+    el.id = 'petrus-watermark';
+    // Sit ABOVE the capture-warning overlay so the name lands on top in any
+    // screenshot taken while the warning is up.
+    el.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:2147483647',
+      'pointer-events:none',
+      'background-image:url("' + url + '")',
+      'background-repeat:repeat'
+    ].join(';');
+    (document.body || document.documentElement).appendChild(el);
+
+    if (durationMs !== 0) {
+      setTimeout(function () {
+        var w = document.getElementById('petrus-watermark');
+        if (w) w.remove();
+      }, durationMs || 5000);
     }
-    var label = labelFor(user);
-    if (document.body) build(label);
-    else document.addEventListener('DOMContentLoaded', function () { build(label); });
-  });
+  }
+
+  function hide() {
+    var w = document.getElementById('petrus-watermark');
+    if (w) w.remove();
+  }
+
+  // Exposed for anti-capture.js to call on a detected capture attempt.
+  window.petrusShowWatermark = show;
+  window.petrusHideWatermark = hide;
 })();
