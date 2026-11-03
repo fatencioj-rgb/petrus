@@ -195,6 +195,8 @@ tr:last-child td { border-bottom:none; }
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth.js"></script>
+<script src="watermark.js"></script>
+<script src="anti-capture.js"></script>
 <!-- Local data fallback + shared helpers -->
 <script src="food-net/script.js"></script>
 <script>
@@ -448,8 +450,8 @@ function renderDishes(){
 // The list currently shown in the grid, so the modal can look up a dish by index.
 let currentList = [];
 
-// Who may edit dishes — the pencil icon on each card only shows for these.
-const FN_EDITORS = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local','irena@petrus.local'];
+// Who may edit dishes & producers — the pencil icon on each card only shows for these.
+const FN_EDITORS = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local'];
 let canEdit = false;
 
 // Open a dish straight in the editor (used by the pencil icon on each card).

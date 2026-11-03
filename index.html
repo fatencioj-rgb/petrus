@@ -336,6 +336,17 @@ body {
   text-transform:uppercase; cursor:pointer;
 }
 
+/* ── Recently connected (Fiorella only) ── */
+.recent-row {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background: rgba(184, 150, 80,0.07);
+  border: 1px solid rgba(184, 150, 80,0.22);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+}
+.recent-name { color: var(--cream); font-size: 14px; font-weight:500; }
+.recent-time { color: var(--gold-light); font-size: 12px; opacity: 0.85; white-space:nowrap; }
+.recent-empty { color: var(--gold-light); font-size: 12px; opacity: 0.6; text-align:center; padding: 6px 0; }
+
 @media (max-width: 600px) {
   .logo h1 { font-size: 38px; }
   .subtitle { font-size: 11px; margin-bottom: 36px; }
@@ -362,6 +373,12 @@ body {
 
   <!-- Notes panel (shown above the buttons, visible to everyone) -->
   <div id="notesPanel" style="display:none;"></div>
+
+  <!-- Recently connected (Fiorella only) — last 5 logins, name + time -->
+  <div id="recentPanel" style="display:none;text-align:left;margin-bottom:28px;">
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-light);opacity:0.7;margin-bottom:10px;">Recently connected</div>
+    <div id="recentList"></div>
+  </div>
 
   <!-- Navigation (hidden until logged in) -->
   <nav class="nav-buttons" id="navButtons" style="display:none;">
@@ -463,6 +480,15 @@ auth.onAuthStateChanged((user) => {
     var adminWrap = document.getElementById('adminLinkWrap');
     if (adminWrap) adminWrap.style.display = userCanSee(user, 'admin') ? 'block' : 'none';
 
+    // Recently connected (last 5 logins) — Fiorella only.
+    var recentWrap = document.getElementById('recentPanel');
+    if (user.email === 'fiorella@petrus.local') {
+      if (recentWrap) recentWrap.style.display = 'block';
+      renderRecentlyConnected();
+    } else if (recentWrap) {
+      recentWrap.style.display = 'none';
+    }
+
     // Notes panel: visible to the team; hidden entirely for guest.
     if (guest) {
       notesPanel.style.display = 'none';
@@ -477,8 +503,65 @@ auth.onAuthStateChanged((user) => {
     loginPrompt.style.display = 'block';
     var pushWrap0 = document.getElementById('enablePushWrap');
     if (pushWrap0) pushWrap0.style.display = 'none';
+    var recentWrap0 = document.getElementById('recentPanel');
+    if (recentWrap0) recentWrap0.style.display = 'none';
   }
 });
+
+// ══ Recently connected (Fiorella only) ════════════════════════════
+// Shows the last 5 logins (name + time) from the access log. Reads are
+// allowed by the rules for signed-in users; only Fiorella sees the panel.
+function fmtRecentTime(d){
+  try {
+    var today = new Date();
+    var sameDay = d.toDateString() === today.toDateString();
+    var time = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    if (sameDay) return 'Today ' + time;
+    var date = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    return date + ' ' + time;
+  } catch(e){ return ''; }
+}
+function renderRecentlyConnected(){
+  var listEl = document.getElementById('recentList');
+  if (!listEl) return;
+  db.collection('access_logs')
+    .where('action','==','login')
+    .orderBy('timestamp','desc')
+    .limit(5)
+    .get()
+    .then(function(snap){
+      if (snap.empty) { listEl.innerHTML = '<div class="recent-empty">No recent logins.</div>'; return; }
+      var rows = snap.docs.map(function(doc){
+        var l = doc.data();
+        var name = l.displayName || (l.email ? l.email.split('@')[0].replace(/\./g,' ') : 'Unknown');
+        name = name.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+        var when = l.timestamp && l.timestamp.toDate ? fmtRecentTime(l.timestamp.toDate()) : '';
+        var esc = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+        return '<div class="recent-row"><span class="recent-name">' + esc(name) + '</span><span class="recent-time">' + esc(when) + '</span></div>';
+      }).join('');
+      listEl.innerHTML = rows;
+    })
+    .catch(function(err){
+      // Most likely a missing composite index (action == + orderBy timestamp).
+      // Fall back to an unindexed read: order by time, filter logins client-side.
+      console.warn('recent logins query failed, falling back:', err && err.message);
+      db.collection('access_logs').orderBy('timestamp','desc').limit(40).get()
+        .then(function(snap){
+          var logins = snap.docs.map(function(d){ return d.data(); })
+            .filter(function(l){ return l.action === 'login'; })
+            .slice(0,5);
+          if (!logins.length) { listEl.innerHTML = '<div class="recent-empty">No recent logins.</div>'; return; }
+          var esc = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+          listEl.innerHTML = logins.map(function(l){
+            var name = l.displayName || (l.email ? l.email.split('@')[0].replace(/\./g,' ') : 'Unknown');
+            name = name.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+            var when = l.timestamp && l.timestamp.toDate ? fmtRecentTime(l.timestamp.toDate()) : '';
+            return '<div class="recent-row"><span class="recent-name">' + esc(name) + '</span><span class="recent-time">' + esc(when) + '</span></div>';
+          }).join('');
+        })
+        .catch(function(){ listEl.innerHTML = '<div class="recent-empty">Could not load recent logins.</div>'; });
+    });
+}
 
 // ── Modal Functions ───────────────────────────────────────────────
 function quickLogin(name){
