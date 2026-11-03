@@ -336,15 +336,15 @@ body {
   text-transform:uppercase; cursor:pointer;
 }
 
-/* ── Recently connected (Fiorella only) ── */
+/* ── Recently connected (Fiorella only) — plain text rows, not buttons ── */
 .recent-row {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
-  background: rgba(184, 150, 80,0.07);
-  border: 1px solid rgba(184, 150, 80,0.22);
-  border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+  padding: 6px 2px;
+  border-bottom: 1px solid rgba(184, 150, 80,0.12);
 }
-.recent-name { color: var(--cream); font-size: 14px; font-weight:500; }
-.recent-time { color: var(--gold-light); font-size: 12px; opacity: 0.85; white-space:nowrap; }
+.recent-row:last-child { border-bottom: none; }
+.recent-name { color: var(--gold-light); font-size: 13px; font-weight:400; opacity:0.9; }
+.recent-time { color: var(--gold-light); font-size: 12px; opacity: 0.6; white-space:nowrap; }
 .recent-empty { color: var(--gold-light); font-size: 12px; opacity: 0.6; text-align:center; padding: 6px 0; }
 
 @media (max-width: 600px) {
@@ -374,28 +374,12 @@ body {
   <!-- Notes panel (shown above the buttons, visible to everyone) -->
   <div id="notesPanel" style="display:none;"></div>
 
-  <!-- Recently connected (Fiorella only) — last 5 logins, name + time -->
-  <div id="recentPanel" style="display:none;text-align:left;margin-bottom:28px;">
-    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-light);opacity:0.7;margin-bottom:10px;">Recently connected</div>
-    <div id="recentList"></div>
-  </div>
-
   <!-- Navigation (hidden until logged in) -->
   <nav class="nav-buttons" id="navButtons" style="display:none;">
     <a href="training.html" class="nav-btn" data-section="training">Training</a>
     <a href="sommeliers.html" class="nav-btn" data-section="sommeliers">Sommeliers</a>
     <a href="operations.html" class="nav-btn" data-section="operations">Operations</a>
   </nav>
-
-  <!-- Enable notifications (visible when logged in). Each person taps this
-       once on their own phone, with their own account. -->
-  <div id="enablePushWrap" style="display:none;margin-top:18px;">
-    <button type="button" class="nav-btn" style="border-color:rgba(184,150,80,0.5);"
-      onclick="petrusEnablePush && petrusEnablePush()">🔔 Turn on notifications</button>
-    <p id="enablePushHint" style="font-size:11px;color:var(--gold-light);opacity:0.7;margin-top:8px;letter-spacing:0.5px;">
-      Tap once to receive team alerts on this device.
-    </p>
-  </div>
 
   <!-- Login prompt (shown when NOT logged in) -->
   <div id="loginPrompt" style="display:none;">
@@ -412,9 +396,19 @@ body {
     </form>
   </div>
 
-  <!-- Admin: subtle text link, only visible to Fiorella -->
-  <div id="adminLinkWrap" style="display:none;margin-top:44px;">
-    <a href="admin.html" style="color:var(--gold);opacity:0.55;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">Admin</a>
+  <!-- Small notification bell + Admin link (shown when logged in) -->
+  <div id="bottomBar" style="display:none;margin-top:40px;align-items:center;justify-content:center;gap:18px;">
+    <button type="button" id="pushBell" title="Turn on notifications on this device"
+      onclick="petrusEnablePush && petrusEnablePush()"
+      style="background:transparent;border:none;color:var(--gold);opacity:0.55;font-size:16px;cursor:pointer;line-height:1;transition:opacity .2s;padding:0;"
+      onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">🔔</button>
+    <a href="admin.html" id="adminLink" style="display:none;color:var(--gold);opacity:0.55;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">Admin</a>
+  </div>
+
+  <!-- Recently connected (Fiorella only) — last 5 logins, name + time -->
+  <div id="recentPanel" style="display:none;text-align:left;margin-top:30px;">
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-light);opacity:0.6;margin-bottom:10px;text-align:center;">Recently connected</div>
+    <div id="recentList"></div>
   </div>
 
   <div class="footer">
@@ -469,16 +463,20 @@ auth.onAuthStateChanged((user) => {
     // Buttons: everyone sees all (access enforced on target page) EXCEPT guest,
     // who only sees Training; the rest are hidden for guest.
     nav.style.display = 'flex';
-    var pushWrap = document.getElementById('enablePushWrap');
-    if (pushWrap) pushWrap.style.display = guest ? 'none' : 'block';
     nav.querySelectorAll('.nav-btn').forEach(btn => {
       const section = btn.getAttribute('data-section');
       btn.style.display = (guest && section !== 'training') ? 'none' : 'block';
     });
 
-    // Admin link (subtle text at the bottom) only for Fiorella.
-    var adminWrap = document.getElementById('adminLinkWrap');
-    if (adminWrap) adminWrap.style.display = userCanSee(user, 'admin') ? 'block' : 'none';
+    // Bottom bar: small notification bell (everyone except guest) + Admin link (Fiorella only).
+    var bottomBar = document.getElementById('bottomBar');
+    var bell = document.getElementById('pushBell');
+    var adminLink = document.getElementById('adminLink');
+    if (bell) bell.style.display = guest ? 'none' : 'inline-block';
+    if (adminLink) adminLink.style.display = userCanSee(user, 'admin') ? 'inline-block' : 'none';
+    // Show the bar if at least one of its items is visible.
+    var showBar = !guest || userCanSee(user, 'admin');
+    if (bottomBar) bottomBar.style.display = showBar ? 'flex' : 'none';
 
     // Recently connected (last 5 logins) — Fiorella only.
     var recentWrap = document.getElementById('recentPanel');
@@ -501,8 +499,8 @@ auth.onAuthStateChanged((user) => {
     nav.style.display = 'none';
     notesPanel.style.display = 'none';
     loginPrompt.style.display = 'block';
-    var pushWrap0 = document.getElementById('enablePushWrap');
-    if (pushWrap0) pushWrap0.style.display = 'none';
+    var bottomBar0 = document.getElementById('bottomBar');
+    if (bottomBar0) bottomBar0.style.display = 'none';
     var recentWrap0 = document.getElementById('recentPanel');
     if (recentWrap0) recentWrap0.style.display = 'none';
   }
