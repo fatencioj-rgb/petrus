@@ -146,7 +146,11 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   .pf-page{page:floor;break-after:page;page-break-after:always}
   .pf-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid var(--gold);padding-bottom:6px;margin-bottom:10px}
   .pf-head h1{font-family:var(--serif);font-size:26px;color:var(--green-dark);letter-spacing:2px;line-height:1.1}
-  .pf-sub{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-top:2px}
+  /* "PETRUS - <event name>": the brand is spaced capitals, the event keeps the case it was saved with */
+  .pf-sub{margin-top:3px;font-size:10px;font-weight:600;color:var(--gold)}
+  .pf-brand{letter-spacing:3px;text-transform:uppercase}
+  .pf-dash{margin:0 6px 0 3px}
+  .pf-event{font-size:13px;letter-spacing:.5px;text-transform:none;color:var(--green-dark)}
   .pf-meta{font-size:11px;color:#555;text-align:right;line-height:1.5}
   .pf-box{margin:0 auto;overflow:hidden}
   .pf-stage{position:relative}
@@ -154,12 +158,12 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 
   .pt-page{page:tables}
   .pt-table{width:100%;border-collapse:collapse}
-  .pt-table thead th{text-align:left;font-weight:600;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);padding:0 0 6px;border-bottom:1px solid var(--gold)}
+  .pt-table thead th{text-align:left;font-weight:400;padding:0 0 6px;border-bottom:1px solid var(--gold)}
+  .pt-run{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+  .pt-run-title{font-family:var(--serif);font-size:22px;color:var(--green-dark);letter-spacing:2px;line-height:1.1}
+  .pt-run-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
   .pt-table tr{break-inside:avoid;page-break-inside:avoid}
   .pt-table td{padding:12px 0;border-bottom:1px solid var(--border);vertical-align:top}
-  .pt-row{display:flex;gap:18px;align-items:flex-start}
-  .pt-drawcol{flex:0 0 250px;display:flex;justify-content:center}
-  .pt-draw{position:relative;overflow:hidden}
   .pt-info{flex:1;min-width:0}
   .pt-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
   .pt-name{font-family:var(--serif);font-size:22px;color:var(--green-dark);letter-spacing:1px}
@@ -1049,10 +1053,9 @@ function deleteSaved(id){
 
 // ── Printing ─────────────────────────────────────────────────────
 // Page 1: the whole floor, scaled to fit one landscape sheet.
-// Pages 2+: every table in number order (Table 1, Table 2…): a small drawing on the
-// left and its guest list on the right. The table header repeats on every sheet.
+// Pages 2+: guest lists only, every table in number order (Table 1, Table 2…).
+// Every sheet is headed "Seat Plan" with "PETRUS - <the name the plan was saved under>".
 var PRINT_FLOOR_W = 1000, PRINT_FLOOR_H = 600;   // px for the floor drawing (A4 landscape minus margins and title)
-var PRINT_DRAW_W = 250,  PRINT_DRAW_H = 220;     // px box for each small table drawing (A4 portrait list)
 
 function mk(tag, cls, html){
   var n = document.createElement(tag);
@@ -1083,12 +1086,14 @@ function buildPrintSheets(){
   });
   var planName = (state.meta && state.meta.id) ? state.meta.name : '';
   var today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  var titleHtml = 'Seat Plan' + (planName ? ' &mdash; ' + esc(planName) : '');
+  // "PETRUS - GR 60's": the event name is printed exactly as it was saved.
+  var subHtml = '<div class="pf-sub"><span class="pf-brand">Petrus</span>' +
+    (planName ? '<span class="pf-dash">-</span><span class="pf-event">' + esc(planName) + '</span>' : '') + '</div>';
 
   // ── Page 1: the floor ──
   var p1 = mk('section', 'pf-page');
   p1.appendChild(mk('div', 'pf-head',
-    '<div><h1>' + titleHtml + '</h1><div class="pf-sub">Petrus &middot; Restaurant Floor</div></div>' +
+    '<div><h1>Seat Plan</h1>' + subHtml + '</div>' +
     '<div class="pf-meta">' + state.units.length + ' tables &middot; ' + covers + ' covers &middot; ' +
     named + ' guests named<br>' + today + '</div>'));
   var nodes = Array.prototype.slice.call(canvas.children);
@@ -1127,7 +1132,8 @@ function buildPrintSheets(){
   var sec = mk('section', 'pt-page');
   var tbl = mk('table', 'pt-table');
   tbl.appendChild(mk('thead', null,
-    '<tr><th>Petrus &middot; ' + titleHtml + ' &middot; Guest lists</th></tr>'));
+    '<tr><th><div class="pt-run"><div><div class="pt-run-title">Seat Plan</div>' + subHtml + '</div>' +
+    '<span class="pt-run-tag">Guest lists</span></div></th></tr>'));
   var tbody = mk('tbody');
   state.units.slice().sort(function(a, b){ return naturalCompare(a.label, b.label); }).forEach(function(u){
     var seated = 0, items = '';
@@ -1136,33 +1142,13 @@ function buildPrintSheets(){
       if (n) seated++;
       items += '<li><span class="pt-pos">P' + (i + 1) + '</span><span class="pt-guest">' + esc(n) + '</span></li>';
     }
-    var row = mk('div', 'pt-row');
-
-    var drawCol = mk('div', 'pt-drawcol');
-    var live = canvas.querySelector('[data-id="' + u.id + '"]');
-    if (live){
-      var w = live.offsetWidth, h = live.offsetHeight;
-      var sc = Math.min(1, PRINT_DRAW_W / w, PRINT_DRAW_H / h);
-      var draw = mk('div', 'pt-draw');
-      draw.style.width = Math.ceil(w * sc) + 'px'; draw.style.height = Math.ceil(h * sc) + 'px';
-      var inner = mk('div');
-      inner.style.cssText = 'position:relative;width:' + w + 'px;height:' + h + 'px;zoom:' + sc;
-      var c = printClone(live);
-      c.style.left = '0px'; c.style.top = '0px'; c.style.cursor = 'default';
-      inner.appendChild(c);
-      draw.appendChild(inner);
-      drawCol.appendChild(draw);
-    }
-    row.appendChild(drawCol);
-
     var info = mk('div', 'pt-info',
       '<div class="pt-head"><span class="pt-name">Table ' + esc(u.label) + '</span>' +
       '<span class="pt-meta">' + u.seats + ' seats &middot; ' + seated + ' named</span></div>' +
       '<ul class="pt-list" style="column-count:' + (u.seats > 10 ? 2 : 1) + '">' + items + '</ul>');
-    row.appendChild(info);
 
     var tr = document.createElement('tr'), td = document.createElement('td');
-    td.appendChild(row); tr.appendChild(td); tbody.appendChild(tr);
+    td.appendChild(info); tr.appendChild(td); tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
   sec.appendChild(tbl);
