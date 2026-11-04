@@ -77,6 +77,24 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .mini.x:hover{background:#c0392b;color:#fff}
 .mini-count{font-size:11px;color:var(--gold);min-width:46px;text-align:center}
 
+/* Named plans: toolbar label, title for print, saved-plans dialog */
+.plan-name{font-size:12px;color:var(--green-dark);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-flag{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.plan-flag.mod{color:var(--gold)}
+.btn:disabled{opacity:.45;cursor:default;transform:none;background:var(--white);border-color:var(--border)}
+.plan-title{font-family:var(--serif);font-size:1.15rem;color:var(--green);margin-top:4px}
+.plan-title:empty{display:none}
+.dlg-overlay{position:fixed;inset:0;z-index:1000;background:rgba(45,10,10,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--white);border-radius:12px;width:min(620px,100%);max-height:80vh;overflow:auto;padding:18px 18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.dlg-head h2{font-family:var(--serif);font-size:1.5rem;color:var(--green-dark);letter-spacing:1px}
+.plan-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border);flex-wrap:wrap}
+.plan-info{min-width:0;flex:1}
+.plan-title-row{font-family:var(--serif);font-size:1.15rem;color:var(--green-dark)}
+.plan-when{font-size:11px;color:var(--gold)}
+.plan-btns{display:flex;gap:6px}
+.plan-btns .btn{padding:7px 12px}
+
 /* Plan + guest list side panel */
 .plan-layout{display:flex;gap:16px;align-items:flex-start}
 .plan-layout .canvas-wrap{flex:1;min-width:0}
@@ -122,9 +140,18 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   <div class="page-header">
     <h1>Seat Plan</h1>
     <p class="sub">Restaurant Floor</p>
+    <p class="plan-title" id="planTitle"></p>
   </div>
 
   <div class="toolbar">
+    <div class="tool-group">
+      <span class="tool-label">Plan</span>
+      <span class="plan-name" id="planName"></span>
+      <button class="btn primary" onclick="saveAsPlan()">Save as&hellip;</button>
+      <button class="btn" id="btnUpdate" onclick="updatePlan()" disabled title="Save your changes to the open saved plan">Update</button>
+      <button class="btn" onclick="newPlan()">New</button>
+      <button class="btn" onclick="openPlansDialog()">Open&hellip;</button>
+    </div>
     <div class="tool-group">
       <span class="tool-label">Seats</span>
       <input type="number" id="seatCount" class="seat-input" value="8" min="1" max="30">
@@ -163,6 +190,17 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only</em></div>
 </div>
 
+<!-- Saved plans dialog -->
+<div class="dlg-overlay" id="plansDialog" role="dialog" aria-modal="true" aria-labelledby="plansHeading">
+  <div class="dlg">
+    <div class="dlg-head">
+      <h2 id="plansHeading">Saved plans</h2>
+      <button type="button" class="btn" id="plansClose">Close</button>
+    </div>
+    <div id="plansList"></div>
+  </div>
+</div>
+
 <!-- Firebase + Auth + Guard ADMIN -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -182,8 +220,28 @@ var CLOUD_COLLECTION = 'seat_plans', CLOUD_DOC = 'main';
 
 var canvas = document.getElementById('canvas');
 // isDefault = true while the plan is just the built-in starter layout (never uploaded on its own).
-var state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false };
+// meta = link to a named saved plan: { id (Firestore doc id or null), name, baseline (signature when saved/opened) }
+var state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false, meta: blankMeta() };
 var uid = function(){ return 'u' + Date.now() + Math.floor(Math.random()*1000); };
+function blankMeta(){ return { id: null, name: '', baseline: '' }; }
+
+// A normalised fingerprint of a plan, used to tell whether it differs from the saved copy.
+// Rendering adds internal bookkeeping (empty angle lists, blank guest rows) that must not
+// count as a change, so those are normalised away here.
+function planSignature(p){
+  p = p || state;
+  var units = (p.units || []).map(function(u){
+    var guests = (u.guests || []).slice(0, u.seats).map(function(g){ return String(g || '').trim(); });
+    while (guests.length && !guests[guests.length - 1]) guests.pop();
+    var angles = (u.angles || []).map(function(a){ return typeof a === 'number' ? Math.round(a * 10000) / 10000 : null; });
+    while (angles.length && angles[angles.length - 1] === null) angles.pop();
+    return [u.id, u.shape, u.seats, u.label, Math.round(u.x), Math.round(u.y), angles, guests];
+  });
+  var fixed = (p.fixed || []).map(function(f){
+    return [f.id, f.shape, f.label, Math.round(f.w), Math.round(f.h), Math.round(f.x), Math.round(f.y)];
+  });
+  return JSON.stringify([units, fixed]);
+}
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── Saving: this device (instant) + Firestore (debounced) ────────────
@@ -206,13 +264,21 @@ function save(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(DIRTY_KEY, '1');
   updateTotals();
+  updatePlanUi();
   scheduleCloudSave();
 }
+// Returns true when a stored plan was found (even an empty one).
 function load(){
   try {
     var s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (s && s.units) { state = s; state.selectedId = null; if (!state.fixed) state.fixed = []; }
+    if (s && s.units) {
+      state = s; state.selectedId = null;
+      if (!state.fixed) state.fixed = [];
+      if (!state.meta || typeof state.meta !== 'object') state.meta = blankMeta();
+      return true;
+    }
   } catch(e){}
+  return false;
 }
 
 function scheduleCloudSave(){
@@ -228,6 +294,7 @@ function cloudSaveNow(){
   setCloudStatus('Saving…');
   cloudRef.set({
     json: JSON.stringify(planForCloud()),
+    meta: state.meta || blankMeta(),     // which named plan this working copy belongs to
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedBy: (auth.currentUser && auth.currentUser.email) || ''
   }).then(function(){
@@ -242,10 +309,13 @@ function cloudSaveNow(){
   });
 }
 // Replace the current plan with one read from the cloud.
-function applyRemote(remote){
+function applyRemote(remote, meta){
   state = {
     units: remote.units || [], fixed: remote.fixed || [],
-    nextNum: remote.nextNum || 1, selectedId: null, isDefault: false
+    nextNum: remote.nextNum || 1, selectedId: null, isDefault: false,
+    meta: (meta && typeof meta === 'object')
+      ? { id: meta.id || null, name: meta.name || '', baseline: meta.baseline || '' }
+      : blankMeta()
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.removeItem(DIRTY_KEY);
@@ -273,7 +343,7 @@ function syncFromCloud(){
 
     if (dirty && hasLocalPlan){ cloudSaveNow(); return; }  // edits made here that never reached the cloud
 
-    if (!synced && hasLocalPlan && data.json !== JSON.stringify(planForCloud())){
+    if (!synced && hasLocalPlan && planSignature(remote) !== planSignature()){
       // First time this device meets the cloud and both hold different plans.
       var useCloud = confirm(
         'The cloud already has a saved Seat Plan, and this device has a different one.\n\n' +
@@ -282,7 +352,7 @@ function syncFromCloud(){
       if (!useCloud){ cloudSaveNow(); return; }
       localStorage.setItem(BACKUP_KEY, localStorage.getItem(STORAGE_KEY) || '');
     }
-    applyRemote(remote);
+    applyRemote(remote, data.meta);
     setCloudStatus('Loaded from cloud ✓');
   }).catch(function(err){
     console.error('Seat plan cloud load failed:', err);
@@ -443,6 +513,7 @@ function render(){
   state.units.forEach(renderUnit);
   updateTotals();
   renderGuestPanel();
+  updatePlanUi();
 }
 
 // Select WITHOUT rebuilding the whole plan — just move the CSS class.
@@ -674,13 +745,213 @@ function renderGuestPanel(){
   });
 })();
 
+// ── Named plans: Save as… / Update / New / Open… ─────────────────
+// The canvas is always the "working plan" (autosaved as before). A named plan is a
+// snapshot kept in the seat_plan_saves collection. state.meta says which snapshot the
+// working plan came from, so we can tell when it has been modified and offer Update.
+var SAVES = 'seat_plan_saves';
+var savedList = [];
+function savesCol(){ return db.collection(SAVES); }
+function nowStamp(){ return firebase.firestore.FieldValue.serverTimestamp(); }
+function myEmail(){ return (auth.currentUser && auth.currentUser.email) || ''; }
+
+function isModified(){ return !!(state.meta && state.meta.id) && planSignature() !== state.meta.baseline; }
+// True when the working plan holds work that isn't safely stored as a named plan.
+function hasUnsavedWork(){
+  // Linked to a saved plan: any difference from it counts, even if the plan was emptied.
+  if (state.meta && state.meta.id) return isModified();
+  // Not linked: only real content counts (not the starter layout, not an empty canvas).
+  if (state.isDefault) return false;
+  return state.units.length > 0 || state.fixed.length > 0;
+}
+function updatePlanUi(){
+  var el = document.getElementById('planName');
+  if (!el) return;
+  var m = state.meta || blankMeta();
+  var modified = isModified();
+  if (m.id) el.innerHTML = '<b>' + esc(m.name) + '</b> · ' +
+    (modified ? '<span class="plan-flag mod">modified</span>' : '<span class="plan-flag">saved</span>');
+  else el.innerHTML = '<i>Unnamed plan</i> · <span class="plan-flag mod">not saved</span>';
+  el.title = m.id ? m.name : 'Not saved as a named plan yet';
+  var up = document.getElementById('btnUpdate');
+  if (up) up.disabled = !(m.id && modified);
+  var t = document.getElementById('planTitle');
+  if (t) t.textContent = m.id ? m.name : '';
+}
+
+function fetchSaved(){
+  return savesCol().get().then(function(snap){
+    var list = snap.docs.map(function(d){
+      var v = d.data() || {};
+      return {
+        id: d.id, name: v.name || '(unnamed)', json: v.json,
+        updatedMs: (v.updatedAt && v.updatedAt.toMillis) ? v.updatedAt.toMillis() : 0,
+        updatedBy: v.updatedBy || ''
+      };
+    });
+    list.sort(function(a, b){ return b.updatedMs - a.updatedMs; });
+    savedList = list;
+    return list;
+  });
+}
+function failMsg(prefix, err){ console.error(prefix, err); alert(prefix + ' ' + ((err && err.message) || 'Please try again.')); }
+
+// Save the current plan under a name the user chooses (a new saved plan).
+function saveAsPlan(){
+  var suggested = state.meta && state.meta.name ? state.meta.name + ' (copy)' : '';
+  var name = prompt('Name for this plan:', suggested);
+  if (name === null) return;
+  name = name.trim();
+  if (!name) return;
+  fetchSaved().then(function(list){
+    var same = list.filter(function(p){ return p.name.toLowerCase() === name.toLowerCase(); })[0];
+    var data = { name: name, json: JSON.stringify(planForCloud()), updatedAt: nowStamp(), updatedBy: myEmail() };
+    var op;
+    if (same){
+      if (!confirm('A saved plan called "' + same.name + '" already exists.\n\nReplace it with the current plan?')) return null;
+      data.name = same.name;
+      op = savesCol().doc(same.id).update(data).then(function(){ return same.id; });
+    } else {
+      data.createdAt = nowStamp();
+      op = savesCol().add(data).then(function(ref){ return ref.id; });
+    }
+    return op.then(function(id){
+      state.meta = { id: id, name: data.name, baseline: planSignature() };
+      save();
+    });
+  }).catch(function(err){ failMsg('Could not save the plan.', err); });
+}
+
+// Overwrite the open saved plan with the current version.
+function updatePlan(){
+  if (!state.meta || !state.meta.id){ saveAsPlan(); return; }
+  if (!isModified()) return;
+  if (!confirm('Replace the saved plan "' + state.meta.name + '" with the current version?')) return;
+  savesCol().doc(state.meta.id).update({
+    json: JSON.stringify(planForCloud()), updatedAt: nowStamp(), updatedBy: myEmail()
+  }).then(function(){
+    state.meta.baseline = planSignature();
+    save();
+  }).catch(function(err){
+    if (err && err.code === 'not-found'){
+      alert('That saved plan no longer exists (it was deleted). Use "Save as…" to save it again.');
+      state.meta = blankMeta(); save();
+    } else failMsg('Could not update the plan.', err);
+  });
+}
+
+// Start a fresh, empty plan. Saved plans are untouched.
+function newPlan(){
+  if (hasUnsavedWork() && !confirm(
+    'The current plan has unsaved changes.\n\nStart a new, empty plan anyway?\n(Tip: cancel and use "Save as…" or "Update" first.)')) return;
+  state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false, meta: blankMeta() };
+  save(); render();
+}
+
+// ── Saved plans dialog ──
+function fmtWhen(ms){
+  if (!ms) return '';
+  var d = new Date(ms);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
+         d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+function renderPlansList(){
+  var box = document.getElementById('plansList');
+  if (!savedList.length){
+    box.innerHTML = '<div class="gp-empty">No saved plans yet.<br>Use &ldquo;Save as&hellip;&rdquo; to keep the current plan under a name.</div>';
+    return;
+  }
+  box.innerHTML = savedList.map(function(p){
+    var isOpen = state.meta && state.meta.id === p.id;
+    var who = p.updatedBy ? ' · ' + esc(p.updatedBy.split('@')[0].replace(/\b\w/g, function(c){ return c.toUpperCase(); })) : '';
+    var id = esc(p.id);
+    return '<div class="plan-row"><div class="plan-info">' +
+      '<div class="plan-title-row">' + esc(p.name) + (isOpen ? ' <span class="plan-flag">open</span>' : '') + '</div>' +
+      '<div class="plan-when">' + esc(fmtWhen(p.updatedMs)) + who + '</div></div>' +
+      '<div class="plan-btns">' +
+      '<button type="button" class="btn primary" data-act="open" data-id="' + id + '">Open</button>' +
+      '<button type="button" class="btn" data-act="rename" data-id="' + id + '">Rename</button>' +
+      '<button type="button" class="btn danger" data-act="delete" data-id="' + id + '">Delete</button>' +
+      '</div></div>';
+  }).join('');
+}
+function refreshSaved(){
+  return fetchSaved().then(renderPlansList).catch(function(err){
+    console.error('Could not load saved plans:', err);
+    document.getElementById('plansList').innerHTML = '<div class="gp-empty">Could not load saved plans.</div>';
+  });
+}
+function openPlansDialog(){
+  document.getElementById('plansList').innerHTML = '<div class="gp-empty">Loading&hellip;</div>';
+  document.getElementById('plansDialog').style.display = 'flex';
+  refreshSaved();
+}
+function closePlansDialog(){ document.getElementById('plansDialog').style.display = 'none'; }
+function plansDialogOpen(){ return document.getElementById('plansDialog').style.display === 'flex'; }
+
+function openSaved(id){
+  var item = savedList.filter(function(p){ return p.id === id; })[0];
+  if (!item) return;
+  if (hasUnsavedWork() && !confirm(
+    'The current plan has unsaved changes.\n\nOpen "' + item.name + '" anyway? The current changes will be lost.')) return;
+  var plan;
+  try { plan = JSON.parse(item.json); } catch(e){ plan = null; }
+  if (!plan || !plan.units){ alert('This saved plan could not be read.'); return; }
+  state = {
+    units: plan.units || [], fixed: plan.fixed || [], nextNum: plan.nextNum || 1,
+    selectedId: null, isDefault: false, meta: { id: item.id, name: item.name, baseline: '' }
+  };
+  render();                                   // render first: it adds bookkeeping the signature ignores
+  state.meta.baseline = planSignature();
+  save();
+  closePlansDialog();
+}
+function renameSaved(id){
+  var item = savedList.filter(function(p){ return p.id === id; })[0];
+  if (!item) return;
+  var name = prompt('New name:', item.name);
+  if (name === null) return;
+  name = name.trim();
+  if (!name || name === item.name) return;
+  var clash = savedList.some(function(p){ return p.id !== id && p.name.toLowerCase() === name.toLowerCase(); });
+  if (clash){ alert('Another saved plan is already called "' + name + '".'); return; }
+  savesCol().doc(id).update({ name: name }).then(function(){
+    if (state.meta && state.meta.id === id){ state.meta.name = name; save(); }
+    return refreshSaved();
+  }).catch(function(err){ failMsg('Could not rename the plan.', err); });
+}
+function deleteSaved(id){
+  var item = savedList.filter(function(p){ return p.id === id; })[0];
+  if (!item) return;
+  if (!confirm('Delete the saved plan "' + item.name + '"? This cannot be undone.')) return;
+  savesCol().doc(id).delete().then(function(){
+    if (state.meta && state.meta.id === id){ state.meta = blankMeta(); save(); }   // the open plan becomes unsaved
+    return refreshSaved();
+  }).catch(function(err){ failMsg('Could not delete the plan.', err); });
+}
+(function wirePlansDialog(){
+  var dlg = document.getElementById('plansDialog');
+  document.getElementById('plansClose').addEventListener('click', closePlansDialog);
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) closePlansDialog(); });
+  document.getElementById('plansList').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button[data-act]') : null;
+    if (!b) return;
+    var id = b.getAttribute('data-id'), act = b.getAttribute('data-act');
+    if (act === 'open') openSaved(id);
+    else if (act === 'rename') renameSaved(id);
+    else if (act === 'delete') deleteSaved(id);
+  });
+})();
+
 function clearAll(){
   if (!confirm('Clear the whole plan? This cannot be undone.')) return;
-  state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false };
+  state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false, meta: state.meta };   // keeps the link, so it shows as "modified"
   save(); render();
 }
 
 document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && plansDialogOpen()) { closePlansDialog(); return; }
+  if (plansDialogOpen()) return;                 // never delete a table while the dialog is open
   if ((e.key==='Delete'||e.key==='Backspace') && state.selectedId && document.activeElement.tagName!=='INPUT') deleteSelected();
 });
 
@@ -700,8 +971,9 @@ function seedDefault(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-load();
-if (state.units.length === 0 && state.fixed.length === 0) seedDefault();
+// Only seed the starter layout when nothing has ever been stored, so an intentionally
+// empty plan (e.g. after "New") stays empty on reload.
+if (!load()) seedDefault();
 render();
 auth.onAuthStateChanged(function(user){ if (user) syncFromCloud(); });
 </script>

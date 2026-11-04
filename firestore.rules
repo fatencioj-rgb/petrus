@@ -34,6 +34,11 @@ service cloud.firestore {
       allow read, write: if canOperations();
     }
 
+    // Seat plan — named, saved versions ("Save as…" / "Update" / "Open…").
+    match /seat_plan_saves/{saveId} {
+      allow read, write: if canOperations();
+    }
+
     // Dishes: any signed-in user can read; dish editors can write.
     match /dishes/{dishId} {
       allow read: if signedIn();

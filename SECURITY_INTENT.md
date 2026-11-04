@@ -137,8 +137,10 @@ Reglas clave:
   Orson e Irena (`canEditDishes()`).
 - `producers`: lectura para cualquier autenticado; escritura solo Fiorella,
   Milena y Orson (`isManager()`).
-- `seat_plans` (plano de sala + nombres de invitados): lectura y escritura solo
-  para quienes tienen Operations: Fiorella, Milena, Orson y Liza (`canOperations()`).
+- `seat_plans` (plano de sala de trabajo + nombres de invitados) y
+  `seat_plan_saves` (planos guardados con nombre: Save as / Update / Open):
+  lectura y escritura solo para quienes tienen Operations: Fiorella, Milena,
+  Orson y Liza (`canOperations()`).
 - `access_logs`: crear para cualquier autenticado; **leer solo Fiorella**;
   sin editar/borrar desde el cliente.
 - Despliegue de reglas: se hace con la **service account** (`serviceAccountKey.json`)
