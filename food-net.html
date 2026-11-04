@@ -450,8 +450,10 @@ function renderDishes(){
 // The list currently shown in the grid, so the modal can look up a dish by index.
 let currentList = [];
 
-// Who may edit dishes & producers — the pencil icon on each card only shows for these.
-const FN_EDITORS = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local'];
+// Who may edit DISHES — the pencil icon on each card and "Edit dishes" link show for these.
+const FN_EDITORS = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local','irena@petrus.local'];
+// Who may edit PRODUCERS — managers only (Irena edits dishes, not producers).
+const FN_PRODUCER_EDITORS = ['fiorella@petrus.local','milena@petrus.local','orson@petrus.local'];
 let canEdit = false;
 
 // Open a dish straight in the editor (used by the pencil icon on each card).
@@ -750,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
       var w = document.getElementById('editorLink');
       if(w) w.style.display = canEdit ? 'inline-block' : 'none';
       var wp = document.getElementById('producerEditorLink');
-      if(wp) wp.style.display = canEdit ? 'inline-block' : 'none';
+      if(wp) wp.style.display = (user && FN_PRODUCER_EDITORS.indexOf(user.email) >= 0) ? 'inline-block' : 'none';
       renderDishes();   // re-render so pencils appear/disappear with the role
       tryLoad();
     });

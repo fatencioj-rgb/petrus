@@ -14,10 +14,10 @@ service cloud.firestore {
                          || request.auth.token.email == 'milena@petrus.local'
                          || request.auth.token.email == 'orson@petrus.local');
     }
-    // Who can edit Food dishes & producers: the managers above only
-    // (Fiorella, Milena, Orson).
+    // Who can edit Food DISHES: the managers above plus Irena (dishes only —
+    // she is NOT a manager, so this does not grant producers/wines/notes access).
     function canEditDishes() {
-      return isManager();
+      return isManager() || (signedIn() && request.auth.token.email == 'irena@petrus.local');
     }
 
     // Dishes: any signed-in user can read; dish editors can write.
@@ -27,10 +27,10 @@ service cloud.firestore {
     }
 
     // Producers (Food training — supplier profiles): any signed-in user can
-    // read; the same people who edit dishes can write.
+    // read; only the managers (Fiorella, Milena, Orson) can write.
     match /producers/{producerId} {
       allow read: if signedIn();
-      allow write: if canEditDishes();
+      allow write: if isManager();
     }
 
     // Wines: any signed-in user can read; managers can write.

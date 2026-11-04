@@ -1,4 +1,4 @@
-# Petrus FOH — Seguridad y protección del contenido
+﻿# Petrus FOH — Seguridad y protección del contenido
 
 > Documento de intención. Resume **qué quiere Fiorella** respecto a "asegurar"
 > la web, **qué se implementó**, **dónde**, y los **límites reales** de cada
@@ -104,7 +104,7 @@ Definido en `auth.js` (`PETRUS_ACCESS`) y aplicado en las reglas de Firestore
 | Orson    | ✅ | ✅ | ✅ | — | ✅ |
 | Christian| ✅ | ✅ | — | — | — |
 | Liza     | ✅ | — | ✅ | — | — |
-| Irena    | ✅ | — | — | — | — (se le quitó la edición) |
+| Irena    | ✅ | — | — | — | ✅ solo platos (no producers) |
 | Cain     | ✅ | — | — | — | — |
 | Tanvir   | ✅ | — | — | — | — |
 | Johnny   | ✅ | — | — | — | — |
@@ -112,13 +112,15 @@ Definido en `auth.js` (`PETRUS_ACCESS`) y aplicado en las reglas de Firestore
 
 Reglas clave:
 - **Acceso total: solo Fiorella.**
-- **Editar platos y producers: solo Fiorella, Milena y Orson.** (Irena fue
-  removida de los editores; conserva acceso de solo training.)
+- **Editar platos: Fiorella, Milena, Orson e Irena.**
+- **Editar producers: solo Fiorella, Milena y Orson.** (Irena edita únicamente
+  platos; no tiene acceso al editor de producers.)
 - **Cain: solo training**, nada más.
-- La edición de platos/producers está protegida en `firestore.rules` por
-  `canEditDishes()` = managers (Fiorella/Milena/Orson), y en el cliente por las
-  listas `FN_EDITORS` / `EDITOR_ALLOWED` de `food-net.html`, `food-editor.html`
-  y `producers-editor.html`.
+- La edición está protegida en `firestore.rules`: `canEditDishes()` = managers
+  + Irena (colección `dishes`); `isManager()` (Fiorella/Milena/Orson) para
+  `producers`. En el cliente: `FN_EDITORS` (platos) y `FN_PRODUCER_EDITORS`
+  (producers) en `food-net.html`, `EDITOR_ALLOWED` en `food-editor.html` (con
+  Irena) y en `producers-editor.html` (sin Irena).
 
 ### Contraseñas y sesiones
 - Las contraseñas viven en **Firebase Authentication**, no en el repo.
@@ -131,8 +133,10 @@ Reglas clave:
 
 ## 5. Reglas de Firestore relevantes (`firestore.rules`)
 
-- `dishes` y `producers`: lectura para cualquier usuario autenticado; escritura
-  solo para `canEditDishes()` (Fiorella/Milena/Orson).
+- `dishes`: lectura para cualquier autenticado; escritura para Fiorella, Milena,
+  Orson e Irena (`canEditDishes()`).
+- `producers`: lectura para cualquier autenticado; escritura solo Fiorella,
+  Milena y Orson (`isManager()`).
 - `access_logs`: crear para cualquier autenticado; **leer solo Fiorella**;
   sin editar/borrar desde el cliente.
 - Despliegue de reglas: se hace con la **service account** (`serviceAccountKey.json`)
@@ -147,8 +151,8 @@ Reglas clave:
 - `anti-capture.js` *(nuevo)* — aviso de screenshot + disuasores de copia.
 - `watermark.js` *(nuevo)* — marca de agua bajo demanda con el nombre del usuario.
 - `index.html` — Recently connected (solo Fiorella) + campana pequeña.
-- `firestore.rules` — producers, canEditDishes sin Irena, access_logs legible por Fiorella.
-- `food-net.html`, `food-editor.html`, `producers-editor.html` — editores sin Irena;
+- `firestore.rules` — producers (solo managers), canEditDishes con Irena (solo platos), access_logs legible por Fiorella.
+- `food-net.html`, `food-editor.html`, `producers-editor.html` — producers-editor sin Irena, food-editor con Irena;
   food-net incluye watermark + anti-capture.
 - `training.html`, `wine-btg.html`, `wine-pairings.html` — incluyen watermark + anti-capture.
 
@@ -161,3 +165,4 @@ Reglas clave:
 - Si siguen compartiendo cuentas: evaluar **sesión única por dispositivo** (opción C).
 - Actualizar `reset-password.js` a la API modular de `firebase-admin` v14
   (el script actual está escrito para una versión antigua y fallaría tal cual).
+
