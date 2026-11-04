@@ -103,6 +103,16 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .plan-btns{display:flex;gap:6px}
 .plan-btns .btn{padding:7px 12px}
 
+/* Print / PDF layout chooser */
+.dlg.dlg-sm{width:min(480px,100%)}
+.print-opts{display:grid;gap:10px}
+.print-opt{display:flex;align-items:center;gap:16px;text-align:left;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;font-family:var(--sans);transition:border-color .15s,background .15s}
+.print-opt:hover,.print-opt:focus-visible{border-color:var(--gold);background:#fdf9f2;outline:none}
+.print-opt svg{flex:0 0 auto}
+.po-title{display:block;font-family:var(--serif);font-size:1.25rem;color:var(--green-dark);letter-spacing:.5px}
+.po-desc{display:block;font-size:12px;color:#777;line-height:1.4;margin-top:2px}
+.po-note{font-size:11px;color:var(--gold);margin-top:12px;line-height:1.5}
+
 /* Plan + guest list side panel */
 .plan-layout{display:flex;gap:16px;align-items:flex-start}
 .plan-layout .canvas-wrap{flex:1;min-width:0}
@@ -155,6 +165,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 
 .ps-body{display:flex;gap:18px;align-items:flex-start;height:645px}
 .ps-floor{flex:0 0 400px}
+.ps-floor.big{flex:0 0 100%}                 /* "Two sheets": the floor gets the whole first sheet */
+.ps-floor.big .pf-box{margin:0 auto}
 .pf-box{overflow:hidden}
 .pf-stage{position:relative}
 /* the floor is shrunk a lot, so numbers/labels are enlarged to stay readable */
@@ -236,7 +248,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
       <span class="cloud-status" id="cloudStatus"></span>
     </div>
     <div class="tool-group">
-      <button class="btn" onclick="printPlan()">Print / PDF</button>
+      <button class="btn" onclick="openPrintDialog()">Print / PDF</button>
       <button class="btn danger" onclick="clearAll()">Reset</button>
     </div>
   </div>
@@ -254,6 +266,27 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 
 <!-- Print sheets: filled by buildPrintSheets(), shown only when printing -->
 <div id="printRoot"></div>
+
+<!-- Print / PDF: choose the layout -->
+<div class="dlg-overlay" id="printDialog" role="dialog" aria-modal="true" aria-labelledby="printHeading">
+  <div class="dlg dlg-sm">
+    <div class="dlg-head">
+      <h2 id="printHeading">Print / PDF</h2>
+      <button type="button" class="btn" id="printClose">Close</button>
+    </div>
+    <div class="print-opts">
+      <button type="button" class="print-opt" data-mode="one">
+        <svg width="66" height="46" viewBox="0 0 66 46" aria-hidden="true"><rect x="1" y="1" width="64" height="44" rx="3" fill="#fff" stroke="#b89650"/><rect x="6" y="9" width="20" height="17" rx="2" fill="#b89650" opacity=".6"/><g stroke="#5c1a1a" stroke-width="1.4" opacity=".65"><line x1="32" y1="10" x2="42" y2="10"/><line x1="32" y1="16" x2="42" y2="16"/><line x1="32" y1="22" x2="42" y2="22"/><line x1="32" y1="28" x2="42" y2="28"/><line x1="47" y1="10" x2="58" y2="10"/><line x1="47" y1="16" x2="58" y2="16"/><line x1="47" y1="22" x2="58" y2="22"/><line x1="47" y1="28" x2="58" y2="28"/></g></svg>
+        <span><span class="po-title">All on one sheet</span><span class="po-desc">Mini floor on the left, guest lists by table on the right.</span></span>
+      </button>
+      <button type="button" class="print-opt" data-mode="two">
+        <svg width="66" height="46" viewBox="0 0 66 46" aria-hidden="true"><rect x="1" y="3" width="30" height="40" rx="3" fill="#fff" stroke="#b89650"/><rect x="5" y="12" width="22" height="22" rx="2" fill="#b89650" opacity=".6"/><rect x="35" y="3" width="30" height="40" rx="3" fill="#fff" stroke="#b89650"/><g stroke="#5c1a1a" stroke-width="1.4" opacity=".65"><line x1="39" y1="10" x2="46" y2="10"/><line x1="39" y1="16" x2="46" y2="16"/><line x1="39" y1="22" x2="46" y2="22"/><line x1="39" y1="28" x2="46" y2="28"/><line x1="39" y1="34" x2="46" y2="34"/><line x1="52" y1="10" x2="60" y2="10"/><line x1="52" y1="16" x2="60" y2="16"/><line x1="52" y1="22" x2="60" y2="22"/><line x1="52" y1="28" x2="60" y2="28"/><line x1="52" y1="34" x2="60" y2="34"/></g></svg>
+        <span><span class="po-title">Two sheets</span><span class="po-desc">Sheet 1: the floor, large. Sheet 2: the tables, in columns.</span></span>
+      </button>
+    </div>
+    <p class="po-note">In the print window, choose &ldquo;Save as PDF&rdquo; as the printer to get a PDF file.</p>
+  </div>
+</div>
 
 <!-- Saved plans dialog -->
 <div class="dlg-overlay" id="plansDialog" role="dialog" aria-modal="true" aria-labelledby="plansHeading">
@@ -1159,11 +1192,12 @@ function psFits(html, W, d){
   holder.parentNode.removeChild(holder);
   return ok;
 }
-// Split the table blocks into sheets: sheet 1 sits next to the mini floor, any further sheet is full width.
-function psPaginate(blocks){
+// Split the table blocks into sheets. The first sheet's lists are firstW wide (narrower when the
+// mini floor sits beside them); any further sheet is full width.
+function psPaginate(blocks, firstW){
   var pages = [], i = 0, first = true;
   while (i < blocks.length){
-    var W = first ? PS_LISTS_W : PS_W, rest = blocks.slice(i), pick = null;
+    var W = first ? firstW : PS_W, rest = blocks.slice(i), pick = null;
     for (var k = 0; k < PS_DENSITY.length && !pick; k++){
       if (psFits(rest.join(''), W, PS_DENSITY[k])) pick = PS_DENSITY[k];
     }
@@ -1177,9 +1211,12 @@ function psPaginate(blocks){
   return pages;
 }
 
-// The whole floor, shrunk to fit the left column. Labels are enlarged so they stay readable.
-function psMiniFloor(){
-  var wrap = mk('div', 'ps-floor');
+// The whole floor, scaled to fit opts.w × the sheet body. Labels are enlarged (sizes in px on
+// paper) so they stay readable when the floor is shrunk.
+var PS_MINI = { w: PS_FLOOR_W, cap: 1,   tl: 12, fl: 9,  cn: 6.5, cls: 'ps-floor' };       // beside the lists
+var PS_BIG  = { w: PS_W,       cap: 1.4, tl: 15, fl: 12, cn: 9,   cls: 'ps-floor big' };   // a sheet of its own
+function psFloor(opts){
+  var wrap = mk('div', opts.cls);
   var nodes = Array.prototype.slice.call(canvas.children);
   if (!nodes.length){ wrap.appendChild(mk('p', 'pf-none', 'No tables placed yet.')); return wrap; }
   var PAD = 10, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -1188,7 +1225,7 @@ function psMiniFloor(){
     minY = Math.min(minY, n.offsetTop);   maxY = Math.max(maxY, n.offsetTop + n.offsetHeight);
   });
   var bw = (maxX - minX) + PAD * 2, bh = (maxY - minY) + PAD * 2;
-  var s = Math.min(PS_FLOOR_W / bw, PS_BODY_H / bh, 1);
+  var s = Math.min(opts.w / bw, PS_BODY_H / bh, opts.cap);
   var box = mk('div', 'pf-box');
   box.style.width = Math.floor(bw * s) + 'px';
   box.style.height = Math.floor(bh * s) + 'px';
@@ -1197,9 +1234,9 @@ function psMiniFloor(){
   // zoom (not transform): it shrinks the real layout size, so the browser never splits the
   // floor across pages based on its unscaled height.
   stage.style.zoom = s;
-  stage.style.setProperty('--tl', (12 / s).toFixed(1) + 'px');    // table numbers ≈ 12 px on paper
-  stage.style.setProperty('--fl', (9 / s).toFixed(1) + 'px');     // wine cellar / cloakroom / zones
-  stage.style.setProperty('--cn', (6.5 / s).toFixed(1) + 'px');   // seat numbers
+  stage.style.setProperty('--tl', (opts.tl / s).toFixed(1) + 'px');   // table numbers
+  stage.style.setProperty('--fl', (opts.fl / s).toFixed(1) + 'px');   // wine cellar / cloakroom / zones
+  stage.style.setProperty('--cn', (opts.cn / s).toFixed(1) + 'px');   // seat numbers
   nodes.forEach(function(n){
     var c = printClone(n);
     c.style.left = (n.offsetLeft - minX + PAD) + 'px';
@@ -1212,7 +1249,12 @@ function psMiniFloor(){
   return wrap;
 }
 
-function buildPrintSheets(){
+// mode 'one': a single sheet with the mini floor and the guest lists together.
+// mode 'two': sheet 1 is the floor alone (large); the guest lists start on sheet 2.
+var printMode = 'one';
+function buildPrintSheets(mode){
+  mode = (mode === 'one' || mode === 'two') ? mode : printMode;
+  var oneSheet = mode !== 'two';
   var root = document.getElementById('printRoot');
   if (!root) return;
   root.innerHTML = '';
@@ -1233,29 +1275,63 @@ function buildPrintSheets(){
   var blocks = state.units.slice()
     .sort(function(a, b){ return naturalCompare(a.label, b.label); })
     .map(psBlockHtml);
-  var pages = blocks.length
-    ? psPaginate(blocks)
-    : [{ blocks: [], d: PS_DENSITY[1], W: PS_LISTS_W, first: true }];
+  function head(rightHtml){
+    return mk('div', 'ps-head', '<div><h1>Seat Plan</h1>' + subHtml + '</div><div class="pf-meta">' + rightHtml + '</div>');
+  }
 
-  pages.forEach(function(pg){
+  // "Two sheets": the floor on a sheet of its own, then the lists at full width.
+  if (!oneSheet){
+    var floorPage = mk('section', 'ps-page');
+    floorPage.appendChild(head(stats));
+    var fb = mk('div', 'ps-body');
+    fb.appendChild(psFloor(PS_BIG));
+    floorPage.appendChild(fb);
+    root.appendChild(floorPage);
+  }
+
+  var pages = blocks.length
+    ? psPaginate(blocks, oneSheet ? PS_LISTS_W : PS_W)
+    : (oneSheet ? [{ blocks: [], d: PS_DENSITY[1], W: PS_LISTS_W, first: true }] : []);
+
+  pages.forEach(function(pg, idx){
     var page = mk('section', 'ps-page');
-    page.appendChild(mk('div', 'ps-head',
-      '<div><h1>Seat Plan</h1>' + subHtml + '</div>' +
-      '<div class="pf-meta">' + (pg.first ? stats : 'Guest lists (continued)') + '</div>'));
+    page.appendChild(head(oneSheet && idx === 0 ? stats : (idx === 0 ? 'Guest lists' : 'Guest lists (continued)')));
     var body = mk('div', 'ps-body');
-    if (pg.first) body.appendChild(psMiniFloor());
+    if (oneSheet && idx === 0) body.appendChild(psFloor(PS_MINI));
     var lists = mk('div', 'ps-lists', pg.blocks.join(''));
-    lists.setAttribute('style', psListStyle(pg.W, pg.d));
+    // Full-width list sheets spread the tables across all the columns instead of piling them to the left.
+    // (It only ever shortens the columns, so whatever fitted before still fits.)
+    lists.setAttribute('style', psListStyle(pg.W, pg.d) + (pg.W === PS_W ? ';column-fill:balance' : ''));
     body.appendChild(lists);
     page.appendChild(body);
     root.appendChild(page);
   });
 }
-function printPlan(){ buildPrintSheets(); window.print(); }
-window.addEventListener('beforeprint', buildPrintSheets);          // also covers Ctrl/Cmd+P
+function printPlan(mode){
+  if (mode === 'one' || mode === 'two') printMode = mode;
+  buildPrintSheets(printMode);
+  window.print();
+}
+window.addEventListener('beforeprint', function(){ buildPrintSheets(printMode); });   // also covers Ctrl/Cmd+P (uses the last layout chosen)
 window.addEventListener('afterprint', function(){
   var r = document.getElementById('printRoot'); if (r) r.innerHTML = '';
 });
+
+// Print / PDF menu: pick the layout, then the browser's print window opens.
+function openPrintDialog(){ document.getElementById('printDialog').style.display = 'flex'; }
+function closePrintDialog(){ document.getElementById('printDialog').style.display = 'none'; }
+function printDialogOpen(){ return document.getElementById('printDialog').style.display === 'flex'; }
+(function wirePrintDialog(){
+  var dlg = document.getElementById('printDialog');
+  document.getElementById('printClose').addEventListener('click', closePrintDialog);
+  dlg.addEventListener('click', function(e){
+    if (e.target === dlg){ closePrintDialog(); return; }
+    var b = e.target.closest ? e.target.closest('button[data-mode]') : null;
+    if (!b) return;
+    closePrintDialog();
+    printPlan(b.getAttribute('data-mode'));
+  });
+})();
 
 function clearAll(){
   if (!confirm('Clear the whole plan? This cannot be undone.')) return;
@@ -1264,8 +1340,11 @@ function clearAll(){
 }
 
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && plansDialogOpen()) { closePlansDialog(); return; }
-  if (plansDialogOpen()) return;                 // never delete a table while the dialog is open
+  if (e.key === 'Escape'){
+    if (plansDialogOpen()) { closePlansDialog(); return; }
+    if (printDialogOpen()) { closePrintDialog(); return; }
+  }
+  if (plansDialogOpen() || printDialogOpen()) return;   // never delete a table while a dialog is open
   if ((e.key==='Delete'||e.key==='Backspace') && state.selectedId && document.activeElement.tagName!=='INPUT') deleteSelected();
 });
 
