@@ -55,7 +55,8 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .unit:active{cursor:grabbing}
 .seat-ring{position:relative;pointer-events:none}   /* empty gaps don't block neighbours */
 .seat-ring .chair,.seat-ring .table-shape{pointer-events:auto}
-.chair{position:absolute;border-radius:50%;background:var(--chair);cursor:grab;transition:transform .1s}
+.chair{position:absolute;border-radius:50%;background:var(--chair);cursor:grab;transition:transform .1s;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--sans);font-size:10px;font-weight:600;line-height:1}
+.chair.filled{outline:2px solid var(--gold-light);outline-offset:0}
 .unit.selected .chair{box-shadow:0 0 0 2px rgba(184,150,80,.6)}
 .unit.selected .chair:hover{transform:scale(1.15)}
 .table-shape{position:absolute;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-family:var(--serif);box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:grab}
@@ -76,11 +77,31 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .mini.x:hover{background:#c0392b;color:#fff}
 .mini-count{font-size:11px;color:var(--gold);min-width:46px;text-align:center}
 
+/* Plan + guest list side panel */
+.plan-layout{display:flex;gap:16px;align-items:flex-start}
+.plan-layout .canvas-wrap{flex:1;min-width:0}
+.side-panel{flex:0 0 280px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 14px 16px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.gp-title{font-family:var(--serif);font-size:1.4rem;color:var(--green-dark);letter-spacing:1px}
+.gp-sub{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.gp-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.gp-pos{flex:0 0 28px;font-size:11px;font-weight:600;color:var(--green)}
+.gp-input{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none}
+.gp-input:focus{border-color:var(--gold)}
+.gp-actions{margin-top:12px}
+.gp-empty{font-size:12px;color:var(--gold);text-align:center;padding:24px 8px;line-height:1.6}
+.cloud-status{font-size:11px;color:var(--green);min-width:130px}
+.cloud-status.err{color:#c0392b}
+@media(max-width:900px){
+  .plan-layout{flex-direction:column}
+  .side-panel{flex:none;width:100%;position:static;max-height:none}
+}
+
 .hint{text-align:center;font-size:11px;color:var(--gold);margin-top:10px;opacity:.9}
 .footer{text-align:center;margin-top:30px;font-size:10px;color:rgba(92,26,26,.4);letter-spacing:1px}
 
 @media print{
-  .topbar,.toolbar,.hint,.page-header .sub{display:none!important}
+  .topbar,.toolbar,.hint,.page-header .sub,.side-panel,.cloud-status{display:none!important}
+  .plan-layout{display:block}
   body{background:#fff}
   .canvas-wrap{border:none}
   .unit-ctrl{display:none!important}
@@ -123,6 +144,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
     </div>
     <div class="tool-group">
       <span class="counter" id="totals">0 tables · 0 covers</span>
+      <span class="cloud-status" id="cloudStatus"></span>
     </div>
     <div class="tool-group">
       <button class="btn" onclick="window.print()">Print / PDF</button>
@@ -130,10 +152,13 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
     </div>
   </div>
 
-  <div class="canvas-wrap">
-    <div id="canvas"></div>
+  <div class="plan-layout">
+    <div class="canvas-wrap">
+      <div id="canvas"></div>
+    </div>
+    <aside class="side-panel" id="guestPanel" aria-live="polite"></aside>
   </div>
-  <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Double-click a table number to rename. Everything saves automatically.</p>
+  <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Double-click a table number to rename. Click a table to add guest names by position (P1, P2&hellip;). Everything saves automatically on this device and to the cloud.</p>
 
   <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only</em></div>
 </div>
@@ -150,14 +175,123 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 //  Seat Plan — dynamic, draggable, saved in the browser
 // ─────────────────────────────────────────────────────────────
 var STORAGE_KEY = 'petrus_seatplan_v1';
-var canvas = document.getElementById('canvas');
-var state = { units: [], fixed: [], nextNum: 1, selectedId: null };
-var uid = function(){ return 'u' + Date.now() + Math.floor(Math.random()*1000); };
+var BACKUP_KEY  = 'petrus_seatplan_v1_backup';   // copy of this device's plan, kept before the cloud replaces it
+var DIRTY_KEY   = 'petrus_seatplan_dirty';       // '1' = local changes not yet confirmed in the cloud
+var SYNCED_KEY  = 'petrus_seatplan_synced';      // '1' = this device has synced with the cloud before
+var CLOUD_COLLECTION = 'seat_plans', CLOUD_DOC = 'main';
 
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateTotals(); }
-function load(){
-  try { var s = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (s && s.units) state = s; } catch(e){}
+var canvas = document.getElementById('canvas');
+// isDefault = true while the plan is just the built-in starter layout (never uploaded on its own).
+var state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false };
+var uid = function(){ return 'u' + Date.now() + Math.floor(Math.random()*1000); };
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Saving: this device (instant) + Firestore (debounced) ────────────
+var cloudRef = null, cloudTimer = null, editSeq = 0;
+
+// What goes to the cloud: the plan only (no selection, no flags). Stored as one
+// JSON string so Firestore's array/undefined restrictions never get in the way.
+function planForCloud(){ return { units: state.units, fixed: state.fixed, nextNum: state.nextNum }; }
+
+function setCloudStatus(text, isErr){
+  var el = document.getElementById('cloudStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'cloud-status' + (isErr ? ' err' : '');
 }
+
+function save(){
+  state.isDefault = false;
+  editSeq++;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(DIRTY_KEY, '1');
+  updateTotals();
+  scheduleCloudSave();
+}
+function load(){
+  try {
+    var s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (s && s.units) { state = s; state.selectedId = null; if (!state.fixed) state.fixed = []; }
+  } catch(e){}
+}
+
+function scheduleCloudSave(){
+  if (!cloudRef) return;
+  setCloudStatus('Unsaved changes…');
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(cloudSaveNow, 800);
+}
+function cloudSaveNow(){
+  if (!cloudRef) return;
+  clearTimeout(cloudTimer); cloudTimer = null;
+  var mine = editSeq;
+  setCloudStatus('Saving…');
+  cloudRef.set({
+    json: JSON.stringify(planForCloud()),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy: (auth.currentUser && auth.currentUser.email) || ''
+  }).then(function(){
+    if (mine === editSeq){            // nothing newer is waiting
+      localStorage.removeItem(DIRTY_KEY);
+      localStorage.setItem(SYNCED_KEY, '1');
+      setCloudStatus('Saved to cloud ✓');
+    }
+  }).catch(function(err){
+    console.error('Seat plan cloud save failed:', err);
+    setCloudStatus('Cloud save failed — kept on this device', true);
+  });
+}
+// Replace the current plan with one read from the cloud.
+function applyRemote(remote){
+  state = {
+    units: remote.units || [], fixed: remote.fixed || [],
+    nextNum: remote.nextNum || 1, selectedId: null, isDefault: false
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.removeItem(DIRTY_KEY);
+  localStorage.setItem(SYNCED_KEY, '1');
+  render();
+}
+// On open: decide between the cloud copy and this device's copy, without
+// silently throwing away anyone's work.
+function syncFromCloud(){
+  cloudRef = db.collection(CLOUD_COLLECTION).doc(CLOUD_DOC);
+  setCloudStatus('Connecting to cloud…');
+  cloudRef.get().then(function(snap){
+    var dirty  = localStorage.getItem(DIRTY_KEY) === '1';
+    var synced = localStorage.getItem(SYNCED_KEY) === '1';
+    var hasLocalPlan = !state.isDefault;
+
+    if (!snap.exists){
+      if (hasLocalPlan) cloudSaveNow();                  // first upload of an existing plan
+      else setCloudStatus('Cloud: nothing saved yet');
+      return;
+    }
+    var data = snap.data() || {}, remote = null;
+    try { remote = JSON.parse(data.json); } catch(e){}
+    if (!remote || !remote.units){ setCloudStatus('Cloud plan could not be read', true); return; }
+
+    if (dirty && hasLocalPlan){ cloudSaveNow(); return; }  // edits made here that never reached the cloud
+
+    if (!synced && hasLocalPlan && data.json !== JSON.stringify(planForCloud())){
+      // First time this device meets the cloud and both hold different plans.
+      var useCloud = confirm(
+        'The cloud already has a saved Seat Plan, and this device has a different one.\n\n' +
+        'OK = load the cloud plan (this device\'s plan is backed up first).\n' +
+        'Cancel = keep this device\'s plan and upload it (replaces the cloud plan).');
+      if (!useCloud){ cloudSaveNow(); return; }
+      localStorage.setItem(BACKUP_KEY, localStorage.getItem(STORAGE_KEY) || '');
+    }
+    applyRemote(remote);
+    setCloudStatus('Loaded from cloud ✓');
+  }).catch(function(err){
+    console.error('Seat plan cloud load failed:', err);
+    cloudRef = null;
+    setCloudStatus('Cloud unavailable — working on this device only', true);
+  });
+}
+// If the tab closes mid-debounce, try to flush; the dirty flag covers the rest.
+window.addEventListener('pagehide', function(){ if (cloudTimer) cloudSaveNow(); });
 
 function updateTotals(){
   var covers = state.units.reduce(function(a,u){return a+u.seats;},0);
@@ -195,13 +329,15 @@ function renderUnit(u){
       ch.style.width = chairD+'px'; ch.style.height = chairD+'px';
       ch.style.left = (cx + radius*Math.cos(a) - chairD/2)+'px';
       ch.style.top  = (cy + radius*Math.sin(a) - chairD/2)+'px';
+      decorateChair(ch, u, i);
       makeChairDraggable(ch, u, i, cx, cy, radius, chairD);
       ring.appendChild(ch);
     }
   } else {
     var perSide = Math.ceil(u.seats/2), bottomCount = u.seats - perSide;
-    layoutRectChairs(ring, perSide, pad, pad - chairD - 4, dim.w, chairD);
-    layoutRectChairs(ring, bottomCount, pad, pad + dim.h + 4, dim.w, chairD);
+    // Positions run left→right along the top, then left→right along the bottom.
+    layoutRectChairs(ring, perSide, pad, pad - chairD - 4, dim.w, chairD, u, 0);
+    layoutRectChairs(ring, bottomCount, pad, pad + dim.h + 4, dim.w, chairD, u, perSide);
   }
 
   var t = document.createElement('div');
@@ -232,7 +368,7 @@ function renderUnit(u){
     if (act==='del'){
       el.remove();
       state.units = state.units.filter(function(x){return x.id!==u.id;});
-      state.selectedId=null; updateTotals(); save();
+      state.selectedId=null; updateTotals(); renderGuestPanel(); save();
       return;
     }
     if (act==='plus') u.seats = Math.min(30, u.seats+1);
@@ -241,6 +377,7 @@ function renderUnit(u){
     state.selectedId = u.id;
     var node = canvas.querySelector('[data-id="'+u.id+'"]');
     if (node) node.classList.add('selected');
+    renderGuestPanel();   // seat count changed → rows change
     save();
   });
 
@@ -250,7 +387,7 @@ function renderUnit(u){
   makeDraggable(el, u);
 }
 
-function layoutRectChairs(ring, count, startPad, top, width, chairD){
+function layoutRectChairs(ring, count, startPad, top, width, chairD, u, startIdx){
   if (count <= 0) return;
   var gap = width / count;
   for (var i=0;i<count;i++){
@@ -259,8 +396,28 @@ function layoutRectChairs(ring, count, startPad, top, width, chairD){
     ch.style.width = chairD+'px'; ch.style.height = chairD+'px';
     ch.style.left = (startPad + gap*i + gap/2 - chairD/2)+'px';
     ch.style.top = top+'px';
+    decorateChair(ch, u, startIdx + i);
     ring.appendChild(ch);
   }
+}
+
+// ── Seat positions & guest names ─────────────────────────────────
+// Chair number = position (P1, P2…). A seated name gives the chair a gold ring
+// and appears in its tooltip. Names live in u.guests[index].
+function guestName(u, i){ return String((u.guests && u.guests[i]) || '').trim(); }
+function decorateChair(ch, u, i){
+  ch.dataset.pos = i;
+  ch.textContent = String(i + 1);
+  var n = guestName(u, i);
+  ch.title = 'P' + (i + 1) + (n ? ' — ' + n : '');
+  if (n) ch.classList.add('filled');
+}
+function paintChair(u, i){
+  var ch = canvas.querySelector('[data-id="'+u.id+'"] .chair[data-pos="'+i+'"]');
+  if (!ch) return;
+  var n = guestName(u, i);
+  ch.title = 'P' + (i + 1) + (n ? ' — ' + n : '');
+  ch.classList.toggle('filled', !!n);
 }
 
 function renderFixed(f){
@@ -285,6 +442,7 @@ function render(){
   state.fixed.forEach(renderFixed);
   state.units.forEach(renderUnit);
   updateTotals();
+  renderGuestPanel();
 }
 
 // Select WITHOUT rebuilding the whole plan — just move the CSS class.
@@ -295,14 +453,15 @@ function selectUnit(id){
   state.selectedId = id;
   var next = id ? canvas.querySelector('[data-id="'+id+'"]') : null;
   if (next) next.classList.add('selected');
+  renderGuestPanel();
 }
 canvas.addEventListener('mousedown', function(e){ if (e.target===canvas){ selectUnit(null); } });
 
 // Drag a single chair around its table's ring (changes only its angle).
 function makeChairDraggable(ch, u, index, cx, cy, radius, chairD){
-  var dragging=false, raf=null, pendA=0;
+  var dragging=false, moved=false, raf=null, pendA=0;
   function down(e){
-    dragging=true;
+    dragging=true; moved=false;
     // keep the table selected but DON'T start a table drag
     e.stopPropagation();
     e.preventDefault();
@@ -316,6 +475,7 @@ function makeChairDraggable(ch, u, index, cx, cy, radius, chairD){
   }
   function move(e){
     if(!dragging) return; e.preventDefault();
+    moved = true;
     var p = point(e);
     // angle from the table centre to the pointer, in the ring's coordinate space
     var ringEl = ch.parentNode;
@@ -339,6 +499,7 @@ function makeChairDraggable(ch, u, index, cx, cy, radius, chairD){
     document.removeEventListener('mouseup', up);
     document.removeEventListener('touchmove', move);
     document.removeEventListener('touchend', up);
+    if (!moved) return;           // a plain click (selecting the table) must not move the chair
     if (!u.angles) u.angles = [];
     u.angles[index] = pendA;      // remember this chair's custom position
     save();
@@ -417,7 +578,7 @@ function deleteSelected(){
   if (node) node.remove();
   state.units = state.units.filter(function(u){return u.id!==state.selectedId;});
   state.fixed = state.fixed.filter(function(f){return f.id!==state.selectedId;});
-  state.selectedId = null; updateTotals(); save();
+  state.selectedId = null; updateTotals(); renderGuestPanel(); save();
 }
 
 // Re-render a single table in place (used by +/- seat buttons).
@@ -431,6 +592,7 @@ function duplicateSelected(){
   var sel = findSelected(); if (!sel) return;
   var copy = JSON.parse(JSON.stringify(sel));
   copy.id = uid(); copy.x += 40; copy.y += 40;
+  if (copy.guests) copy.guests = [];   // a duplicated table starts with no names
   if (state.units.indexOf(sel) > -1){ copy.label = String(state.nextNum++); state.units.push(copy); renderUnit(copy); }
   else { state.fixed.push(copy); renderFixed(copy); }
   selectUnit(copy.id); save();
@@ -447,9 +609,74 @@ function resetSeats(){
   save();
 }
 
+// ── Guest list panel (shows for the selected table) ──────────────
+function selectedUnit(){
+  return state.units.find(function(u){ return u.id === state.selectedId; });
+}
+function updateGuestCount(u){
+  var el = document.getElementById('gpCount');
+  if (!el || !u) return;
+  var seated = 0;
+  for (var i = 0; i < u.seats; i++) if (guestName(u, i)) seated++;
+  el.textContent = seated + ' of ' + u.seats + ' seats named';
+}
+function renderGuestPanel(){
+  var box = document.getElementById('guestPanel');
+  if (!box) return;
+  var u = selectedUnit();
+  if (!u){
+    box.innerHTML = '<div class="gp-empty">Click a table to see its positions and add guest names (P1, P2&hellip;).</div>';
+    return;
+  }
+  if (!Array.isArray(u.guests)) u.guests = [];
+  while (u.guests.length < u.seats) u.guests.push('');
+  var rows = '';
+  for (var i = 0; i < u.seats; i++){
+    rows += '<div class="gp-row">' +
+      '<label class="gp-pos" for="gp-' + i + '">P' + (i + 1) + '</label>' +
+      '<input class="gp-input" id="gp-' + i + '" data-i="' + i + '" type="text" maxlength="60" ' +
+      'autocomplete="off" placeholder="Guest name" value="' + esc(u.guests[i]) + '">' +
+      '</div>';
+  }
+  box.innerHTML =
+    '<div class="gp-title">Table ' + esc(u.label) + '</div>' +
+    '<div class="gp-sub" id="gpCount"></div>' + rows +
+    '<div class="gp-actions"><button type="button" class="btn danger" id="gpClear">Clear names</button></div>';
+  updateGuestCount(u);
+}
+(function wireGuestPanel(){
+  var box = document.getElementById('guestPanel');
+  box.addEventListener('input', function(e){
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('gp-input')) return;
+    var u = selectedUnit(); if (!u) return;
+    var i = parseInt(t.getAttribute('data-i'), 10);
+    u.guests[i] = t.value;
+    paintChair(u, i);
+    updateGuestCount(u);
+    save();
+  });
+  // Enter moves to the next position, so a table can be typed in quickly.
+  box.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('gp-input')) return;
+    e.preventDefault();
+    var next = box.querySelector('#gp-' + (parseInt(e.target.getAttribute('data-i'), 10) + 1));
+    if (next) next.focus(); else e.target.blur();
+  });
+  box.addEventListener('click', function(e){
+    if (e.target.id !== 'gpClear') return;
+    var u = selectedUnit(); if (!u) return;
+    if (!confirm('Clear all names on table ' + u.label + '?')) return;
+    u.guests = [];
+    for (var i = 0; i < u.seats; i++) paintChair(u, i);
+    renderGuestPanel();
+    save();
+  });
+})();
+
 function clearAll(){
   if (!confirm('Clear the whole plan? This cannot be undone.')) return;
-  state = { units: [], fixed: [], nextNum: 1, selectedId: null };
+  state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false };
   save(); render();
 }
 
@@ -466,12 +693,17 @@ function seedDefault(){
   seats.forEach(function(s, i){
     state.units.push({ id: uid(), shape:'round', seats:s, label:String(i+1), x:pos[i][0], y:pos[i][1] });
   });
-  state.nextNum = seats.length + 1; save();
+  state.nextNum = seats.length + 1;
+  // Starter layout: kept on this device only; it is NOT uploaded until someone edits it,
+  // so opening the page on a new device can never overwrite a real plan in the cloud.
+  state.isDefault = true;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 load();
 if (state.units.length === 0 && state.fixed.length === 0) seedDefault();
 render();
+auth.onAuthStateChanged(function(user){ if (user) syncFromCloud(); });
 </script>
 </body>
 </html>

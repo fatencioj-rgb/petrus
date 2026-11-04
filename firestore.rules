@@ -20,6 +20,20 @@ service cloud.firestore {
       return isManager() || (signedIn() && request.auth.token.email == 'irena@petrus.local');
     }
 
+    // Who can use the Operations section (matches PETRUS_ACCESS in auth.js):
+    // Fiorella, Milena, Orson and Liza.
+    function canOperations() {
+      return signedIn() && (request.auth.token.email == 'fiorella@petrus.local'
+                         || request.auth.token.email == 'milena@petrus.local'
+                         || request.auth.token.email == 'orson@petrus.local'
+                         || request.auth.token.email == 'liza@petrus.local');
+    }
+
+    // Seat plan (Operations): shared floor plan + guest names per seat.
+    match /seat_plans/{planId} {
+      allow read, write: if canOperations();
+    }
+
     // Dishes: any signed-in user can read; dish editors can write.
     match /dishes/{dishId} {
       allow read: if signedIn();
