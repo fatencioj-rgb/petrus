@@ -106,6 +106,18 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .gp-input{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none}
 .gp-input:focus{border-color:var(--gold)}
 .gp-actions{margin-top:12px}
+.gp-plan{border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:12px}
+.gp-plan-state{font-size:12px;color:var(--green-dark);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gp-plan-btns{display:flex;gap:6px}
+.gp-plan-btns .btn{flex:1;padding:7px 8px}
+.gp-head{display:flex;align-items:center;gap:10px}
+/* Cormorant's default figures are old-style, where "1" looks like a small "I".
+   Lining figures keep table numbers unambiguous (screen and print). */
+.table-label,.gp-label,.gp-title,.pt-name,.pf-head h1{font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.gp-label{width:92px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:var(--serif);font-size:1.4rem;color:var(--green-dark);letter-spacing:1px;outline:none;background:var(--white)}
+.gp-label:focus{border-color:var(--gold)}
+.gp-warn{font-size:11px;color:#c0392b;min-height:0;margin-top:4px}
+.gp-warn:empty{display:none}
 .gp-empty{font-size:12px;color:var(--gold);text-align:center;padding:24px 8px;line-height:1.6}
 .cloud-status{font-size:11px;color:var(--green);min-width:130px}
 .cloud-status.err{color:#c0392b}
@@ -117,14 +129,45 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .hint{text-align:center;font-size:11px;color:var(--gold);margin-top:10px;opacity:.9}
 .footer{text-align:center;margin-top:30px;font-size:10px;color:rgba(92,26,26,.4);letter-spacing:1px}
 
+/* ── Printing ──
+   Page 1 (landscape): the whole floor — tables, wine cellar, cloakroom, zones.
+   Pages 2+ (portrait): every table in number order, a small drawing on the left and
+   its guest list on the right. Built by buildPrintSheets() into #printRoot. */
+#printRoot{display:none}
+@page floor{size:A4 landscape;margin:10mm}
+@page tables{size:A4 portrait;margin:12mm}
 @media print{
-  .topbar,.toolbar,.hint,.page-header .sub,.side-panel,.cloud-status{display:none!important}
-  .plan-layout{display:block}
+  body > *:not(#printRoot){display:none!important}
   body{background:#fff}
-  .canvas-wrap{border:none}
+  #printRoot{display:block}
+  #printRoot,#printRoot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .unit-ctrl{display:none!important}
-  .unit.selected .seat-ring{outline:none}
-  #canvas{background:#fff}
+
+  .pf-page{page:floor;break-after:page;page-break-after:always}
+  .pf-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid var(--gold);padding-bottom:6px;margin-bottom:10px}
+  .pf-head h1{font-family:var(--serif);font-size:26px;color:var(--green-dark);letter-spacing:2px;line-height:1.1}
+  .pf-sub{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-top:2px}
+  .pf-meta{font-size:11px;color:#555;text-align:right;line-height:1.5}
+  .pf-box{margin:0 auto;overflow:hidden}
+  .pf-stage{position:relative}
+  .pf-none{font-size:13px;color:#777;padding:30px 0;text-align:center}
+
+  .pt-page{page:tables}
+  .pt-table{width:100%;border-collapse:collapse}
+  .pt-table thead th{text-align:left;font-weight:600;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);padding:0 0 6px;border-bottom:1px solid var(--gold)}
+  .pt-table tr{break-inside:avoid;page-break-inside:avoid}
+  .pt-table td{padding:12px 0;border-bottom:1px solid var(--border);vertical-align:top}
+  .pt-row{display:flex;gap:18px;align-items:flex-start}
+  .pt-drawcol{flex:0 0 250px;display:flex;justify-content:center}
+  .pt-draw{position:relative;overflow:hidden}
+  .pt-info{flex:1;min-width:0}
+  .pt-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+  .pt-name{font-family:var(--serif);font-size:22px;color:var(--green-dark);letter-spacing:1px}
+  .pt-meta{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
+  .pt-list{list-style:none;column-gap:24px}
+  .pt-list li{display:flex;gap:8px;align-items:flex-end;break-inside:avoid;page-break-inside:avoid;padding:3px 0;min-height:24px;border-bottom:1px dotted #cfc6b6;font-size:13px}
+  .pt-pos{flex:0 0 28px;font-weight:600;color:var(--green);font-size:11px}
+  .pt-guest{flex:1;min-width:0}
 }
 </style>
 </head>
@@ -174,7 +217,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
       <span class="cloud-status" id="cloudStatus"></span>
     </div>
     <div class="tool-group">
-      <button class="btn" onclick="window.print()">Print / PDF</button>
+      <button class="btn" onclick="printPlan()">Print / PDF</button>
       <button class="btn danger" onclick="clearAll()">Reset</button>
     </div>
   </div>
@@ -185,10 +228,13 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
     </div>
     <aside class="side-panel" id="guestPanel" aria-live="polite"></aside>
   </div>
-  <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Double-click a table number to rename. Click a table to add guest names by position (P1, P2&hellip;). Everything saves automatically on this device and to the cloud.</p>
+  <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Change a table&rsquo;s number in the side panel (or double-click the number). Click a table to add guest names by position (P1, P2&hellip;). Everything saves automatically on this device and to the cloud.</p>
 
   <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only</em></div>
 </div>
+
+<!-- Print sheets: filled by buildPrintSheets(), shown only when printing -->
+<div id="printRoot"></div>
 
 <!-- Saved plans dialog -->
 <div class="dlg-overlay" id="plansDialog" role="dialog" aria-modal="true" aria-labelledby="plansHeading">
@@ -415,11 +461,11 @@ function renderUnit(u){
   t.style.width = dim.w+'px'; t.style.height = dim.h+'px';
   t.style.left = pad+'px'; t.style.top = pad+'px';
   var lbl = document.createElement('span');
-  lbl.className = 'table-label'; lbl.textContent = u.label; lbl.title = 'Double-click to rename';
+  lbl.className = 'table-label'; lbl.textContent = u.label; lbl.title = 'Double-click to change the number';
   lbl.addEventListener('dblclick', function(e){
     e.stopPropagation();
     var v = prompt('Table name / number:', u.label);
-    if (v !== null){ u.label = v.trim() || u.label; lbl.textContent = u.label; save(); }
+    if (v !== null){ u.label = v.trim() || u.label; lbl.textContent = u.label; save(); renderGuestPanel(); }
   });
   t.appendChild(lbl);
   ring.appendChild(t);
@@ -691,12 +737,32 @@ function updateGuestCount(u){
   for (var i = 0; i < u.seats; i++) if (guestName(u, i)) seated++;
   el.textContent = seated + ' of ' + u.seats + ' seats named';
 }
+// Save as… / Update, repeated at the top of the panel so guest names can be saved from here.
+// Guest names are part of the plan, so they are stored and updated together with it.
+function planBlockHtml(){
+  return '<div class="gp-plan">' +
+    '<div class="gp-plan-state" id="gpPlanState"></div>' +
+    '<div class="gp-plan-btns">' +
+    '<button type="button" class="btn primary" id="gpSaveAs">Save as&hellip;</button>' +
+    '<button type="button" class="btn" id="gpUpdate" disabled>Update</button>' +
+    '</div></div>';
+}
+// Warn (don't block) when another table already has this number.
+function updateDupWarning(u){
+  var w = document.getElementById('gpDup');
+  if (!w || !u) return;
+  var l = String(u.label || '').trim().toLowerCase();
+  var dup = !!l && state.units.some(function(o){ return o !== u && String(o.label || '').trim().toLowerCase() === l; });
+  w.textContent = dup ? 'Another table already uses this number.' : '';
+}
 function renderGuestPanel(){
   var box = document.getElementById('guestPanel');
   if (!box) return;
   var u = selectedUnit();
   if (!u){
-    box.innerHTML = '<div class="gp-empty">Click a table to see its positions and add guest names (P1, P2&hellip;).</div>';
+    box.innerHTML = planBlockHtml() +
+      '<div class="gp-empty">Click a table to see its positions and add guest names (P1, P2&hellip;).</div>';
+    updatePlanUi();
     return;
   }
   if (!Array.isArray(u.guests)) u.guests = [];
@@ -709,33 +775,66 @@ function renderGuestPanel(){
       'autocomplete="off" placeholder="Guest name" value="' + esc(u.guests[i]) + '">' +
       '</div>';
   }
-  box.innerHTML =
-    '<div class="gp-title">Table ' + esc(u.label) + '</div>' +
+  box.innerHTML = planBlockHtml() +
+    '<div class="gp-head"><label class="gp-title" for="gpLabel">Table</label>' +
+    '<input class="gp-label" id="gpLabel" type="text" maxlength="10" autocomplete="off" ' +
+    'aria-label="Table number" title="Change the table number" value="' + esc(u.label) + '"></div>' +
+    '<div class="gp-warn" id="gpDup"></div>' +
     '<div class="gp-sub" id="gpCount"></div>' + rows +
     '<div class="gp-actions"><button type="button" class="btn danger" id="gpClear">Clear names</button></div>';
   updateGuestCount(u);
+  updateDupWarning(u);
+  updatePlanUi();
 }
 (function wireGuestPanel(){
   var box = document.getElementById('guestPanel');
   box.addEventListener('input', function(e){
     var t = e.target;
-    if (!t.classList || !t.classList.contains('gp-input')) return;
+    if (!t.classList) return;
     var u = selectedUnit(); if (!u) return;
+    if (t.classList.contains('gp-label')){          // editable table number
+      var v = t.value.trim();
+      if (!v) return;                                // keep the old number until a new one is typed
+      u.label = v;
+      var span = canvas.querySelector('[data-id="' + u.id + '"] .table-label');
+      if (span) span.textContent = v;
+      updateDupWarning(u);
+      save();
+      return;
+    }
+    if (!t.classList.contains('gp-input')) return;
     var i = parseInt(t.getAttribute('data-i'), 10);
     u.guests[i] = t.value;
     paintChair(u, i);
     updateGuestCount(u);
     save();
   });
+  // If the number field is left empty, put the table's number back.
+  box.addEventListener('focusout', function(e){
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('gp-label')) return;
+    var u = selectedUnit();
+    if (u && !t.value.trim()) t.value = u.label;
+  });
   // Enter moves to the next position, so a table can be typed in quickly.
   box.addEventListener('keydown', function(e){
-    if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('gp-input')) return;
+    if (e.key !== 'Enter' || !e.target.classList) return;
+    if (e.target.classList.contains('gp-label')){
+      e.preventDefault();
+      var first = box.querySelector('#gp-0');
+      if (first) first.focus(); else e.target.blur();
+      return;
+    }
+    if (!e.target.classList.contains('gp-input')) return;
     e.preventDefault();
     var next = box.querySelector('#gp-' + (parseInt(e.target.getAttribute('data-i'), 10) + 1));
     if (next) next.focus(); else e.target.blur();
   });
   box.addEventListener('click', function(e){
-    if (e.target.id !== 'gpClear') return;
+    var id = e.target.id;
+    if (id === 'gpSaveAs'){ saveAsPlan(); return; }
+    if (id === 'gpUpdate'){ updatePlan(); return; }
+    if (id !== 'gpClear') return;
     var u = selectedUnit(); if (!u) return;
     if (!confirm('Clear all names on table ' + u.label + '?')) return;
     u.guests = [];
@@ -775,6 +874,11 @@ function updatePlanUi(){
   el.title = m.id ? m.name : 'Not saved as a named plan yet';
   var up = document.getElementById('btnUpdate');
   if (up) up.disabled = !(m.id && modified);
+  // Same state, mirrored at the top of the guest panel.
+  var gs = document.getElementById('gpPlanState');
+  if (gs) gs.innerHTML = el.innerHTML;
+  var gu = document.getElementById('gpUpdate');
+  if (gu) gu.disabled = !(m.id && modified);
   var t = document.getElementById('planTitle');
   if (t) t.textContent = m.id ? m.name : '';
 }
@@ -942,6 +1046,133 @@ function deleteSaved(id){
     else if (act === 'delete') deleteSaved(id);
   });
 })();
+
+// ── Printing ─────────────────────────────────────────────────────
+// Page 1: the whole floor, scaled to fit one landscape sheet.
+// Pages 2+: every table in number order (Table 1, Table 2…): a small drawing on the
+// left and its guest list on the right. The table header repeats on every sheet.
+var PRINT_FLOOR_W = 1000, PRINT_FLOOR_H = 600;   // px for the floor drawing (A4 landscape minus margins and title)
+var PRINT_DRAW_W = 250,  PRINT_DRAW_H = 220;     // px box for each small table drawing (A4 portrait list)
+
+function mk(tag, cls, html){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html != null) n.innerHTML = html;
+  return n;
+}
+function naturalCompare(a, b){
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+}
+// A static copy of a canvas element: no selection styling, and no data-id so it can't be
+// mistaken for the live element by the editor's lookups.
+function printClone(node){
+  var c = node.cloneNode(true);
+  c.classList.remove('selected');
+  c.removeAttribute('data-id');
+  return c;
+}
+function buildPrintSheets(){
+  var root = document.getElementById('printRoot');
+  if (!root) return;
+  root.innerHTML = '';
+
+  var covers = 0, named = 0;
+  state.units.forEach(function(u){
+    covers += u.seats;
+    for (var i = 0; i < u.seats; i++) if (guestName(u, i)) named++;
+  });
+  var planName = (state.meta && state.meta.id) ? state.meta.name : '';
+  var today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  var titleHtml = 'Seat Plan' + (planName ? ' &mdash; ' + esc(planName) : '');
+
+  // ── Page 1: the floor ──
+  var p1 = mk('section', 'pf-page');
+  p1.appendChild(mk('div', 'pf-head',
+    '<div><h1>' + titleHtml + '</h1><div class="pf-sub">Petrus &middot; Restaurant Floor</div></div>' +
+    '<div class="pf-meta">' + state.units.length + ' tables &middot; ' + covers + ' covers &middot; ' +
+    named + ' guests named<br>' + today + '</div>'));
+  var nodes = Array.prototype.slice.call(canvas.children);
+  if (!nodes.length){
+    p1.appendChild(mk('p', 'pf-none', 'No tables placed yet.'));
+  } else {
+    var PAD = 14, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodes.forEach(function(n){
+      minX = Math.min(minX, n.offsetLeft);                 maxX = Math.max(maxX, n.offsetLeft + n.offsetWidth);
+      minY = Math.min(minY, n.offsetTop);                  maxY = Math.max(maxY, n.offsetTop + n.offsetHeight);
+    });
+    var bw = (maxX - minX) + PAD * 2, bh = (maxY - minY) + PAD * 2;
+    var s = Math.min(PRINT_FLOOR_W / bw, PRINT_FLOOR_H / bh, 1.5);
+    var box = mk('div', 'pf-box');
+    box.style.width = Math.floor(bw * s) + 'px';
+    box.style.height = Math.floor(bh * s) + 'px';
+    var stage = mk('div', 'pf-stage');
+    stage.style.width = bw + 'px'; stage.style.height = bh + 'px';
+    // zoom (not transform): it shrinks the real layout size, so the browser doesn't split
+    // the floor across pages based on its unscaled height.
+    stage.style.zoom = s;
+    nodes.forEach(function(n){
+      var c = printClone(n);
+      c.style.left = (n.offsetLeft - minX + PAD) + 'px';
+      c.style.top  = (n.offsetTop  - minY + PAD) + 'px';
+      c.style.cursor = 'default';
+      stage.appendChild(c);
+    });
+    box.appendChild(stage);
+    p1.appendChild(box);
+  }
+  root.appendChild(p1);
+
+  // ── Pages 2+: each table with its guest list ──
+  if (!state.units.length) return;
+  var sec = mk('section', 'pt-page');
+  var tbl = mk('table', 'pt-table');
+  tbl.appendChild(mk('thead', null,
+    '<tr><th>Petrus &middot; ' + titleHtml + ' &middot; Guest lists</th></tr>'));
+  var tbody = mk('tbody');
+  state.units.slice().sort(function(a, b){ return naturalCompare(a.label, b.label); }).forEach(function(u){
+    var seated = 0, items = '';
+    for (var i = 0; i < u.seats; i++){
+      var n = guestName(u, i);
+      if (n) seated++;
+      items += '<li><span class="pt-pos">P' + (i + 1) + '</span><span class="pt-guest">' + esc(n) + '</span></li>';
+    }
+    var row = mk('div', 'pt-row');
+
+    var drawCol = mk('div', 'pt-drawcol');
+    var live = canvas.querySelector('[data-id="' + u.id + '"]');
+    if (live){
+      var w = live.offsetWidth, h = live.offsetHeight;
+      var sc = Math.min(1, PRINT_DRAW_W / w, PRINT_DRAW_H / h);
+      var draw = mk('div', 'pt-draw');
+      draw.style.width = Math.ceil(w * sc) + 'px'; draw.style.height = Math.ceil(h * sc) + 'px';
+      var inner = mk('div');
+      inner.style.cssText = 'position:relative;width:' + w + 'px;height:' + h + 'px;zoom:' + sc;
+      var c = printClone(live);
+      c.style.left = '0px'; c.style.top = '0px'; c.style.cursor = 'default';
+      inner.appendChild(c);
+      draw.appendChild(inner);
+      drawCol.appendChild(draw);
+    }
+    row.appendChild(drawCol);
+
+    var info = mk('div', 'pt-info',
+      '<div class="pt-head"><span class="pt-name">Table ' + esc(u.label) + '</span>' +
+      '<span class="pt-meta">' + u.seats + ' seats &middot; ' + seated + ' named</span></div>' +
+      '<ul class="pt-list" style="column-count:' + (u.seats > 10 ? 2 : 1) + '">' + items + '</ul>');
+    row.appendChild(info);
+
+    var tr = document.createElement('tr'), td = document.createElement('td');
+    td.appendChild(row); tr.appendChild(td); tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  sec.appendChild(tbl);
+  root.appendChild(sec);
+}
+function printPlan(){ buildPrintSheets(); window.print(); }
+window.addEventListener('beforeprint', buildPrintSheets);          // also covers Ctrl/Cmd+P
+window.addEventListener('afterprint', function(){
+  var r = document.getElementById('printRoot'); if (r) r.innerHTML = '';
+});
 
 function clearAll(){
   if (!confirm('Clear the whole plan? This cannot be undone.')) return;
