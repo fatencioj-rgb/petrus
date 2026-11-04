@@ -106,10 +106,6 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .gp-input{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none}
 .gp-input:focus{border-color:var(--gold)}
 .gp-actions{margin-top:12px}
-.gp-plan{border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:12px}
-.gp-plan-state{font-size:12px;color:var(--green-dark);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gp-plan-btns{display:flex;gap:6px}
-.gp-plan-btns .btn{flex:1;padding:7px 8px}
 .gp-head{display:flex;align-items:center;gap:10px}
 /* Cormorant's default figures are old-style, where "1" looks like a small "I".
    Lining figures keep table numbers unambiguous (screen and print). */
@@ -130,48 +126,54 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .footer{text-align:center;margin-top:30px;font-size:10px;color:rgba(92,26,26,.4);letter-spacing:1px}
 
 /* ── Printing ──
-   Page 1 (landscape): the whole floor — tables, wine cellar, cloakroom, zones.
-   Pages 2+ (portrait): every table in number order, a small drawing on the left and
-   its guest list on the right. Built by buildPrintSheets() into #printRoot. */
+   One landscape sheet: a mini copy of the whole floor on the left and, on the right, every
+   table's guest list in narrow columns. buildPrintSheets() fills #printRoot and picks the
+   column count / text size so it all fits (extra sheets only if a plan is too big).
+   The .ps-* / .pl-* rules also style an off-screen copy used to test the fit, so they are
+   deliberately not limited to @media print. */
 #printRoot{display:none}
-@page floor{size:A4 landscape;margin:10mm}
-@page tables{size:A4 portrait;margin:12mm}
+@page{size:A4 landscape;margin:10mm}
+.ps-measure{position:absolute;left:-20000px;top:0;visibility:hidden}
+
+.ps-page{position:relative;width:1040px;height:710px;overflow:hidden;background:#fff}
+.ps-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;height:53px;box-sizing:border-box;border-bottom:1px solid var(--gold);padding-bottom:6px;margin-bottom:12px}
+.ps-head h1{font-family:var(--serif);font-size:26px;color:var(--green-dark);letter-spacing:2px;line-height:1.1}
+/* "PETRUS - <event name>": the brand is spaced capitals, the event keeps the case it was saved with */
+.pf-sub{margin-top:3px;font-size:10px;font-weight:600;color:var(--gold);white-space:nowrap}
+.pf-brand{letter-spacing:3px;text-transform:uppercase}
+.pf-dash{margin:0 6px 0 3px}
+.pf-event{font-size:13px;letter-spacing:.5px;text-transform:none;color:var(--green-dark)}
+.pf-meta{font-size:11px;color:#555;text-align:right;line-height:1.5}
+
+.ps-body{display:flex;gap:18px;align-items:flex-start;height:645px}
+.ps-floor{flex:0 0 400px}
+.pf-box{overflow:hidden}
+.pf-stage{position:relative}
+/* the floor is shrunk a lot, so numbers/labels are enlarged to stay readable */
+.pf-stage .table-label{font-size:var(--tl,15px);font-weight:700}
+.pf-stage .fixed-el{font-size:var(--fl,16px)}
+.pf-stage .chair{font-size:var(--cn,10px)}
+.pf-none{font-size:13px;color:#777;padding:30px 0}
+
+/* guest lists: one block per table, flowing down narrow columns */
+.ps-lists{flex:0 0 auto;height:645px;column-fill:auto;column-gap:14px;font-size:var(--pl-font,11px)}
+.pl-block{break-inside:avoid;page-break-inside:avoid;margin:0 0 9px}
+.pl-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;border-bottom:1px solid var(--gold);margin-bottom:2px}
+.pl-name{font-family:var(--serif);font-size:calc(var(--pl-font,11px) + 4px);font-weight:700;color:var(--green-dark);letter-spacing:.5px}
+.pl-meta{font-size:.8em;font-weight:600;color:var(--gold);letter-spacing:.5px}
+.pl-list{list-style:none}
+.pl-list li{display:flex;gap:5px;align-items:flex-end;min-height:var(--pl-line,15px);line-height:var(--pl-line,15px);border-bottom:1px dotted #d9d0c0}
+.pl-pos{flex:0 0 1.7em;text-align:right;font-weight:600;color:var(--green);font-size:.82em}
+.pl-guest{flex:1;min-width:0;overflow-wrap:anywhere}
+
 @media print{
-  body > *:not(#printRoot){display:none!important}
+  body > *:not(#printRoot):not(.ps-measure){display:none!important}
   body{background:#fff}
   #printRoot{display:block}
   #printRoot,#printRoot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .unit-ctrl{display:none!important}
-
-  .pf-page{page:floor;break-after:page;page-break-after:always}
-  .pf-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid var(--gold);padding-bottom:6px;margin-bottom:10px}
-  .pf-head h1{font-family:var(--serif);font-size:26px;color:var(--green-dark);letter-spacing:2px;line-height:1.1}
-  /* "PETRUS - <event name>": the brand is spaced capitals, the event keeps the case it was saved with */
-  .pf-sub{margin-top:3px;font-size:10px;font-weight:600;color:var(--gold)}
-  .pf-brand{letter-spacing:3px;text-transform:uppercase}
-  .pf-dash{margin:0 6px 0 3px}
-  .pf-event{font-size:13px;letter-spacing:.5px;text-transform:none;color:var(--green-dark)}
-  .pf-meta{font-size:11px;color:#555;text-align:right;line-height:1.5}
-  .pf-box{margin:0 auto;overflow:hidden}
-  .pf-stage{position:relative}
-  .pf-none{font-size:13px;color:#777;padding:30px 0;text-align:center}
-
-  .pt-page{page:tables}
-  .pt-table{width:100%;border-collapse:collapse}
-  .pt-table thead th{text-align:left;font-weight:400;padding:0 0 6px;border-bottom:1px solid var(--gold)}
-  .pt-run{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
-  .pt-run-title{font-family:var(--serif);font-size:22px;color:var(--green-dark);letter-spacing:2px;line-height:1.1}
-  .pt-run-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
-  .pt-table tr{break-inside:avoid;page-break-inside:avoid}
-  .pt-table td{padding:12px 0;border-bottom:1px solid var(--border);vertical-align:top}
-  .pt-info{flex:1;min-width:0}
-  .pt-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
-  .pt-name{font-family:var(--serif);font-size:22px;color:var(--green-dark);letter-spacing:1px}
-  .pt-meta{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
-  .pt-list{list-style:none;column-gap:24px}
-  .pt-list li{display:flex;gap:8px;align-items:flex-end;break-inside:avoid;page-break-inside:avoid;padding:3px 0;min-height:24px;border-bottom:1px dotted #cfc6b6;font-size:13px}
-  .pt-pos{flex:0 0 28px;font-weight:600;color:var(--green);font-size:11px}
-  .pt-guest{flex:1;min-width:0}
+  .ps-page{break-after:page;page-break-after:always}
+  .ps-page:last-child{break-after:auto;page-break-after:auto}
 }
 </style>
 </head>
@@ -741,16 +743,6 @@ function updateGuestCount(u){
   for (var i = 0; i < u.seats; i++) if (guestName(u, i)) seated++;
   el.textContent = seated + ' of ' + u.seats + ' seats named';
 }
-// Save as… / Update, repeated at the top of the panel so guest names can be saved from here.
-// Guest names are part of the plan, so they are stored and updated together with it.
-function planBlockHtml(){
-  return '<div class="gp-plan">' +
-    '<div class="gp-plan-state" id="gpPlanState"></div>' +
-    '<div class="gp-plan-btns">' +
-    '<button type="button" class="btn primary" id="gpSaveAs">Save as&hellip;</button>' +
-    '<button type="button" class="btn" id="gpUpdate" disabled>Update</button>' +
-    '</div></div>';
-}
 // Warn (don't block) when another table already has this number.
 function updateDupWarning(u){
   var w = document.getElementById('gpDup');
@@ -764,9 +756,7 @@ function renderGuestPanel(){
   if (!box) return;
   var u = selectedUnit();
   if (!u){
-    box.innerHTML = planBlockHtml() +
-      '<div class="gp-empty">Click a table to see its positions and add guest names (P1, P2&hellip;).</div>';
-    updatePlanUi();
+    box.innerHTML = '<div class="gp-empty">Click a table to see its positions and add guest names (P1, P2&hellip;).<br>Names are saved automatically.</div>';
     return;
   }
   if (!Array.isArray(u.guests)) u.guests = [];
@@ -779,7 +769,7 @@ function renderGuestPanel(){
       'autocomplete="off" placeholder="Guest name" value="' + esc(u.guests[i]) + '">' +
       '</div>';
   }
-  box.innerHTML = planBlockHtml() +
+  box.innerHTML =
     '<div class="gp-head"><label class="gp-title" for="gpLabel">Table</label>' +
     '<input class="gp-label" id="gpLabel" type="text" maxlength="10" autocomplete="off" ' +
     'aria-label="Table number" title="Change the table number" value="' + esc(u.label) + '"></div>' +
@@ -788,7 +778,6 @@ function renderGuestPanel(){
     '<div class="gp-actions"><button type="button" class="btn danger" id="gpClear">Clear names</button></div>';
   updateGuestCount(u);
   updateDupWarning(u);
-  updatePlanUi();
 }
 (function wireGuestPanel(){
   var box = document.getElementById('guestPanel');
@@ -835,10 +824,7 @@ function renderGuestPanel(){
     if (next) next.focus(); else e.target.blur();
   });
   box.addEventListener('click', function(e){
-    var id = e.target.id;
-    if (id === 'gpSaveAs'){ saveAsPlan(); return; }
-    if (id === 'gpUpdate'){ updatePlan(); return; }
-    if (id !== 'gpClear') return;
+    if (e.target.id !== 'gpClear') return;
     var u = selectedUnit(); if (!u) return;
     if (!confirm('Clear all names on table ' + u.label + '?')) return;
     u.guests = [];
@@ -878,11 +864,6 @@ function updatePlanUi(){
   el.title = m.id ? m.name : 'Not saved as a named plan yet';
   var up = document.getElementById('btnUpdate');
   if (up) up.disabled = !(m.id && modified);
-  // Same state, mirrored at the top of the guest panel.
-  var gs = document.getElementById('gpPlanState');
-  if (gs) gs.innerHTML = el.innerHTML;
-  var gu = document.getElementById('gpUpdate');
-  if (gu) gu.disabled = !(m.id && modified);
   var t = document.getElementById('planTitle');
   if (t) t.textContent = m.id ? m.name : '';
 }
@@ -1052,10 +1033,25 @@ function deleteSaved(id){
 })();
 
 // ── Printing ─────────────────────────────────────────────────────
-// Page 1: the whole floor, scaled to fit one landscape sheet.
-// Pages 2+: guest lists only, every table in number order (Table 1, Table 2…).
-// Every sheet is headed "Seat Plan" with "PETRUS - <the name the plan was saved under>".
-var PRINT_FLOOR_W = 1000, PRINT_FLOOR_H = 600;   // px for the floor drawing (A4 landscape minus margins and title)
+// One landscape sheet (A4, 10 mm margins): the whole floor in miniature on the left, and
+// on the right the guest list of every table (Table 1, Table 2…) in narrow columns.
+// The text size and number of columns are chosen automatically — roomiest first — by
+// testing each option in an off-screen copy until everything fits. Only if a plan is too
+// big even at the tightest setting do the remaining tables continue on extra sheets.
+// Every sheet is headed "Seat Plan" with "PETRUS - <name the plan was saved under>".
+var PS_W = 1040, PS_H = 710, PS_HEAD = 65;        // sheet size and header height, in CSS px
+var PS_BODY_H = PS_H - PS_HEAD;
+var PS_FLOOR_W = 400, PS_GAP = 18, PS_COL_GAP = 14;
+var PS_LISTS_W = PS_W - PS_FLOOR_W - PS_GAP;      // width left for the lists next to the mini floor
+var PS_DENSITY = [                                // roomiest → tightest (colW = target column width)
+  { font: 12,  line: 17,   colW: 195 },
+  { font: 11,  line: 15,   colW: 195 },
+  { font: 11,  line: 15,   colW: 140 },
+  { font: 10,  line: 13.5, colW: 140 },
+  { font: 9,   line: 12,   colW: 112 },
+  { font: 8,   line: 10.5, colW: 112 },
+  { font: 7.5, line: 10,   colW: 92  }
+];
 
 function mk(tag, cls, html){
   var n = document.createElement(tag);
@@ -1074,6 +1070,87 @@ function printClone(node){
   c.removeAttribute('data-id');
   return c;
 }
+
+// One table's block: heading + one short line per seat (number + guest name).
+function psBlockHtml(u){
+  var seated = 0, items = '';
+  for (var i = 0; i < u.seats; i++){
+    var n = guestName(u, i);
+    if (n) seated++;
+    items += '<li><span class="pl-pos">' + (i + 1) + '</span><span class="pl-guest">' + esc(n) + '</span></li>';
+  }
+  return '<div class="pl-block"><div class="pl-head"><span class="pl-name">Table ' + esc(u.label) + '</span>' +
+         '<span class="pl-meta">' + seated + '/' + u.seats + '</span></div><ul class="pl-list">' + items + '</ul></div>';
+}
+function psCols(W, d){ return Math.max(1, Math.floor((W + PS_COL_GAP) / (d.colW + PS_COL_GAP))); }
+function psListStyle(W, d){
+  return 'width:' + W + 'px;column-count:' + psCols(W, d) + ';--pl-font:' + d.font + 'px;--pl-line:' + d.line + 'px';
+}
+// Does this HTML fit in a W × body-height box at density d? Rendered off-screen at full size;
+// if the columns run out of room, the browser adds extra columns to the right (wider than the box).
+function psFits(html, W, d){
+  var holder = document.createElement('div');
+  holder.className = 'ps-measure';
+  holder.innerHTML = '<div class="ps-lists" style="' + psListStyle(W, d) + '">' + html + '</div>';
+  document.body.appendChild(holder);
+  var el = holder.firstChild;
+  var ok = el.scrollWidth <= el.clientWidth + 1;
+  holder.parentNode.removeChild(holder);
+  return ok;
+}
+// Split the table blocks into sheets: sheet 1 sits next to the mini floor, any further sheet is full width.
+function psPaginate(blocks){
+  var pages = [], i = 0, first = true;
+  while (i < blocks.length){
+    var W = first ? PS_LISTS_W : PS_W, rest = blocks.slice(i), pick = null;
+    for (var k = 0; k < PS_DENSITY.length && !pick; k++){
+      if (psFits(rest.join(''), W, PS_DENSITY[k])) pick = PS_DENSITY[k];
+    }
+    if (pick){ pages.push({ blocks: rest, d: pick, W: W, first: first }); break; }
+    // Too much even at the tightest setting: put as many whole tables as fit on this sheet.
+    var tight = PS_DENSITY[PS_DENSITY.length - 1], n = rest.length - 1;
+    while (n > 1 && !psFits(rest.slice(0, n).join(''), W, tight)) n--;
+    pages.push({ blocks: rest.slice(0, n), d: tight, W: W, first: first });
+    i += n; first = false;
+  }
+  return pages;
+}
+
+// The whole floor, shrunk to fit the left column. Labels are enlarged so they stay readable.
+function psMiniFloor(){
+  var wrap = mk('div', 'ps-floor');
+  var nodes = Array.prototype.slice.call(canvas.children);
+  if (!nodes.length){ wrap.appendChild(mk('p', 'pf-none', 'No tables placed yet.')); return wrap; }
+  var PAD = 10, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  nodes.forEach(function(n){
+    minX = Math.min(minX, n.offsetLeft);  maxX = Math.max(maxX, n.offsetLeft + n.offsetWidth);
+    minY = Math.min(minY, n.offsetTop);   maxY = Math.max(maxY, n.offsetTop + n.offsetHeight);
+  });
+  var bw = (maxX - minX) + PAD * 2, bh = (maxY - minY) + PAD * 2;
+  var s = Math.min(PS_FLOOR_W / bw, PS_BODY_H / bh, 1);
+  var box = mk('div', 'pf-box');
+  box.style.width = Math.floor(bw * s) + 'px';
+  box.style.height = Math.floor(bh * s) + 'px';
+  var stage = mk('div', 'pf-stage');
+  stage.style.width = bw + 'px'; stage.style.height = bh + 'px';
+  // zoom (not transform): it shrinks the real layout size, so the browser never splits the
+  // floor across pages based on its unscaled height.
+  stage.style.zoom = s;
+  stage.style.setProperty('--tl', (12 / s).toFixed(1) + 'px');    // table numbers ≈ 12 px on paper
+  stage.style.setProperty('--fl', (9 / s).toFixed(1) + 'px');     // wine cellar / cloakroom / zones
+  stage.style.setProperty('--cn', (6.5 / s).toFixed(1) + 'px');   // seat numbers
+  nodes.forEach(function(n){
+    var c = printClone(n);
+    c.style.left = (n.offsetLeft - minX + PAD) + 'px';
+    c.style.top  = (n.offsetTop  - minY + PAD) + 'px';
+    c.style.cursor = 'default';
+    stage.appendChild(c);
+  });
+  box.appendChild(stage);
+  wrap.appendChild(box);
+  return wrap;
+}
+
 function buildPrintSheets(){
   var root = document.getElementById('printRoot');
   if (!root) return;
@@ -1089,70 +1166,28 @@ function buildPrintSheets(){
   // "PETRUS - GR 60's": the event name is printed exactly as it was saved.
   var subHtml = '<div class="pf-sub"><span class="pf-brand">Petrus</span>' +
     (planName ? '<span class="pf-dash">-</span><span class="pf-event">' + esc(planName) + '</span>' : '') + '</div>';
+  var stats = state.units.length + ' tables &middot; ' + covers + ' covers &middot; ' + named + ' guests named<br>' + today;
 
-  // ── Page 1: the floor ──
-  var p1 = mk('section', 'pf-page');
-  p1.appendChild(mk('div', 'pf-head',
-    '<div><h1>Seat Plan</h1>' + subHtml + '</div>' +
-    '<div class="pf-meta">' + state.units.length + ' tables &middot; ' + covers + ' covers &middot; ' +
-    named + ' guests named<br>' + today + '</div>'));
-  var nodes = Array.prototype.slice.call(canvas.children);
-  if (!nodes.length){
-    p1.appendChild(mk('p', 'pf-none', 'No tables placed yet.'));
-  } else {
-    var PAD = 14, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    nodes.forEach(function(n){
-      minX = Math.min(minX, n.offsetLeft);                 maxX = Math.max(maxX, n.offsetLeft + n.offsetWidth);
-      minY = Math.min(minY, n.offsetTop);                  maxY = Math.max(maxY, n.offsetTop + n.offsetHeight);
-    });
-    var bw = (maxX - minX) + PAD * 2, bh = (maxY - minY) + PAD * 2;
-    var s = Math.min(PRINT_FLOOR_W / bw, PRINT_FLOOR_H / bh, 1.5);
-    var box = mk('div', 'pf-box');
-    box.style.width = Math.floor(bw * s) + 'px';
-    box.style.height = Math.floor(bh * s) + 'px';
-    var stage = mk('div', 'pf-stage');
-    stage.style.width = bw + 'px'; stage.style.height = bh + 'px';
-    // zoom (not transform): it shrinks the real layout size, so the browser doesn't split
-    // the floor across pages based on its unscaled height.
-    stage.style.zoom = s;
-    nodes.forEach(function(n){
-      var c = printClone(n);
-      c.style.left = (n.offsetLeft - minX + PAD) + 'px';
-      c.style.top  = (n.offsetTop  - minY + PAD) + 'px';
-      c.style.cursor = 'default';
-      stage.appendChild(c);
-    });
-    box.appendChild(stage);
-    p1.appendChild(box);
-  }
-  root.appendChild(p1);
+  var blocks = state.units.slice()
+    .sort(function(a, b){ return naturalCompare(a.label, b.label); })
+    .map(psBlockHtml);
+  var pages = blocks.length
+    ? psPaginate(blocks)
+    : [{ blocks: [], d: PS_DENSITY[1], W: PS_LISTS_W, first: true }];
 
-  // ── Pages 2+: each table with its guest list ──
-  if (!state.units.length) return;
-  var sec = mk('section', 'pt-page');
-  var tbl = mk('table', 'pt-table');
-  tbl.appendChild(mk('thead', null,
-    '<tr><th><div class="pt-run"><div><div class="pt-run-title">Seat Plan</div>' + subHtml + '</div>' +
-    '<span class="pt-run-tag">Guest lists</span></div></th></tr>'));
-  var tbody = mk('tbody');
-  state.units.slice().sort(function(a, b){ return naturalCompare(a.label, b.label); }).forEach(function(u){
-    var seated = 0, items = '';
-    for (var i = 0; i < u.seats; i++){
-      var n = guestName(u, i);
-      if (n) seated++;
-      items += '<li><span class="pt-pos">P' + (i + 1) + '</span><span class="pt-guest">' + esc(n) + '</span></li>';
-    }
-    var info = mk('div', 'pt-info',
-      '<div class="pt-head"><span class="pt-name">Table ' + esc(u.label) + '</span>' +
-      '<span class="pt-meta">' + u.seats + ' seats &middot; ' + seated + ' named</span></div>' +
-      '<ul class="pt-list" style="column-count:' + (u.seats > 10 ? 2 : 1) + '">' + items + '</ul>');
-
-    var tr = document.createElement('tr'), td = document.createElement('td');
-    td.appendChild(info); tr.appendChild(td); tbody.appendChild(tr);
+  pages.forEach(function(pg){
+    var page = mk('section', 'ps-page');
+    page.appendChild(mk('div', 'ps-head',
+      '<div><h1>Seat Plan</h1>' + subHtml + '</div>' +
+      '<div class="pf-meta">' + (pg.first ? stats : 'Guest lists (continued)') + '</div>'));
+    var body = mk('div', 'ps-body');
+    if (pg.first) body.appendChild(psMiniFloor());
+    var lists = mk('div', 'ps-lists', pg.blocks.join(''));
+    lists.setAttribute('style', psListStyle(pg.W, pg.d));
+    body.appendChild(lists);
+    page.appendChild(body);
+    root.appendChild(page);
   });
-  tbl.appendChild(tbody);
-  sec.appendChild(tbl);
-  root.appendChild(sec);
 }
 function printPlan(){ buildPrintSheets(); window.print(); }
 window.addEventListener('beforeprint', buildPrintSheets);          // also covers Ctrl/Cmd+P
