@@ -78,12 +78,20 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .mini-count{font-size:11px;color:var(--gold);min-width:46px;text-align:center}
 
 /* Named plans: toolbar label, title for print, saved-plans dialog */
-.plan-name{font-size:12px;color:var(--green-dark);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Event name + Save, under the page title */
+.plan-bar{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.plan-input{width:300px;max-width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);font-family:var(--serif);font-size:1.25rem;color:var(--green);text-align:center;outline:none;font-variant-numeric:lining-nums}
+.plan-input:focus{border-color:var(--gold)}
+.plan-input::placeholder{color:#b8a98f;font-style:italic}
+.plan-input.is-saved{border-color:transparent;background:transparent;font-weight:600;cursor:default}
+.plan-input.need{border-color:#c0392b;animation:planNeed .5s}
+@keyframes planNeed{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.plan-status{min-width:78px;text-align:left}
+.plan-link{background:none;border:none;color:var(--gold);font-family:var(--sans);font-size:11px;letter-spacing:.5px;text-decoration:underline;cursor:pointer;padding:0}
+.plan-link:hover{color:var(--green)}
 .plan-flag{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
 .plan-flag.mod{color:var(--gold)}
 .btn:disabled{opacity:.45;cursor:default;transform:none;background:var(--white);border-color:var(--border)}
-.plan-title{font-family:var(--serif);font-size:1.15rem;color:var(--green);margin-top:4px}
-.plan-title:empty{display:none}
 .dlg-overlay{position:fixed;inset:0;z-index:1000;background:rgba(45,10,10,.55);display:none;align-items:center;justify-content:center;padding:16px}
 .dlg{background:var(--white);border-radius:12px;width:min(620px,100%);max-height:80vh;overflow:auto;padding:18px 18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
@@ -189,15 +197,20 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   <div class="page-header">
     <h1>Seat Plan</h1>
     <p class="sub">Restaurant Floor</p>
-    <p class="plan-title" id="planTitle"></p>
+    <!-- Event name + Save. A new plan has an empty, editable name; once saved it shows the
+         name and the button becomes Update (enabled when there are changes). -->
+    <div class="plan-bar" id="planBar">
+      <input type="text" id="planNameInput" class="plan-input" maxlength="60" autocomplete="off"
+        placeholder="Event name&hellip;" aria-label="Plan name">
+      <button type="button" class="btn primary" id="btnSave">Save</button>
+      <span class="plan-status" id="planStatus"></span>
+      <button type="button" class="plan-link" id="btnCopy" title="Save a copy under a new name" style="display:none;">Save as&hellip;</button>
+    </div>
   </div>
 
   <div class="toolbar">
     <div class="tool-group">
       <span class="tool-label">Plan</span>
-      <span class="plan-name" id="planName"></span>
-      <button class="btn primary" onclick="saveAsPlan()">Save as&hellip;</button>
-      <button class="btn" id="btnUpdate" onclick="updatePlan()" disabled title="Save your changes to the open saved plan">Update</button>
       <button class="btn" onclick="newPlan()">New</button>
       <button class="btn" onclick="openPlansDialog()">Open&hellip;</button>
     </div>
@@ -854,18 +867,35 @@ function hasUnsavedWork(){
   return state.units.length > 0 || state.fixed.length > 0;
 }
 function updatePlanUi(){
-  var el = document.getElementById('planName');
-  if (!el) return;
+  var input = document.getElementById('planNameInput');
+  if (!input) return;
+  var btn = document.getElementById('btnSave'), st = document.getElementById('planStatus'), copy = document.getElementById('btnCopy');
   var m = state.meta || blankMeta();
-  var modified = isModified();
-  if (m.id) el.innerHTML = '<b>' + esc(m.name) + '</b> · ' +
-    (modified ? '<span class="plan-flag mod">modified</span>' : '<span class="plan-flag">saved</span>');
-  else el.innerHTML = '<i>Unnamed plan</i> · <span class="plan-flag mod">not saved</span>';
-  el.title = m.id ? m.name : 'Not saved as a named plan yet';
-  var up = document.getElementById('btnUpdate');
-  if (up) up.disabled = !(m.id && modified);
-  var t = document.getElementById('planTitle');
-  if (t) t.textContent = m.id ? m.name : '';
+  var saved = !!m.id, modified = isModified();
+  var mode = saved ? 'saved' : 'draft';
+  // The name field is only overwritten when the mode changes (or the name changes elsewhere),
+  // never while a new plan's name is being typed.
+  if (input.dataset.mode !== mode){
+    input.dataset.mode = mode;
+    input.value = saved ? m.name : '';
+  } else if (saved && input.value !== m.name){
+    input.value = m.name;
+  }
+  input.readOnly = saved;
+  input.classList.toggle('is-saved', saved);
+  input.title = saved ? 'Rename it from Open…' : '';
+  if (saved){
+    btn.textContent = 'Update';
+    btn.disabled = !modified;
+    btn.title = 'Save your changes to "' + m.name + '"';
+    st.innerHTML = modified ? '<span class="plan-flag mod">modified</span>' : '<span class="plan-flag">saved &#10003;</span>';
+  } else {
+    btn.textContent = 'Save';
+    btn.disabled = false;
+    btn.title = 'Save this plan under the name you typed';
+    st.innerHTML = '<span class="plan-flag mod">not saved</span>';
+  }
+  if (copy) copy.style.display = saved ? '' : 'none';
 }
 
 function fetchSaved(){
@@ -885,13 +915,31 @@ function fetchSaved(){
 }
 function failMsg(prefix, err){ console.error(prefix, err); alert(prefix + ' ' + ((err && err.message) || 'Please try again.')); }
 
-// Save the current plan under a name the user chooses (a new saved plan).
+// The Save button next to the event name: a new plan is saved under the typed name;
+// a plan that is already saved is updated.
+function onPlanSave(){
+  if (state.meta && state.meta.id){ updatePlan(); return; }
+  saveNamedPlan(document.getElementById('planNameInput').value);
+}
+// Save a COPY of the open plan under a new name (asks for the name).
 function saveAsPlan(){
   var suggested = state.meta && state.meta.name ? state.meta.name + ' (copy)' : '';
-  var name = prompt('Name for this plan:', suggested);
+  var name = prompt('Name for the copy:', suggested);
   if (name === null) return;
-  name = name.trim();
-  if (!name) return;
+  saveNamedPlan(name);
+}
+// Save the current plan as a saved plan called `name`.
+function saveNamedPlan(name){
+  name = String(name == null ? '' : name).trim();
+  if (!name){
+    var inp = document.getElementById('planNameInput');
+    if (inp && !inp.readOnly){
+      inp.focus();
+      inp.classList.add('need');
+      setTimeout(function(){ inp.classList.remove('need'); }, 1200);
+    }
+    return;
+  }
   fetchSaved().then(function(list){
     var same = list.filter(function(p){ return p.name.toLowerCase() === name.toLowerCase(); })[0];
     var data = { name: name, json: JSON.stringify(planForCloud()), updatedAt: nowStamp(), updatedBy: myEmail() };
@@ -913,7 +961,7 @@ function saveAsPlan(){
 
 // Overwrite the open saved plan with the current version.
 function updatePlan(){
-  if (!state.meta || !state.meta.id){ saveAsPlan(); return; }
+  if (!state.meta || !state.meta.id){ onPlanSave(); return; }
   if (!isModified()) return;
   if (!confirm('Replace the saved plan "' + state.meta.name + '" with the current version?')) return;
   savesCol().doc(state.meta.id).update({
@@ -923,7 +971,7 @@ function updatePlan(){
     save();
   }).catch(function(err){
     if (err && err.code === 'not-found'){
-      alert('That saved plan no longer exists (it was deleted). Use "Save as…" to save it again.');
+      alert('That saved plan no longer exists (it was deleted). Type a name and press Save to save it again.');
       state.meta = blankMeta(); save();
     } else failMsg('Could not update the plan.', err);
   });
@@ -932,10 +980,23 @@ function updatePlan(){
 // Start a fresh, empty plan. Saved plans are untouched.
 function newPlan(){
   if (hasUnsavedWork() && !confirm(
-    'The current plan has unsaved changes.\n\nStart a new, empty plan anyway?\n(Tip: cancel and use "Save as…" or "Update" first.)')) return;
+    'The current plan has unsaved changes.\n\nStart a new, empty plan anyway?\n(Tip: cancel and press Save or Update first.)')) return;
   state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false, meta: blankMeta() };
+  var inp = document.getElementById('planNameInput');
+  if (inp) inp.value = '';                       // a new plan starts with an empty name
   save(); render();
+  if (inp) inp.focus();
 }
+
+// Event name + Save: Enter saves a new plan, the buttons do the rest.
+(function wirePlanBar(){
+  var inp = document.getElementById('planNameInput');
+  inp.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !inp.readOnly){ e.preventDefault(); onPlanSave(); }
+  });
+  document.getElementById('btnSave').addEventListener('click', onPlanSave);
+  document.getElementById('btnCopy').addEventListener('click', saveAsPlan);
+})();
 
 // ── Saved plans dialog ──
 function fmtWhen(ms){
@@ -947,7 +1008,7 @@ function fmtWhen(ms){
 function renderPlansList(){
   var box = document.getElementById('plansList');
   if (!savedList.length){
-    box.innerHTML = '<div class="gp-empty">No saved plans yet.<br>Use &ldquo;Save as&hellip;&rdquo; to keep the current plan under a name.</div>';
+    box.innerHTML = '<div class="gp-empty">No saved plans yet.<br>Type an event name under the title and press Save to keep the current plan.</div>';
     return;
   }
   box.innerHTML = savedList.map(function(p){
@@ -1161,7 +1222,8 @@ function buildPrintSheets(){
     covers += u.seats;
     for (var i = 0; i < u.seats; i++) if (guestName(u, i)) named++;
   });
-  var planName = (state.meta && state.meta.id) ? state.meta.name : '';
+  var nameField = document.getElementById('planNameInput');       // also uses a name typed but not saved yet
+  var planName = (state.meta && state.meta.id) ? state.meta.name : (nameField ? nameField.value.trim() : '');
   var today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   // "PETRUS - GR 60's": the event name is printed exactly as it was saved.
   var subHtml = '<div class="pf-sub"><span class="pf-brand">Petrus</span>' +
