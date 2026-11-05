@@ -99,6 +99,10 @@ Editor del plano de sala en un solo archivo. Todo el estado vive en `state`
 ## 7. Pendientes / ideas
 
 - Extender watermark + aviso de screenshot a más páginas si se quiere.
-- (En curso) Training → Food: botón **Print / PDF** visible SOLO para Fiorella, que exporte una
-  ficha imprimible por plato.
+- (Hecho) Training → Food: botón **Print / PDF** visible SOLO para Fiorella (`food-net.html`).
+  Abre un diálogo con todos los platos (no ocultos) agrupados por curso, cada uno con casilla +
+  **Select all** + buscador + contador, y un toggle "Include photos". Imprime una **ficha de
+  training A4 por plato** (curso, nombre, menús, foto, announcement, descripción, alérgenos/dieta,
+  wine pairing, set up, knowledge points) con el crédito "Automatization made by Fiorella A." en el
+  encabezado.
 - Actualizar `reset-password.js` a la API modular de `firebase-admin` v14.
