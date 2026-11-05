@@ -142,6 +142,70 @@ tr:last-child td { border-bottom:none; }
 @media (max-width:600px) {
   .section-title { font-size:26px; }
 }
+
+/* ── Dish print: selection dialog ── */
+.dp-overlay{position:fixed;inset:0;z-index:1200;background:rgba(58,34,38,.55);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:16px}
+.dp-overlay.open{display:flex}
+.dp-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:min(560px,100%);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(58,34,38,.4);overflow:hidden}
+.dp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 10px}
+.dp-head h2{font-family:var(--serif);font-size:26px;color:var(--wine)}
+.dp-sub{font-size:12px;color:var(--wine-soft);opacity:.8;margin-top:2px}
+.dp-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:0 18px 10px;border-bottom:1px solid var(--border)}
+.dp-search{flex:1;min-width:150px;padding:8px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);font-family:var(--sans);font-size:13px;outline:none}
+.dp-search:focus{border-color:var(--wine)}
+.dp-all{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--wine);cursor:pointer;white-space:nowrap}
+.dp-all input{accent-color:var(--wine)}
+.dp-count{font-size:11px;color:var(--wine-soft);white-space:nowrap}
+.dp-list{overflow:auto;padding:6px 18px}
+.dp-group{font-family:var(--serif);font-size:15px;color:var(--wine);margin:12px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--border)}
+.dp-group:first-child{margin-top:4px}
+.dp-item{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:6px;cursor:pointer}
+.dp-item:hover{background:var(--bg-soft)}
+.dp-item input{accent-color:var(--wine);margin:0}
+.dp-item .dn{font-size:13.5px;color:var(--text)}
+.dp-item .dc{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:.7;margin-left:auto}
+.dp-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid var(--border)}
+.dp-opt{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--wine);cursor:pointer}
+.dp-opt input{accent-color:var(--wine)}
+.dp-btn{padding:9px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--wine);font-family:var(--sans);font-size:12px;letter-spacing:.5px;cursor:pointer;transition:all .2s}
+.dp-btn:hover{border-color:var(--wine)}
+.dp-btn.primary{background:var(--wine);border-color:var(--wine);color:#fff;font-weight:600}
+.dp-btn.primary:disabled{opacity:.45;cursor:default}
+
+/* ── Dish print: the printed training sheets ── */
+#dishPrintRoot{display:none}
+@media print{
+  /* While printing from this page, show only the sheets. */
+  body.dish-printing > .container{display:none!important}
+  body.dish-printing #dishPrintRoot{display:block}
+  body.dish-printing{background:#fff}
+  #dishPrintRoot,#dishPrintRoot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4 portrait;margin:14mm}
+}
+.ds-sheet{break-after:page;page-break-after:always;position:relative;font-family:var(--sans);color:var(--text)}
+.ds-sheet:last-child{break-after:auto;page-break-after:auto}
+.ds-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid var(--wine);padding-bottom:8px;margin-bottom:14px}
+.ds-course{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--wine-soft)}
+.ds-name{font-family:var(--serif);font-size:30px;color:var(--wine);line-height:1.1;margin-top:2px}
+.ds-menus{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:.75;margin-top:6px}
+.ds-cred{text-align:right;white-space:nowrap}
+.ds-cred .t{font-size:8px;letter-spacing:.4px;color:#8a7f6e}
+.ds-cred .b{font-family:var(--serif);font-size:13px;color:var(--wine);letter-spacing:2px}
+.ds-photo{width:100%;height:230px;object-fit:cover;border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
+.ds-announce{font-family:var(--serif);font-size:16px;font-style:italic;line-height:1.5;color:var(--wine-soft);border-left:3px solid var(--border);padding-left:12px;margin-bottom:12px}
+.ds-desc{font-size:13.5px;line-height:1.6;margin-bottom:14px}
+.ds-sec{margin-bottom:12px;break-inside:avoid}
+.ds-sec h3{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--wine);border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:6px}
+.ds-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ds-chip{font-size:11px;letter-spacing:.3px;padding:3px 10px;border-radius:12px;background:var(--bg-soft);border:1px solid var(--border);color:var(--wine-soft)}
+.ds-chip.diet{background:rgba(120,150,90,.16);border-color:rgba(120,150,90,.4);color:#5a7a3a}
+.ds-k{font-size:13px;line-height:1.5;margin-bottom:5px}
+.ds-k b{color:var(--wine)}
+.ds-wine{display:flex;gap:10px;font-size:13px;line-height:1.5;padding:2px 0}
+.ds-wine .wl{flex:0 0 130px;color:var(--wine);font-weight:600}
+.ds-wine .wy{color:var(--wine-soft);font-weight:600}
+.ds-setup{font-size:13px;line-height:1.6}
+.ds-empty{font-size:13px;color:#999;padding:20px 0}
 </style>
 </head>
 <body>
@@ -153,6 +217,7 @@ tr:last-child td { border-bottom:none; }
     <div style="display:flex;gap:8px;">
       <a href="food-editor.html" id="editorLink" style="display:none;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:0.7;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:7px 14px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--wine)'" onmouseout="this.style.opacity=0.7;this.style.borderColor='var(--border)'">✎ Edit dishes</a>
       <a href="producers-editor.html" id="producerEditorLink" style="display:none;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:0.7;text-decoration:none;border:1px solid var(--border);border-radius:6px;padding:7px 14px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--wine)'" onmouseout="this.style.opacity=0.7;this.style.borderColor='var(--border)'">✎ Edit producers</a>
+      <button type="button" id="printLink" onclick="openDishPrint()" style="display:none;cursor:pointer;font-family:var(--sans);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--wine-soft);opacity:0.7;background:transparent;border:1px solid var(--border);border-radius:6px;padding:7px 14px;transition:all .2s;" onmouseover="this.style.opacity=1;this.style.borderColor='var(--wine)'" onmouseout="this.style.opacity=0.7;this.style.borderColor='var(--border)'">Print / PDF</button>
     </div>
   </div>
 
@@ -189,6 +254,32 @@ tr:last-child td { border-bottom:none; }
     <div id="dish-modal-content"></div>
   </div>
 </div>
+
+<!-- Dish print: pick which dishes to print, then one training sheet per page (Fiorella only) -->
+<div class="dp-overlay" id="dishPrintDialog" role="dialog" aria-modal="true" aria-labelledby="dpHeading">
+  <div class="dp-box">
+    <div class="dp-head">
+      <div>
+        <h2 id="dpHeading">Print training sheets</h2>
+        <p class="dp-sub">Tick the dishes to print — one sheet per dish.</p>
+      </div>
+      <button type="button" class="dp-btn" id="dpClose">Close</button>
+    </div>
+    <div class="dp-tools">
+      <input type="search" id="dpSearch" class="dp-search" placeholder="Search a dish…" aria-label="Search dishes to print">
+      <label class="dp-all"><input type="checkbox" id="dpAll"> Select all</label>
+      <span class="dp-count" id="dpCount">0 selected</span>
+    </div>
+    <div class="dp-list" id="dpList"></div>
+    <div class="dp-actions">
+      <label class="dp-opt"><input type="checkbox" id="dpPhotos" checked> Include photos</label>
+      <button type="button" class="dp-btn primary" id="dpPrint" disabled>Print selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print sheets, filled on demand; shown only when printing -->
+<div id="dishPrintRoot"></div>
 
 <!-- Firebase (for live dishes from Firestore) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -519,8 +610,12 @@ function closeDishModal(){
   document.getElementById('dish-modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
 }
-// Close on Escape.
-document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDishModal(); });
+// Close on Escape (the print dialog first, if it's open).
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape') return;
+  if(typeof dishPrintOpen === 'function' && dishPrintOpen()){ closeDishPrint(); return; }
+  closeDishModal();
+});
 
 // Build the wine pairing block from a dish's winePairing object (saved by the
 // editor). Collapsible, same look as Knowledge points. Only rows with a value
@@ -720,6 +815,153 @@ function renderAll(){
   renderSuppliers();
 }
 
+/* ============================================================
+   Dish print — Fiorella only. Pick dishes (checkbox + Select all),
+   then print one training sheet per dish.
+   ============================================================ */
+var dpSelected = {};   // dish id -> true
+
+// Friendly menu label from its id (uses the same definitions the tabs use).
+function menuLabel(id){
+  var defs = (typeof menuDefinitions !== 'undefined') ? menuDefinitions : [];
+  var m = defs.filter(function(x){ return x.id === id; })[0];
+  if(m && m.label) return m.label;
+  return String(id||'').replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+}
+
+function dpDishes(){
+  // All visible dishes, in the same course order used on the page.
+  return FN_DISHES.filter(d => !d.hidden)
+    .slice()
+    .sort(byCourseThen(d => d.order || 0));
+}
+function dpKey(d){ return d.id || d.docId || d.name; }
+
+function openDishPrint(){
+  // Default: nothing ticked; dialog remembers selection within the session.
+  document.getElementById('dpSearch').value = '';
+  renderDpList();
+  document.getElementById('dishPrintDialog').classList.add('open');
+}
+function closeDishPrint(){ document.getElementById('dishPrintDialog').classList.remove('open'); }
+function dishPrintOpen(){ return document.getElementById('dishPrintDialog').classList.contains('open'); }
+
+function renderDpList(){
+  var box = document.getElementById('dpList');
+  var q = (document.getElementById('dpSearch').value || '').trim().toLowerCase();
+  var list = dpDishes().filter(d => !q || (d.name||'').toLowerCase().includes(q) || (d.course||'').toLowerCase().includes(q));
+  if(!list.length){ box.innerHTML = '<div class="ds-empty">No dishes match.</div>'; updateDpCount(); return; }
+  var html = '', lastCourse = null;
+  list.forEach(function(d){
+    var course = (d.course||'Other').trim() || 'Other';
+    if(course !== lastCourse){ html += '<div class="dp-group">' + esc(course) + '</div>'; lastCourse = course; }
+    var k = dpKey(d);
+    html += '<label class="dp-item"><input type="checkbox" value="' + esc(k) + '" ' + (dpSelected[k] ? 'checked' : '') + '>' +
+      '<span class="dn">' + esc(d.name||'') + '</span><span class="dc">' + esc(d.course||'') + '</span></label>';
+  });
+  box.innerHTML = html;
+  updateDpCount();
+}
+function selectedCount(){ return Object.keys(dpSelected).filter(function(k){ return dpSelected[k]; }).length; }
+function updateDpCount(){
+  var n = selectedCount();
+  document.getElementById('dpCount').textContent = n + ' selected';
+  document.getElementById('dpPrint').disabled = n === 0;
+  // "Select all" reflects whether every currently-listed dish is ticked.
+  var boxes = document.querySelectorAll('#dpList input[type=checkbox]');
+  var all = boxes.length > 0;
+  boxes.forEach(function(c){ if(!c.checked) all = false; });
+  var allBox = document.getElementById('dpAll');
+  allBox.checked = all;
+  allBox.indeterminate = !all && n > 0;
+}
+(function wireDishPrint(){
+  var dlg = document.getElementById('dishPrintDialog');
+  document.getElementById('dpClose').addEventListener('click', closeDishPrint);
+  dlg.addEventListener('click', function(e){ if(e.target === dlg) closeDishPrint(); });
+  document.getElementById('dpSearch').addEventListener('input', renderDpList);
+  document.getElementById('dpList').addEventListener('change', function(e){
+    var c = e.target;
+    if(!c.matches('input[type=checkbox]')) return;
+    dpSelected[c.value] = c.checked;
+    updateDpCount();
+  });
+  // Select all / none — applies to the dishes currently listed (respects the search filter).
+  document.getElementById('dpAll').addEventListener('change', function(e){
+    var on = e.target.checked;
+    document.querySelectorAll('#dpList input[type=checkbox]').forEach(function(c){
+      c.checked = on; dpSelected[c.value] = on;
+    });
+    updateDpCount();
+  });
+  document.getElementById('dpPrint').addEventListener('click', doDishPrint);
+})();
+
+// Build one training sheet per selected dish, then print.
+function doDishPrint(){
+  var withPhotos = document.getElementById('dpPhotos').checked;
+  var chosen = dpDishes().filter(function(d){ return dpSelected[dpKey(d)]; });
+  if(!chosen.length) return;
+  var root = document.getElementById('dishPrintRoot');
+  root.innerHTML = chosen.map(function(d){ return dishSheetHtml(d, withPhotos); }).join('');
+  document.body.classList.add('dish-printing');
+  closeDishPrint();
+  window.print();
+}
+window.addEventListener('afterprint', function(){
+  if(document.body.classList.contains('dish-printing')){
+    document.body.classList.remove('dish-printing');
+    document.getElementById('dishPrintRoot').innerHTML = '';
+  }
+});
+
+// One printable training sheet for a dish (uses the same fields as the on-screen card/modal).
+function dishSheetHtml(d, withPhotos){
+  var menus = (Array.isArray(d.menus) ? d.menus : []).map(menuLabel);
+  var img = withPhotos ? firstImage(d) : '';
+  var imgUrl = img ? (/^data:/i.test(img) ? img : encodeURI(img)) : '';
+  var photo = img ? '<img class="ds-photo" src="' + imgUrl + '" alt="" onerror="this.style.display=\'none\'">' : '';
+
+  var announce = (d.announcement||'').trim();
+  var announceBlock = announce ? '<div class="ds-announce">' + esc(announce).replace(/\n/g,'<br>') + '</div>' : '';
+  var descBlock = (d.desc && String(d.desc).trim()) ? '<div class="ds-desc">' + safeDesc(d.desc) + '</div>' : '';
+
+  var chips = (d.allergies||[]).map(function(a){ return '<span class="ds-chip' + (nonAllergen(a) ? ' diet' : '') + '">' + esc(a) + '</span>'; }).join('');
+  var chipsBlock = chips ? '<div class="ds-sec"><h3>Allergens &amp; diet</h3><div class="ds-chips">' + chips + '</div></div>' : '';
+
+  var setup = (Array.isArray(d.setup) ? d.setup : []).filter(function(s){ return s && s !== 'No Set Up'; });
+  var setupBlock = setup.length ? '<div class="ds-sec"><h3>Set up</h3><div class="ds-setup">' + setup.map(esc).join('<br>') + '</div></div>' : '';
+
+  var wp = d.winePairing || {};
+  var wineRows = [
+    ['Matching wines', wp.matching, wp.matchingVintage],
+    ['Connoisseur', wp.connoisseur, wp.connoisseurVintage],
+    ['Indulgence', wp.indulgence, wp.indulgenceVintage],
+    ['', wp.indulgence2, wp.indulgence2Vintage],
+    ['Non alcoholic', wp.nonAlcoholic, ''],
+    ['Lunch wine', wp.lunch, wp.lunchVintage]
+  ].filter(function(r){ return r[1] && String(r[1]).trim(); });
+  var wineBlock = wineRows.length ? '<div class="ds-sec"><h3>Wine pairing</h3>' + wineRows.map(function(r){
+    var yr = (r[2] && String(r[2]).trim()) ? ' <span class="wy">' + esc(String(r[2]).trim()) + '</span>' : '';
+    return '<div class="ds-wine"><span class="wl">' + esc(r[0]) + '</span><span>' + esc(r[1]) + yr + '</span></div>';
+  }).join('') + '</div>' : '';
+
+  var know = (d.knowledge||[]).filter(function(k){ return (k.title||k.text); }).map(function(k){
+    return '<div class="ds-k"><b>' + esc(k.title||'') + ':</b> ' + esc(k.text||'') + '</div>';
+  }).join('');
+  var knowBlock = know ? '<div class="ds-sec"><h3>Knowledge points</h3>' + know + '</div>' : '';
+
+  var menusBlock = menus.length ? '<div class="ds-menus">' + menus.map(esc).join(' &middot; ') + '</div>' : '';
+
+  return '<section class="ds-sheet">' +
+    '<div class="ds-head"><div>' +
+      (d.course ? '<div class="ds-course">' + esc(d.course) + '</div>' : '') +
+      '<div class="ds-name">' + esc(d.name||'') + '</div>' + menusBlock +
+    '</div><div class="ds-cred"><div class="t">Automatization made by</div><div class="b">Fiorella A.</div></div></div>' +
+    photo + announceBlock + descBlock + chipsBlock + wineBlock + setupBlock + knowBlock +
+  '</section>';
+}
+
 function loadFromFirestore(){
   return new Promise((resolve) => {
     if(typeof db === 'undefined'){ resolve(false); return; }
@@ -753,6 +995,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if(w) w.style.display = canEdit ? 'inline-block' : 'none';
       var wp = document.getElementById('producerEditorLink');
       if(wp) wp.style.display = (user && FN_PRODUCER_EDITORS.indexOf(user.email) >= 0) ? 'inline-block' : 'none';
+      // Print / PDF of training sheets — Fiorella only.
+      var pl = document.getElementById('printLink');
+      if(pl) pl.style.display = (user && user.email === 'fiorella@petrus.local') ? 'inline-block' : 'none';
       renderDishes();   // re-render so pencils appear/disappear with the role
       tryLoad();
     });
