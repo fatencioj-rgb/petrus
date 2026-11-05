@@ -182,12 +182,13 @@ tr:last-child td { border-bottom:none; }
   #dishPrintRoot,#dishPrintRoot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{size:A4 portrait;margin:14mm}
 }
-/* One sheet = one A4 page of usable area (A4 minus 14mm margins ≈ 783 x 1123 px @96dpi).
-   .ds-fit holds the content; if it's too tall it's scaled down (zoom) so the dish always
-   fits on a single page. Height is fixed and clipped so a sheet can never spill over. */
-.ds-sheet{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid;position:relative;font-family:var(--sans);color:var(--text);width:682px;height:1030px;overflow:hidden}
+/* One sheet = one A4 page of usable area. A4 is 210x297mm; with 14mm margins the printable
+   area is 182x269mm ≈ 688x1017px @96dpi. We keep the sheet a touch SHORTER than that so a
+   full sheet never spills onto a second page. .ds-fit holds the content; if it's too tall
+   it's scaled down so the dish always fits on a single page. Overflow is clipped as a safety net. */
+.ds-sheet{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid;position:relative;font-family:var(--sans);color:var(--text);width:688px;height:1000px;overflow:hidden}
 .ds-sheet:last-child{break-after:auto;page-break-after:auto}
-.ds-fit{transform-origin:top left}
+.ds-fit{transform-origin:top left;width:688px}
 .ds-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid var(--wine);padding-bottom:8px;margin-bottom:14px}
 .ds-course{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--wine-soft)}
 .ds-name{font-family:var(--serif);font-size:30px;color:var(--wine);line-height:1.1;margin-top:2px}
@@ -976,24 +977,24 @@ function dishSheetHtml(d, withPhotos){
 // so every dish fits on exactly one sheet. Uses `zoom` (scales layout, not just paint),
 // and the fixed sheet height clips anything left over as a safety net.
 function fitDishSheets(){
-  var SHEET_H = 1030;                       // must match .ds-sheet height in the CSS
+  var SHEET_W = 688, SHEET_H = 1000;        // must match .ds-sheet in the CSS (A4 printable area)
   var root = document.getElementById('dishPrintRoot');
   if(!root) return;
   // #dishPrintRoot is display:none off-print, which gives 0 heights. Reveal it off-screen
   // just long enough to measure, then restore so nothing flashes on screen.
   var prev = root.getAttribute('style') || '';
-  root.style.cssText = 'display:block;position:absolute;left:-10000px;top:0;width:682px;';
+  root.style.cssText = 'display:block;position:absolute;left:-10000px;top:0;width:' + SHEET_W + 'px;';
   root.querySelectorAll('.ds-sheet').forEach(function(sheet){
     var fit = sheet.querySelector('.ds-fit');
     if(!fit) return;
     fit.style.transform = '';               // reset before measuring
-    fit.style.width = '';
+    fit.style.width = SHEET_W + 'px';
     var h = fit.scrollHeight;
     if(h > SHEET_H){
-      var scale = Math.max(0.5, (SHEET_H - 2) / h);        // never below 50%
+      var scale = Math.max(0.4, (SHEET_H - 4) / h);        // 4px safety; never below 40%
       // transform:scale prints reliably (zoom can drop out when printing). Widen the box by
       // 1/scale first so the scaled content still fills the sheet width.
-      fit.style.width = (100 / scale) + '%';
+      fit.style.width = (SHEET_W / scale) + 'px';
       fit.style.transform = 'scale(' + scale + ')';
     }
   });
