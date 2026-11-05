@@ -176,7 +176,9 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .pf-event{font-size:13px;letter-spacing:.5px;text-transform:none;color:var(--green-dark)}
 .pf-meta{font-size:11px;color:#555;text-align:right;line-height:1.5}
 
-.ps-body{display:flex;gap:18px;align-items:flex-start;height:645px}
+.ps-body{display:flex;gap:18px;align-items:flex-start}      /* height set in JS (PS_BODY_H) */
+/* credit line at the foot of every printed / exported sheet */
+.ps-foot{position:absolute;left:0;right:0;bottom:0;text-align:center;font-family:var(--sans);font-size:8px;letter-spacing:.4px;color:#8a7f6e}
 .ps-floor{flex:0 0 400px}
 .ps-floor.big{flex:0 0 100%}                 /* "Two sheets": the floor gets the whole first sheet */
 .ps-floor.big .pf-box{margin:0 auto}
@@ -189,7 +191,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .pf-none{font-size:13px;color:#777;padding:30px 0}
 
 /* guest lists: one block per table, flowing down narrow columns */
-.ps-lists{flex:0 0 auto;height:645px;column-fill:auto;column-gap:14px;font-size:var(--pl-font,11px)}
+.ps-lists{flex:0 0 auto;column-fill:auto;column-gap:14px;font-size:var(--pl-font,11px)}
 .pl-block{break-inside:avoid;page-break-inside:avoid;margin:0 0 9px}
 .pl-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;border-bottom:1px solid var(--gold);margin-bottom:2px}
 .pl-name{font-family:var(--serif);font-size:calc(var(--pl-font,11px) + 4px);font-weight:700;color:var(--green-dark);letter-spacing:.5px}
@@ -280,7 +282,7 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   </div>
   <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Change a table&rsquo;s number in the side panel (or double-click the number). Click a table to add guest names by position (P1, P2&hellip;); next to each name, &ldquo;Allergies&hellip;&rdquo; lets you tick allergies / diets or type your own. Everything saves automatically on this device and to the cloud.</p>
 
-  <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only</em></div>
+  <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only — This automatization has been made by Fiorella Atencio</em></div>
 </div>
 
 <!-- Print sheets: filled by buildPrintSheets(), shown only when printing -->
@@ -1275,7 +1277,9 @@ function deleteSaved(id){
 // big even at the tightest setting do the remaining tables continue on extra sheets.
 // Every sheet is headed "Seat Plan" with "PETRUS - <name the plan was saved under>".
 var PS_W = 1040, PS_H = 710, PS_HEAD = 65;        // sheet size and header height, in CSS px
-var PS_BODY_H = PS_H - PS_HEAD;
+var PS_FOOT = 16;                                 // room kept free at the foot of every sheet for the credit line
+var PS_BODY_H = PS_H - PS_HEAD - PS_FOOT;
+var PS_CREDIT = 'This automatization has been made by Fiorella Atencio';
 var PS_FLOOR_W = 400, PS_GAP = 18, PS_COL_GAP = 14;
 var PS_LISTS_W = PS_W - PS_FLOOR_W - PS_GAP;      // width left for the lists next to the mini floor
 var PS_DENSITY = [                                // roomiest → tightest (colW = target column width)
@@ -1329,7 +1333,7 @@ function psBlockHtml(u){
 }
 function psCols(W, d){ return Math.max(1, Math.floor((W + PS_COL_GAP) / (d.colW + PS_COL_GAP))); }
 function psListStyle(W, d){
-  return 'width:' + W + 'px;column-count:' + psCols(W, d) + ';--pl-font:' + d.font + 'px;--pl-line:' + d.line + 'px';
+  return 'width:' + W + 'px;height:' + PS_BODY_H + 'px;column-count:' + psCols(W, d) + ';--pl-font:' + d.font + 'px;--pl-line:' + d.line + 'px';
 }
 // Does this HTML fit in a W × body-height box at density d? Rendered off-screen at full size;
 // if the columns run out of room, the browser adds extra columns to the right (wider than the box).
@@ -1441,8 +1445,10 @@ function buildPrintSheets(mode){
     var floorPage = mk('section', 'ps-page');
     floorPage.appendChild(head(stats));
     var fb = mk('div', 'ps-body');
+    fb.style.height = PS_BODY_H + 'px';
     fb.appendChild(psFloor(PS_BIG));
     floorPage.appendChild(fb);
+    floorPage.appendChild(mk('div', 'ps-foot', PS_CREDIT));
     root.appendChild(floorPage);
   }
 
@@ -1454,6 +1460,7 @@ function buildPrintSheets(mode){
     var page = mk('section', 'ps-page');
     page.appendChild(head(oneSheet && idx === 0 ? stats : (idx === 0 ? 'Guest lists' : 'Guest lists (continued)')));
     var body = mk('div', 'ps-body');
+    body.style.height = PS_BODY_H + 'px';
     if (oneSheet && idx === 0) body.appendChild(psFloor(PS_MINI));
     var lists = mk('div', 'ps-lists', pg.blocks.join(''));
     // Full-width list sheets spread the tables across all the columns instead of piling them to the left.
@@ -1461,6 +1468,7 @@ function buildPrintSheets(mode){
     lists.setAttribute('style', psListStyle(pg.W, pg.d) + (pg.W === PS_W ? ';column-fill:balance' : ''));
     body.appendChild(lists);
     page.appendChild(body);
+    page.appendChild(mk('div', 'ps-foot', PS_CREDIT));          // always: small credit at the foot of every sheet
     root.appendChild(page);
   });
 }
