@@ -906,9 +906,14 @@ function doDishPrint(){
   root.innerHTML = chosen.map(function(d){ return dishSheetHtml(d, withPhotos); }).join('');
   document.body.classList.add('dish-printing');
   closeDishPrint();
+  // Tell anti-capture.js this print is authorised, so it doesn't show the screenshot warning.
+  window.petrusAllowPrint = true;
   window.print();
+  // Fallback in case 'afterprint' never fires (some browsers): drop the flag shortly after.
+  setTimeout(function(){ window.petrusAllowPrint = false; }, 1000);
 }
 window.addEventListener('afterprint', function(){
+  window.petrusAllowPrint = false;
   if(document.body.classList.contains('dish-printing')){
     document.body.classList.remove('dish-printing');
     document.getElementById('dishPrintRoot').innerHTML = '';

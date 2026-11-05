@@ -78,8 +78,13 @@
     if (document.hidden) { hiddenAt = Date.now(); }
   });
 
-  // Warn on print attempts (Ctrl/Cmd+P) — printing is another way to lift content.
-  window.addEventListener('beforeprint', function () { showCaptureWarning(); });
+  // Warn on print attempts (Ctrl/Cmd+P) — printing is another way to lift content —
+  // UNLESS the page itself started an authorised print (e.g. the Seat Plan or the
+  // Food training sheets). Those set window.petrusAllowPrint = true around window.print().
+  window.addEventListener('beforeprint', function () {
+    if (window.petrusAllowPrint) return;
+    showCaptureWarning();
+  });
 
   // ── Casual-copy deterrents (cosmetic — not real security) ─────────
   // Block right-click context menu.
@@ -96,6 +101,8 @@
     if (ctrl && k === 'u') { e.preventDefault(); showCaptureWarning(); return false; }
     // Ctrl/Cmd+C / X / S  (copy / cut / save page)
     if (ctrl && ['c', 'x', 's'].indexOf(k) >= 0) { e.preventDefault(); return false; }
+    // Ctrl/Cmd+P: let an authorised print through (page sets petrusAllowPrint); otherwise warn.
+    if (ctrl && k === 'p' && !window.petrusAllowPrint) { e.preventDefault(); showCaptureWarning(); return false; }
   });
 
   // Block the copy event itself (and clear the clipboard payload).

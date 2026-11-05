@@ -1474,7 +1474,9 @@ function buildPrintSheets(mode){
 function printPlan(mode){
   if (mode === 'one' || mode === 'two') printMode = mode;
   buildPrintSheets(printMode);
+  window.petrusAllowPrint = true;                 // authorised print (if anti-capture is ever added here)
   window.print();
+  setTimeout(function(){ window.petrusAllowPrint = false; }, 1000);
 }
 window.addEventListener('beforeprint', function(){ buildPrintSheets(printMode); });   // also covers Ctrl/Cmd+P (uses the last layout chosen)
 window.addEventListener('afterprint', function(){
