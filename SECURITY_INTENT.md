@@ -124,7 +124,8 @@ Reglas clave:
 
 ### Contraseñas y sesiones
 - Las contraseñas viven en **Firebase Authentication**, no en el repo.
-- Cambio de contraseña: `cain@petrus.local` → `kinnerton-cain` (31 Oct 2026).
+- La contraseña de `cain@petrus.local` se cambió el 31 Oct 2026 (el valor no se anota aquí:
+  este repo y su web son públicos, así que nunca se guardan contraseñas en documentos).
 - Opciones que Fiorella **descartó** por ahora: caducar sesiones automáticamente
   (A) y sesión única por cuenta (C). Si el problema de cuentas compartidas
   persiste, reconsiderar la opción C.
