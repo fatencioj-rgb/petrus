@@ -327,6 +327,34 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 <script src="../auth.js"></script>
 <script src="../guard.js"></script>
 
+<!-- Access gate: the Seat Plan is closed for everyone except Fiorella. -->
+<style>
+.seat-closed{position:fixed;inset:0;z-index:99998;background:#2d0a0a;color:#faf7f1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;font-family:'Cormorant Garamond',Georgia,serif}
+.seat-closed h2{font-size:38px;font-weight:600;color:#b89650;margin-bottom:14px;max-width:640px;line-height:1.2}
+.seat-closed a{font-family:'Inter',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#d4b87a;border:1px solid rgba(184,150,80,.4);border-radius:6px;padding:10px 22px;text-decoration:none;margin-top:18px}
+html.seat-locked .page{display:none!important}
+@media print{.seat-closed{display:none}}
+</style>
+<script>
+var SEAT_OWNER = 'fiorella@petrus.local';
+function seatIsOwner(){ return !!(auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase() === SEAT_OWNER); }
+function seatLock(){
+  document.documentElement.classList.add('seat-locked');
+  if (document.getElementById('seat-closed')) return;
+  var d = document.createElement('div');
+  d.id = 'seat-closed'; d.className = 'seat-closed';
+  d.innerHTML = '<h2>This feature is not available at the moment. Please contact Fiorella.</h2>'
+              + '<a href="../operations.html">&larr; Back to Operations</a>';
+  document.body.appendChild(d);
+}
+function seatUnlock(){
+  document.documentElement.classList.remove('seat-locked');
+  var d = document.getElementById('seat-closed'); if (d) d.remove();
+}
+seatLock();                                    // closed by default until we know who is signed in
+auth.onAuthStateChanged(function(user){ if (user && seatIsOwner()) seatUnlock(); else seatLock(); });
+</script>
+
 <script>
 // ─────────────────────────────────────────────────────────────
 //  Seat Plan — dynamic, draggable, saved in the browser
@@ -1535,7 +1563,7 @@ function seedDefault(){
 // empty plan (e.g. after "New") stays empty on reload.
 if (!load()) seedDefault();
 render();
-auth.onAuthStateChanged(function(user){ if (user) syncFromCloud(); });
+auth.onAuthStateChanged(function(user){ if (user && seatIsOwner()) syncFromCloud(); });
 </script>
 </body>
 </html>
