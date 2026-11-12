@@ -295,6 +295,7 @@ function blank14(){ var a=[]; for(var i=0;i<14;i++) a.push(''); return a; }
 
 function dialog(title,text,buttons,extraHtml){
   var o=document.getElementById('dlg');
+  o.querySelector('.dlg').style.maxWidth='';
   document.getElementById('dlgTitle').textContent=title;
   document.getElementById('dlgText').textContent=text||'';
   document.getElementById('dlgExtra').innerHTML=extraHtml||'';
@@ -788,17 +789,95 @@ function waText(t){
   if(!any) return {error:'There are no shifts for today ('+DAYS[k]+' '+fmtDM(t)+') yet.'};
   return {text:txt};
 }
+// Same lists as the text, as data for the image card.
+function waData(t){
+  var mon=ymd(mondayOf(t)), k=(t.getDay()+6)%7, m=buildModel(mon);
+  if(t<periodStart()) return {error:'Today ('+fmtDM(t)+') is before the start of the rota.'};
+  if(dayClosed(k,m.monOpen)) return {error:'Today ('+DAYS[k]+' '+fmtDM(t)+') the restaurant is closed — nothing to send.'};
+  var L=whoLists(m,k), lists=[], any=false;
+  for(var c=0;c<4;c++){
+    if(L[c].length) any=true;
+    lists.push(L[c].map(function(r){
+      var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]));
+      return { name:r.name, time: showT ? fmtT(tMin(s)) : '' };
+    }));
+  }
+  if(!any) return {error:'There are no shifts for today ('+DAYS[k]+' '+fmtDM(t)+') yet.'};
+  return { date:t, k:k, lists:lists };
+}
+
+// Image card for WhatsApp: today's date, Opening / Lunch / Dinner / Closing in a 2x2 grid.
+function drawCard(d){
+  var FONT='Calibri, Carlito, "Segoe UI", Arial, sans-serif', NAVY='#1F3864', BLUE='#2F5597', LINE='#9BB7D9', BAND='#DDEBF7';
+  var heads=['OPENING','LUNCH','DINNER','CLOSING'], W=1080, P=48, G=24, CW=(W-2*P-G)/2, LH=50, HH=70, TOP=206;
+  var grid=[[0,1],[2,3]];
+  var rowH=grid.map(function(r){ return HH+22+Math.max(1,d.lists[r[0]].length,d.lists[r[1]].length)*LH+18; });
+  var H=TOP+rowH[0]+G+rowH[1]+84;
+  var c=document.createElement('canvas'); c.width=W; c.height=H;
+  var x=c.getContext('2d');
+  function rr(px,py,w,h,r,top){ x.beginPath(); if(x.roundRect){ x.roundRect(px,py,w,h,top?[r,r,0,0]:r); } else { x.rect(px,py,w,h); } }
+  x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  // header
+  x.fillStyle=NAVY; x.fillRect(0,0,W,172);
+  x.fillStyle='#fff'; x.font='bold 58px '+FONT; x.textBaseline='alphabetic'; x.fillText('PETRUS \u00B7 ROTA',P,84);
+  var dt=d.date;
+  x.fillStyle=BAND; x.font='34px '+FONT;
+  x.fillText('TODAY  \u00B7  '+DAYS[d.k]+' '+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear(),P,138);
+  // cards
+  var y=TOP;
+  grid.forEach(function(r,ri){
+    r.forEach(function(ci,j){
+      var bx=P+j*(CW+G), by=y, bh=rowH[ri], L=d.lists[ci];
+      x.fillStyle=BAND; rr(bx,by,CW,HH,16,true); x.fill();
+      x.strokeStyle=LINE; x.lineWidth=2; rr(bx,by,CW,bh,16,false); x.stroke();
+      x.fillStyle=NAVY; x.font='bold 36px '+FONT; x.textAlign='left'; x.fillText(heads[ci],bx+26,by+47);
+      x.fillStyle=BLUE; x.font='bold 30px '+FONT; x.textAlign='right'; x.fillText(L.length?String(L.length):'',bx+CW-26,by+46);
+      x.textAlign='left';
+      if(!L.length){
+        if(ci===0||ci===3){
+          x.fillStyle='#FFC7CE'; rr(bx+20,by+HH+18,CW-40,LH,10,false); x.fill();
+          x.fillStyle='#9C0006'; x.font='bold 32px '+FONT; x.fillText('NOBODY',bx+36,by+HH+18+35);
+        } else { x.fillStyle='#8C8C8C'; x.font='32px '+FONT; x.fillText('-',bx+26,by+HH+22+34); }
+      } else {
+        L.forEach(function(p,i){
+          var ly=by+HH+22+i*LH+34;
+          if(i>0){ x.strokeStyle='#E3ECF7'; x.lineWidth=1; x.beginPath(); x.moveTo(bx+22,ly-36); x.lineTo(bx+CW-22,ly-36); x.stroke(); }
+          x.fillStyle=NAVY; x.font='34px '+FONT; x.textAlign='left'; x.fillText(p.name,bx+26,ly);
+          if(p.time){ x.fillStyle=BLUE; x.font='32px '+FONT; x.textAlign='right'; x.fillText(p.time,bx+CW-26,ly); x.textAlign='left'; }
+        });
+      }
+    });
+    y+=rowH[ri]+G;
+  });
+  // credit
+  x.fillStyle='#7887A0'; x.font='bold 20px '+FONT; x.textAlign='right';
+  x.fillText(CREDIT,W-P,H-36);
+  return c;
+}
+
 function whatsappToday(){
-  var t=today(), mon=ymd(mondayOf(t)), k=(t.getDay()+6)%7;
-  var win=window.open('','_blank');                // open now (popup blockers need the click)
+  var t=today(), mon=ymd(mondayOf(t));
   loadWeek(mon).then(function(){
-    var r=waText(t);
-    if(r.error){ if(win) win.close(); return dialog('WhatsApp',r.error); }
-    var txt=r.text;
-    try{ navigator.clipboard && navigator.clipboard.writeText(txt); }catch(e){}
-    var url='https://wa.me/?text='+encodeURIComponent(txt);
-    if(win){ win.location.href=url; } else { location.href=url; }
-  }).catch(function(err){ if(win) win.close(); toast('Could not load today: '+(err&&err.message||err),true); });
+    var d=waData(t);
+    if(d.error) return dialog('WhatsApp',d.error);
+    var canvas=drawCard(d), url=canvas.toDataURL('image/png'), fname='Petrus Rota '+pad(t.getDate())+'-'+pad(t.getMonth()+1)+'.png';
+    canvas.toBlob(function(blob){
+      var file=null; try{ file=new File([blob],fname,{type:'image/png'}); }catch(e){}
+      var canShare=!!(file && navigator.canShare && navigator.canShare({files:[file]}));
+      var btns=[{label:'Close',cls:'light'},
+        {label:'Send as text',cls:'light',fn:function(){ var tx=waText(t).text; try{navigator.clipboard.writeText(tx);}catch(e){} window.open('https://wa.me/?text='+encodeURIComponent(tx),'_blank'); }},
+        {label:'Download',cls:'light',fn:function(){ var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove(); }},
+        {label:'Copy image',cls:'blue',fn:function(){
+          if(!(navigator.clipboard && window.ClipboardItem)) return toast('This browser cannot copy images — use Download.',true);
+          navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){ toast('Image copied — paste it in the WhatsApp chat (Ctrl+V)'); },
+            function(){ toast('Could not copy the image — use Download.',true); });
+        }}];
+      if(canShare) btns.push({label:'Share',cls:'green',fn:function(){ navigator.share({files:[file],title:'Today\'s Rota'}).catch(function(){}); }});
+      dialog('Today\'s rota', canShare ? 'Press Share and choose WhatsApp, or copy the image and paste it in the chat.' : 'Copy the image and paste it in the WhatsApp chat (Ctrl+V), or download it.', btns,
+        '<img src="'+url+'" alt="Today\'s rota" style="display:block;width:100%;max-height:58vh;object-fit:contain;border:1px solid var(--line);border-radius:8px;margin-bottom:12px">');
+      document.querySelector('#dlg .dlg').style.maxWidth='520px';
+    },'image/png');
+  }).catch(function(err){ toast('Could not load today: '+(err&&err.message||err),true); });
 }
 
 /* ---------------------------------------------------------------- printing */
@@ -892,7 +971,7 @@ auth.onAuthStateChanged(function(user){
   });
 });
 
-window.__rota = { S:S, waText:waText, paidMin:paidMin, staffMatch:staffMatch, buildModel:buildModel, weekSheet:weekSheet, fitSheets:fitSheets, openWeek:openWeek, renderIndex:renderIndex };
+window.__rota = { S:S, waText:waText, waData:waData, drawCard:drawCard, paidMin:paidMin, staffMatch:staffMatch, buildModel:buildModel, weekSheet:weekSheet, fitSheets:fitSheets, openWeek:openWeek, renderIndex:renderIndex };
 })();
 </script>
 </body>
