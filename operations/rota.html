@@ -202,13 +202,13 @@ table.rota.who td.nobody{background:var(--over);color:var(--overT);font-weight:7
    PETRUS ROTA (web) — same rules as the Excel rota.
    Index: calendar (click a week) + Team table.  Week: one week, editable.
    Paid hours: 30 min unpaid break for every 6 h worked. Holiday/Sick/TBC = 0 h.
-   Edit: Fiorella & Milena.  View: Operations team (Orson, Liza).
+   Edit: Fiorella only for now (Milena view only until Fiorella says).  View: Operations team.
    ===================================================================== */
 (function(){
 'use strict';
 
-var EDITORS = ['fiorella@petrus.local','milena@petrus.local'];
-var VIEWERS = EDITORS.concat(['orson@petrus.local','liza@petrus.local']);
+var EDITORS = ['fiorella@petrus.local'];               // Milena: view only for now (add her back here + firestore.rules when Fiorella says)
+var VIEWERS = EDITORS.concat(['milena@petrus.local','orson@petrus.local','liza@petrus.local']);
 var DEFAULT_START = '2026-11-09';
 var CREDIT = 'AUTOMATION \u00B7 FIORELLA ATENCIO';
 var HOME_URL = 'https://gordonramsayhome.workvivo.com/';
@@ -431,7 +431,7 @@ function renderIndex(){
   var ps=periodStart(), pe=periodEnd(), t=today(), html='';
   html+='<div class="title">PETRUS &middot; ROTA</div>';
   html+='<div class="subtitle">From '+ps.getDate()+' '+MONTHS[ps.getMonth()]+' '+ps.getFullYear()+' &nbsp;&middot;&nbsp; Click a week to open it.</div>';
-  html+='<div class="status'+(S.canEdit?'':' ro')+'">'+(S.canEdit?'You can edit this rota.':'View only — only Fiorella and Milena can edit.')+'</div>';
+  html+='<div class="status'+(S.canEdit?'':' ro')+'">'+(S.canEdit?'You can edit this rota.':'View only — only Fiorella can edit.')+'</div>';
   html+='<div class="bar"><button class="btn" data-a="thisweek">Open this week</button>'+
         '<button class="btn blue" data-a="month">Export month PDF</button>'+
         (S.isOwner?'<button class="btn green" data-a="wa">WhatsApp today</button>':'')+'</div>';
@@ -541,7 +541,7 @@ function renderWeek(keepFocus){
      '<button class="btn home" data-a="home" title="Open HOME GRRG (Workvivo)"><img src="home-grrg.png" alt="HOME"></button>'+
      (S.isOwner?'<button class="btn green" data-a="wa">WhatsApp</button>':'')+
      '</div>';
-  if(!S.canEdit) h+='<div class="status ro">View only — only Fiorella and Milena can edit.</div>';
+  if(!S.canEdit) h+='<div class="status ro">View only — only Fiorella can edit.</div>';
   h+='<div class="week-wrap"><div class="scroll">';
   h+=rotaTable(m,{edit:S.canEdit,print:false});
   h+=paidTable(m);

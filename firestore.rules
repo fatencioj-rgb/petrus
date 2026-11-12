@@ -123,10 +123,10 @@ service cloud.firestore {
     }
 
     // Rota (operations/rota.html): the Operations team can read;
-    // only Fiorella and Milena can edit.
+    // only Fiorella can edit for now (Milena: view only until Fiorella says;
+    // to give her edit access add `|| request.auth.token.email == 'milena@petrus.local'`).
     function canEditRota() {
-      return signedIn() && (request.auth.token.email == 'fiorella@petrus.local'
-                         || request.auth.token.email == 'milena@petrus.local');
+      return isFiorella();
     }
     match /rota2_config/{docId} {
       allow read: if canOperations();

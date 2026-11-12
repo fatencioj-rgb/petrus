@@ -42,7 +42,7 @@
 - **Editar platos:** Fiorella, Milena, Orson + **Irena** (solo platos, no producers).
 - **Editar producers:** solo Fiorella, Milena, Orson.
 - **Operations (bookings, seat plan, rota):** Fiorella, Milena, Orson, Liza (`canOperations()`).
-  La Rota solo la editan Fiorella y Milena (`canEditRota()`).
+  La Rota de momento solo la edita Fiorella (`canEditRota()`); Milena solo ve hasta que Fiorella diga.
 - **Cain, Tanvir, Johnny, Irena, Guest:** solo training.
 
 ## 4. Training → Food (`food-net.html` + `food-editor.html` + `producers-editor.html`)
@@ -100,7 +100,8 @@ Editor del plano de sala en un solo archivo. Todo el estado vive en `state`
 ## 6b. Operations → Rota (`operations/rota.html`)
 
 Versión web del Excel "Petrus Rota" (mismo aspecto blanco/azul, Calibri, sin cuadrícula).
-- **Acceso:** ven el equipo de Operations (`canOperations()`); editan solo Fiorella y Milena
+- **Acceso:** ven el equipo de Operations (`canOperations()`); de momento edita solo Fiorella
+  (Milena solo ve; para darle edición: añadirla a `EDITORS` en la página y a `canEditRota()`)
   (`canEditRota()` en firestore.rules + comprobación en la página). El resto ve un aviso de acceso.
 - **Datos:** `rota2_config/main` = { start, team[{name,team,active,type,order,min,max}], teamOrder[{team,order}] }.
   `rota2_weeks/{lunes YYYY-MM-DD}` = { monday, mondayOpen, info{covers,tables,kt: 14 valores},
