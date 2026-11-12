@@ -217,6 +217,7 @@ var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 var MONTHS_L = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 var CFG = db.collection('rota2_config').doc('main');
+var CFG_PUBLIC = db.collection('rota2_config').doc('public');   // team list WITHOUT min/max hours (for the staff view)
 var WEEKS = db.collection('rota2_weeks');
 
 var S = { user:null, canEdit:false, cfg:null, weeks:{}, view:'index', mon:null, unsub:null, pendingRender:false };
@@ -367,7 +368,7 @@ function makeRow(key,name,team,seq,v,p){
 
 /* ---------------------------------------------------------------- data loading */
 function loadCfg(){
-  return CFG.get().then(function(s){
+  return (S.staff ? CFG_PUBLIC : CFG).get().then(function(s){
     S.cfg = s.exists ? s.data() : { start:DEFAULT_START, team:[], teamOrder:[] };
   });
 }
@@ -415,12 +416,19 @@ function write(monStr,data,merge){
   var d=Object.assign({},data,stamp());
   return WEEKS.doc(monStr).set(d,{merge:!!merge}).then(function(){ toast('Saved'); }).catch(function(err){ toast('Could not save: '+(err&&err.message||err),true); });
 }
+// copy of the team for the staff view: names, teams, order and type only (no min/max hours)
+function publicCfg(d){
+  return Object.assign({ start:d.start||DEFAULT_START,
+    team:(d.team||[]).map(function(p){ return { name:p.name, team:p.team, active:p.active!==false, type:p.type||'Staff', order:p.order }; }),
+    teamOrder:(d.teamOrder||[]).map(function(t){ return { team:t.team, order:t.order }; }) }, stamp());
+}
 var cfgTimer=null;
 function saveCfgSoon(){
   clearTimeout(cfgTimer);
   cfgTimer=setTimeout(function(){
     var d=Object.assign({ start:S.cfg.start||DEFAULT_START, team:S.cfg.team||[], teamOrder:S.cfg.teamOrder||[] }, stamp());
-    CFG.set(d).then(function(){ toast('Team saved'); }).catch(function(err){ toast('Could not save the team: '+(err&&err.message||err),true); });
+    CFG.set(d).then(function(){ toast('Team saved'); return CFG_PUBLIC.set(publicCfg(d)); })
+       .catch(function(err){ toast('Could not save the team: '+(err&&err.message||err),true); });
   },400);
 }
 
@@ -526,7 +534,21 @@ function openWeek(monStr){
 function openDays(m){ var d1=m.monOpen?m.mon:addDays(m.mon,1), d2=addDays(m.mon,5); return [d1,d2]; }
 function pdfName(m){ var d=openDays(m), a=d[0], b=d[1]; return 'PET Rota '+a.getDate()+' '+MONTHS[a.getMonth()]+(a.getFullYear()!==b.getFullYear()?' '+a.getFullYear():'')+'-'+b.getDate()+' '+MONTHS[b.getMonth()]+' '+b.getFullYear(); }
 
+// Staff view: only the title and the week timetable (same as the printed sheet), read only.
+function renderStaffWeek(){
+  var m=buildModel(S.mon), sun=addDays(m.mon,6), h='';
+  h+='<div class="title">PETRUS &middot; ROTA</div>';
+  h+='<div class="subtitle">Week '+isoWeek(m.mon)+' &nbsp;&middot;&nbsp; '+fmtDay(m.mon)+' - '+fmtDay(sun)+' '+sun.getFullYear()+(m.monOpen?' &nbsp;&middot;&nbsp; Monday open (private hire)':'')+'</div>';
+  h+='<div class="bar"><button class="btn blue" data-a="prev">&laquo; Prev</button>'+
+     '<button class="btn" data-a="thisweek">This week</button>'+
+     '<button class="btn blue" data-a="next">Next &raquo;</button></div>';
+  h+='<div class="scroll">'+rotaTable(m,{edit:false,print:true})+
+     '<div class="credit" style="width:'+(150+7*124)+'px">'+CREDIT+'</div></div>';
+  var app=document.getElementById('app'); app.innerHTML=h;
+  bindBar(app);
+}
 function renderWeek(keepFocus){
+  if(S.staff) return renderStaffWeek();
   var focusId=null, a=document.activeElement;
   if(keepFocus!==false && a && a.getAttribute && a.getAttribute('data-cell')) focusId=a.getAttribute('data-cell');
   var m=buildModel(S.mon), sun=addDays(m.mon,6), h='';
@@ -699,6 +721,7 @@ function bindBar(app){
   app.querySelectorAll('[data-a]').forEach(function(b){ b.onclick=function(){ act(b.getAttribute('data-a')); }; });
 }
 function act(a){
+  if(S.staff && ['prev','next','thisweek'].indexOf(a)<0) return;      // staff: only move between weeks
   if(a==='index') return goIndex();
   if(a==='thisweek'){ var m=mondayOf(today()); if(m<mondayOf(periodStart())) m=mondayOf(periodStart()); return openWeek(ymd(m)); }
   if(a==='prev'){ var p=addDays(parseYmd(S.mon),-7); if(p<mondayOf(periodStart())) return toast('This is the first week of the rota.'); return openWeek(ymd(p)); }
@@ -843,12 +866,16 @@ var started=false;
 auth.onAuthStateChanged(function(user){
   if(!user || started) return;
   var email=String(user.email||'').toLowerCase();
-  if(VIEWERS.indexOf(email)<0) return closedPage('The rota is only available for the Operations team.');
+  if(email.indexOf('guest')===0) return closedPage('The rota is only available for the Petrus team.');
   started=true;
   S.user=user; S.canEdit=EDITORS.indexOf(email)>=0; S.isOwner=(email==='fiorella@petrus.local');
-  loadCfg().then(loadRange).then(function(){
+  S.staff=VIEWERS.indexOf(email)<0;                  // rest of the team: timetable only, read only
+  if(S.staff){ var back=document.querySelector('.top-bar a'); if(back) back.href='../index.html'; }
+  loadCfg().then(S.staff?null:loadRange).then(function(){
     var h=(location.hash||'').replace('#','');
-    if(/^\d{4}-\d{2}-\d{2}$/.test(h)) openWeek(ymd(mondayOf(parseYmd(h)))); else renderIndex();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(h)) openWeek(ymd(mondayOf(parseYmd(h))));
+    else if(S.staff) act('thisweek');
+    else renderIndex();
   }).catch(function(err){
     document.getElementById('app').innerHTML='<div class="loading">Could not load the rota: '+esc(err&&err.message||err)+'</div>';
   });

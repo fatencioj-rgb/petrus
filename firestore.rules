@@ -128,12 +128,18 @@ service cloud.firestore {
     function canEditRota() {
       return isFiorella();
     }
+    // Any Petrus team member (not the guest account): may READ the timetable.
+    function isTeam() {
+      return signedIn() && request.auth.token.email != 'guest@petrus.local';
+    }
+    // main = full team table (incl. min/max hours) -> Operations only.
+    // public = names / teams / order only -> whole team (staff view of the rota).
     match /rota2_config/{docId} {
-      allow read: if canOperations();
+      allow read: if canOperations() || (docId == 'public' && isTeam());
       allow write: if canEditRota();
     }
     match /rota2_weeks/{weekId} {
-      allow read: if canOperations();
+      allow read: if isTeam();
       allow write: if canEditRota();
     }
 

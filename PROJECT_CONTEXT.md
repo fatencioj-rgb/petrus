@@ -101,7 +101,11 @@ Editor del plano de sala en un solo archivo. Todo el estado vive en `state`
 
 Versión web del Excel "Petrus Rota" (mismo aspecto blanco/azul, Calibri, sin cuadrícula).
 - **Acceso:** ven el equipo de Operations (`canOperations()`); de momento edita solo Fiorella
-  (Milena solo ve; para darle edición: añadirla a `EDITORS` en la página y a `canEditRota()`)
+  (Milena solo ve; para darle edición: añadirla a `EDITORS` en la página y a `canEditRota()`).
+  **Resto del equipo** (cualquier login menos guest; botón "Rota" en la home): vista de SOLO horario
+  = título + semana + tabla hasta TOTAL FOH + crédito, con Prev / This week / Next; nada editable.
+  Leen `rota2_config/public` (copia SIN min/max, se reescribe cada vez que se guarda el equipo) y
+  `rota2_weeks` (`isTeam()`); `rota2_config/main` sigue solo para Operations. Guest: página cerrada.
   (`canEditRota()` en firestore.rules + comprobación en la página). El resto ve un aviso de acceso.
 - **Datos:** `rota2_config/main` = { start, team[{name,team,active,type,order,min,max}], teamOrder[{team,order}] }.
   `rota2_weeks/{lunes YYYY-MM-DD}` = { monday, mondayOpen, info{covers,tables,kt: 14 valores},
