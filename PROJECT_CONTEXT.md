@@ -114,8 +114,12 @@ Versión web del Excel "Petrus Rota" (mismo aspecto blanco/azul, Calibri, sin cu
   ≥13:00; Dinner 16:00-18:00 o sigue ≥21:00; Closing termina 00:00-03:00) y leyenda.
   Lunes y domingo cerrados; botón Monday on/off (private hire). Copy previous week.
 - **Imprimir / PDF:** una semana por hoja A4 horizontal (1040×710, escala si no cabe), solo la tabla
-  hasta TOTAL FOH + crédito al pie. Export month PDF = semanas del mes + página de horas por persona.
-- **HOME:** imprime con el nombre "PET Rota 17 Nov-21 Nov 2026" y luego ofrece abrir Workvivo.
+  hasta TOTAL FOH. Nombre del PDF: "PET Rota 17 Nov-21 Nov 2026". Export month PDF = semanas del mes +
+  página de horas por persona.
+- **Crédito en TODA hoja impresa:** "AUTOMATION · FIORELLA ATENCIO" arriba a la derecha, bajo
+  "Printed <fecha>", fuera de la parte que se escala (no se encoge ni se recorta). No quitarlo nunca.
+- **HOME:** solo abre https://gordonramsayhome.workvivo.com/ en otra pestaña (el navegador no puede
+  guardar el PDF solo en el Escritorio).
 - **WhatsApp:** abre wa.me con "Today's Rota dd/mm" (hora de inicio solo en Opening y en Lunch para
   quien no está en Opening). No se puede elegir el grupo automáticamente.
 - El antiguo `rota.html` de la raíz se eliminó; la colección vieja `rota_weeks` queda solo para Fiorella.

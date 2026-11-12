@@ -156,6 +156,9 @@ table.rota.who td.nobody{background:var(--over);color:var(--overT);font-weight:7
 #printRoot .sheet{width:1040px;height:710px;overflow:hidden;page-break-after:always;break-after:page;position:relative;background:#fff}
 #printRoot .sheet:last-child{page-break-after:auto;break-after:auto}
 #printRoot .inner{transform-origin:0 0}
+#printRoot .pcred{position:absolute;top:0;right:0;text-align:right;z-index:2;line-height:1.35}
+#printRoot .pcred .pd{font-size:10px;color:var(--blue)}
+#printRoot .pcred .pc{font-size:8px;font-weight:700;letter-spacing:.8px;color:var(--navy)}
 #printRoot .ptitle{font-size:24px;font-weight:700;color:var(--navy)}
 #printRoot .psub{font-size:13px;color:var(--blue);margin:2px 0 10px}
 #printRoot table.sum{border-collapse:collapse;font-size:12px;margin-top:10px}
@@ -535,7 +538,7 @@ function renderWeek(keepFocus){
      '<button class="btn blue" data-a="next">Next &raquo;</button><span class="gap"></span>'+
      '<button class="btn" data-a="print">Print / PDF</button><span class="gap"></span>'+
      (S.canEdit?'<button class="btn blue" data-a="copy">Copy previous week</button><button class="btn gold" data-a="monday">Monday on/off</button><span class="gap"></span>':'')+
-     '<button class="btn home" data-a="home" title="Save the PDF and open HOME GRRG"><img src="home-grrg.png" alt="HOME"></button>'+
+     '<button class="btn home" data-a="home" title="Open HOME GRRG (Workvivo)"><img src="home-grrg.png" alt="HOME"></button>'+
      '<button class="btn green" data-a="wa">WhatsApp</button>'+
      '</div>';
   if(!S.canEdit) h+='<div class="status ro">View only — only Fiorella and Milena can edit.</div>';
@@ -614,7 +617,7 @@ function rotaTable(m,opts){
   for(k=0;k<7;k++){ var cl=dayClosed(k,m.monOpen)?' cl':''; h+='<td class="ds'+cl+'">'+(totL[k]||'')+'</td><td class="'+cl+'"></td><td class="'+cl+'">'+(totD[k]||'')+'</td>'; }
   if(H) h+='<td class="hs">'+fmtH(totH,true)+'</td>'; h+='</tr>';
   h+='</table>';
-  h+='<div class="credit" style="width:'+(150+7*124+(H?64:0))+'px">'+CREDIT+'</div>';
+  if(!opts.print) h+='<div class="credit" style="width:'+(150+7*124+64)+'px">'+CREDIT+'</div>';   // printed sheets carry it in the header
   m.totH=totH;
   return h;
 }
@@ -701,7 +704,7 @@ function act(a){
   if(a==='prev'){ var p=addDays(parseYmd(S.mon),-7); if(p<mondayOf(periodStart())) return toast('This is the first week of the rota.'); return openWeek(ymd(p)); }
   if(a==='next') return openWeek(ymd(addDays(parseYmd(S.mon),7)));
   if(a==='print') return printWeek(false);
-  if(a==='home') return printWeek(true);
+  if(a==='home'){ var w=window.open(HOME_URL,'_blank','noopener'); if(!w) location.href=HOME_URL; return; }
   if(a==='copy') return copyPrevious();
   if(a==='monday') return mondayToggle();
   if(a==='wa') return whatsappToday();
@@ -765,7 +768,12 @@ function whatsappToday(){
 }
 
 /* ---------------------------------------------------------------- printing */
-function sheetHtml(inner){ return '<div class="sheet"><div class="inner">'+inner+'</div></div>'; }
+// Every printed sheet: credit top-right under the print date, outside the scaled part (never shrinks or gets cut).
+function sheetHtml(inner){
+  var t=today();
+  return '<div class="sheet"><div class="pcred"><div class="pd">Printed '+t.getDate()+' '+MONTHS[t.getMonth()]+' '+t.getFullYear()+'</div>'+
+         '<div class="pc">'+CREDIT+'</div></div><div class="inner">'+inner+'</div></div>';
+}
 function weekSheet(monStr){
   var m=buildModel(monStr), sun=addDays(m.mon,6);
   return sheetHtml('<div class="ptitle">PETRUS &middot; ROTA</div><div class="psub">Week '+isoWeek(m.mon)+' &nbsp;&middot;&nbsp; '+fmtDay(m.mon)+' - '+fmtDay(sun)+' '+sun.getFullYear()+(m.monOpen?' &nbsp;&middot;&nbsp; Monday open (private hire)':'')+'</div>'+rotaTable(m,{edit:false,print:true}));
@@ -789,12 +797,10 @@ function doPrint(title,after){
   window.petrusAllowPrint=true;
   setTimeout(function(){ window.print(); setTimeout(function(){ if(!done && !matchMedia('print').matches) fin(); },1000); },50);
 }
-function printWeek(home){
+function printWeek(){
   var m=buildModel(S.mon);
   document.getElementById('printRoot').innerHTML=weekSheet(S.mon);
-  doPrint(home?pdfName(m):'Petrus Rota - Wk '+isoWeek(m.mon)+' - '+pdfName(m).replace('PET Rota ',''), home?function(){
-    dialog('HOME GRRG','Save the PDF as "'+pdfName(m)+'.pdf" (in the print window choose "Save as PDF"), then upload it to the Petrus space.',[{label:'Close',cls:'light'},{label:'Open HOME GRRG',href:HOME_URL}]);
-  }:null);
+  doPrint(pdfName(m), null);                       // PDF file name: "PET Rota 17 Nov-21 Nov 2026"
 }
 function monthDialog(){
   var ps=periodStart(), pe=periodEnd(), list=[], d=new Date(ps.getFullYear(),ps.getMonth(),1);
@@ -814,7 +820,7 @@ function exportMonth(first){
     mons.forEach(function(ms,i){ buildModel(ms).sections.forEach(function(s){ s.rows.forEach(function(r){ if(!r.hours && !(r.v||[]).some(function(x){return String(x||'').trim();})) return; if(!people[r.key]){ people[r.key]={name:r.name,h:[]}; order.push(r.key);} people[r.key].h[i]=r.hours; }); }); });
     var t='<div class="ptitle">PETRUS &middot; Paid hours &middot; '+MONTHS_L[mo]+' '+y+'</div><div class="psub">30 min unpaid break for every 6 h worked</div><table class="sum"><tr><th style="text-align:left">Name</th>'+mons.map(function(ms){var d=parseYmd(ms);return '<th>Wk '+isoWeek(d)+'<br>'+addDays(d,1).getDate()+' '+MONTHS[addDays(d,1).getMonth()]+'</th>';}).join('')+'<th>Total</th></tr>';
     order.forEach(function(k){ var p=people[k], tot=0; t+='<tr><td class="nm">'+esc(p.name)+'</td>'+mons.map(function(ms,i){ var v=p.h[i]||0; tot+=v; return '<td>'+(v?fmtH(v):'-')+'</td>'; }).join('')+'<td class="b">'+fmtH(tot)+'</td></tr>'; });
-    t+='</table><div class="credit" style="text-align:left;margin-top:8px">'+CREDIT+'</div>';
+    t+='</table>';
     html+=sheetHtml(t);
     document.getElementById('printRoot').innerHTML=html;
     doPrint('Petrus Rota - '+MONTHS_L[mo]+' '+y,null);
