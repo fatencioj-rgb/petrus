@@ -434,7 +434,7 @@ function renderIndex(){
   html+='<div class="status'+(S.canEdit?'':' ro')+'">'+(S.canEdit?'You can edit this rota.':'View only — only Fiorella and Milena can edit.')+'</div>';
   html+='<div class="bar"><button class="btn" data-a="thisweek">Open this week</button>'+
         '<button class="btn blue" data-a="month">Export month PDF</button>'+
-        '<button class="btn green" data-a="wa">WhatsApp today</button></div>';
+        (S.isOwner?'<button class="btn green" data-a="wa">WhatsApp today</button>':'')+'</div>';
   html+='<div class="index-wrap"><div class="cal"><table>';
   var wk=mondayOf(ps), curMonth=-1;
   while(wk<=pe){
@@ -539,7 +539,7 @@ function renderWeek(keepFocus){
      '<button class="btn" data-a="print">Print / PDF</button><span class="gap"></span>'+
      (S.canEdit?'<button class="btn blue" data-a="copy">Copy previous week</button><button class="btn gold" data-a="monday">Monday on/off</button><span class="gap"></span>':'')+
      '<button class="btn home" data-a="home" title="Open HOME GRRG (Workvivo)"><img src="home-grrg.png" alt="HOME"></button>'+
-     '<button class="btn green" data-a="wa">WhatsApp</button>'+
+     (S.isOwner?'<button class="btn green" data-a="wa">WhatsApp</button>':'')+
      '</div>';
   if(!S.canEdit) h+='<div class="status ro">View only — only Fiorella and Milena can edit.</div>';
   h+='<div class="week-wrap"><div class="scroll">';
@@ -707,7 +707,7 @@ function act(a){
   if(a==='home'){ var w=window.open(HOME_URL,'_blank','noopener'); if(!w) location.href=HOME_URL; return; }
   if(a==='copy') return copyPrevious();
   if(a==='monday') return mondayToggle();
-  if(a==='wa') return whatsappToday();
+  if(a==='wa'){ if(!S.isOwner) return; return whatsappToday(); }   // WhatsApp: Fiorella only
   if(a==='month') return monthDialog();
   if(a==='addp'){ S.cfg.team=S.cfg.team||[]; var t=teamOrderList()[0]||'OTHER'; S.cfg.team.push({name:'New person',team:t,active:true,type:'Staff',order:99,min:'',max:''}); saveCfgSoon(); return renderIndex(); }
   if(a==='addt'){ S.cfg.teamOrder=S.cfg.teamOrder||[]; S.cfg.teamOrder.push({team:'NEW TEAM',order:(S.cfg.teamOrder.length+1)}); saveCfgSoon(); return renderIndex(); }
@@ -845,7 +845,7 @@ auth.onAuthStateChanged(function(user){
   var email=String(user.email||'').toLowerCase();
   if(VIEWERS.indexOf(email)<0) return closedPage('The rota is only available for the Operations team.');
   started=true;
-  S.user=user; S.canEdit=EDITORS.indexOf(email)>=0;
+  S.user=user; S.canEdit=EDITORS.indexOf(email)>=0; S.isOwner=(email==='fiorella@petrus.local');
   loadCfg().then(loadRange).then(function(){
     var h=(location.hash||'').replace('#','');
     if(/^\d{4}-\d{2}-\d{2}$/.test(h)) openWeek(ymd(mondayOf(parseYmd(h)))); else renderIndex();
