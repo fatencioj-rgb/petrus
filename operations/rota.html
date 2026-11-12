@@ -67,7 +67,8 @@ button,input,select{font-family:var(--font)}
 .tt input,.tt select{border:1px solid transparent;background:transparent;font-size:13px;color:inherit;padding:2px 3px;width:100%}
 .tt input:hover,.tt select:hover{border-color:var(--line)}
 .tt input:focus,.tt select:focus{outline:none;border-color:var(--blue);background:#fff}
-.tt .w-name{width:150px}.tt .w-team{width:130px}.tt .w-s{width:62px}.tt .w-t{width:84px}.tt .w-n{width:56px}
+.tt .w-name{width:150px}.tt .w-team{width:130px}.tt .w-s{width:62px}.tt .w-t{width:84px}.tt .w-n{width:56px}.tt .w-d{width:128px}
+.tt input[type=date]{font-size:12px}
 .tt .del{border:0;background:none;color:#c00000;cursor:pointer;font-size:15px;padding:0 4px;opacity:.5}
 .tt .del:hover{opacity:1}
 .hint{font-size:11px;font-style:italic;color:var(--grey);margin-top:6px;max-width:560px}
@@ -333,11 +334,13 @@ function buildModel(monStr){
               info:{covers:(doc.info&&doc.info.covers)||blank14(), tables:(doc.info&&doc.info.tables)||blank14(), kt:(doc.info&&doc.info.kt)||blank14()},
               sections:[], exists:!!weekDoc(monStr) };
   var stored=Object.keys(e).map(function(k){ return {key:k, d:e[k]}; });
+  var sunStr=ymd(addDays(parseYmd(monStr),6));
   var teams=teamOrderList();
   stored.forEach(function(s){ var p=personByName(s.d.name), t=p?String(p.team||'OTHER').toUpperCase():String(s.d.team||'OTHER').toUpperCase(); s.team=t; if(teams.indexOf(t)<0) teams.push(t); });
   teams.forEach(function(team){
     var sec={team:team, rows:[]};
-    cfgTeam().filter(function(p){ return String(p.team||'OTHER').toUpperCase()===team && p.active!==false; })
+    cfgTeam().filter(function(p){ return String(p.team||'OTHER').toUpperCase()===team && p.active!==false
+                                       && !(p.start && String(p.start) > sunStr); })   // not started yet: shown from the week of their start date
       .map(function(p,i){ return {p:p,i:i}; })
       .sort(function(a,b){ return (num(a.p.order,999)-num(b.p.order,999)) || (a.i-b.i); })
       .forEach(function(x){
@@ -419,7 +422,7 @@ function write(monStr,data,merge){
 // copy of the team for the staff view: names, teams, order and type only (no min/max hours)
 function publicCfg(d){
   return Object.assign({ start:d.start||DEFAULT_START,
-    team:(d.team||[]).map(function(p){ return { name:p.name, team:p.team, active:p.active!==false, type:p.type||'Staff', order:p.order }; }),
+    team:(d.team||[]).map(function(p){ return { name:p.name, team:p.team, active:p.active!==false, type:p.type||'Staff', order:p.order, start:p.start||'' }; }),
     teamOrder:(d.teamOrder||[]).map(function(t){ return { team:t.team, order:t.order }; }) }, stamp());
 }
 var cfgTimer=null;
@@ -470,7 +473,7 @@ function renderIndex(){
 }
 
 function renderTeamTable(){
-  var dis=S.canEdit?'':' disabled', h='<div class="team-box"><h3>TEAM</h3><table class="tt"><tr><th>Name</th><th>Team</th><th>Active</th><th>Type</th><th>Order</th><th>Min h</th><th>Max h</th>'+(S.canEdit?'<th></th>':'')+'</tr>';
+  var dis=S.canEdit?'':' disabled', h='<div class="team-box"><h3>TEAM</h3><table class="tt"><tr><th>Name</th><th>Team</th><th>Active</th><th>Type</th><th>Order</th><th>Min h</th><th>Max h</th><th>Start</th>'+(S.canEdit?'<th></th>':'')+'</tr>';
   var teams=teamOrderList();
   cfgTeam().forEach(function(p,i){
     h+='<tr class="'+(p.active===false?'inactive':'')+'" data-i="'+i+'">'+
@@ -481,6 +484,7 @@ function renderTeamTable(){
        '<td class="w-n c"><input data-f="order" value="'+esc(p.order===undefined?'':p.order)+'" style="text-align:center"'+dis+'></td>'+
        '<td class="w-n c"><input data-f="min" value="'+esc(p.min||'')+'" style="text-align:center"'+dis+'></td>'+
        '<td class="w-n c"><input data-f="max" value="'+esc(p.max||'')+'" style="text-align:center"'+dis+'></td>'+
+       '<td class="w-d c"><input type="date" data-f="start" value="'+esc(p.start||'')+'" title="First day: shown in the rota from the week of this date"'+dis+'></td>'+
        (S.canEdit?'<td><button class="del" data-del="'+i+'" title="Remove">&times;</button></td>':'')+'</tr>';
   });
   h+='</table>';
@@ -492,7 +496,7 @@ function renderTeamTable(){
   });
   h+='</table>';
   if(S.canEdit) h+='<div class="bar"><button class="btn light" data-a="addt">+ Add team</button></div>';
-  h+='<div class="hint">Active = No hides the person from new weeks (weeks already filled keep them). Type = Agency highlights the name. Min h / Max h are weekly paid hours: on the week the hours turn amber under Min h and red over Max h; each Holiday / Sick day lowers Min h by 1/5.</div></div>';
+  h+='<div class="hint">Start = first working day: the person appears from the week of that date (leave empty if already working). Active = No hides the person from new weeks (weeks already filled keep them). Type = Agency highlights the name. Min h / Max h are weekly paid hours: on the week the hours turn amber under Min h and red over Max h; each Holiday / Sick day lowers Min h by 1/5.</div></div>';
   return h;
 }
 function bindTeamTable(app){
@@ -598,7 +602,7 @@ function rotaTable(m,opts){
     for(k=0;k<7;k++){
       var cl=dayClosed(k,m.monOpen);
       for(var j=0;j<2;j++){
-        var v=(m.info[x[1]]||[])[2*k+j]||'', cls=(cl?' cl':'')+(j===0?' ds':'');
+        var v=infoNum((m.info[x[1]]||[])[2*k+j]), cls=(cl?' cl':'')+(j===0?' ds':'');
         var cell = (E&&!cl) ? '<input class="t" data-info="'+x[1]+'" data-i="'+(2*k+j)+'" data-cell="i-'+x[1]+'-'+(2*k+j)+'" value="'+esc(v)+'" inputmode="numeric">' : esc(v);
         h+='<td class="'+cls+'">'+cell+'</td>'; if(j===0) h+='<td class="'+(cl?'cl':'')+'"></td>';
       }
@@ -694,12 +698,19 @@ function hoursPanel(m){
     '<div class="note">Min h / Max h are set per person in the Team table on the Index. Each Holiday or Sick day lowers the minimum by 1/5. This panel, the hours, Who\'s on for and the legend are not printed.</div></div>';
 }
 
+// covers / tables / KT saved earlier as a time by mistake ("13:00", "06:00") -> show the number typed (13, 6)
+function infoNum(v){
+  var s=String(v===undefined||v===null?'':v).trim(), m=s.match(/^(\d{1,2}):(\d{2})$/);
+  if(!m) return s;
+  return m[2]==='00' ? String(+m[1]) : String(+m[1])+m[2];
+}
 function bindCells(app,m){
   if(!S.canEdit) return;
   var rows={}; m.sections.forEach(function(s){ s.rows.forEach(function(r){ rows[r.key]=r; }); });
   app.querySelectorAll('input.t').forEach(function(el){
     el.addEventListener('change',function(){
-      var v=normValue(el.value), i=+el.getAttribute('data-i');
+      var isInfo=el.hasAttribute('data-info'), i=+el.getAttribute('data-i');
+      var v=isInfo ? String(el.value||'').replace(/[^\d]/g,'') : normValue(el.value);   // covers / tables / KT: numbers only
       el.value=v;
       if(el.hasAttribute('data-info')) saveInfo(S.mon, el.getAttribute('data-info'), i, v);
       else saveCell(S.mon, rows[el.getAttribute('data-key')], i, v);
