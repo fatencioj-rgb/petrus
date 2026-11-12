@@ -41,7 +41,8 @@
 - **Fiorella:** todo (único con `admin`). **Milena, Orson:** training/sommeliers/operations.
 - **Editar platos:** Fiorella, Milena, Orson + **Irena** (solo platos, no producers).
 - **Editar producers:** solo Fiorella, Milena, Orson.
-- **Operations (bookings, seat plan):** Fiorella, Milena, Orson, Liza (`canOperations()`).
+- **Operations (bookings, seat plan, rota):** Fiorella, Milena, Orson, Liza (`canOperations()`).
+  La Rota solo la editan Fiorella y Milena (`canEditRota()`).
 - **Cain, Tanvir, Johnny, Irena, Guest:** solo training.
 
 ## 4. Training → Food (`food-net.html` + `food-editor.html` + `producers-editor.html`)
@@ -95,6 +96,29 @@ Editor del plano de sala en un solo archivo. Todo el estado vive en `state`
 - **Crédito:** "Automatization made by Fiorella A." va en el ENCABEZADO, arriba a la derecha bajo la
   fecha (dentro del contenido, para que no se pueda recortar al imprimir), 8px, en cada hoja. El pie
   de la página en pantalla dice "© 2026 — Petrus — Internal Use Only — Automatization made by Fiorella A."
+
+## 6b. Operations → Rota (`operations/rota.html`)
+
+Versión web del Excel "Petrus Rota" (mismo aspecto blanco/azul, Calibri, sin cuadrícula).
+- **Acceso:** ven el equipo de Operations (`canOperations()`); editan solo Fiorella y Milena
+  (`canEditRota()` en firestore.rules + comprobación en la página). El resto ve un aviso de acceso.
+- **Datos:** `rota2_config/main` = { start, team[{name,team,active,type,order,min,max}], teamOrder[{team,order}] }.
+  `rota2_weeks/{lunes YYYY-MM-DD}` = { monday, mondayOpen, info{covers,tables,kt: 14 valores},
+  e{ "Nombre#n": {name, team, seq, v: 14 valores = 7 días × [inicio, fin]} } }. Valores: "HH:MM",
+  "Holiday", "SICK", "TBC" o "". Cada celda se guarda al momento (set merge por persona).
+- **Index:** calendario por meses (semana = mes de su martes; clic abre la semana; "this week",
+  "not started", "Monday open") + tabla Team y Team order (editable solo por editores).
+- **Week:** conteos L (empieza ≤13:00) / D (termina >20:00 o tras medianoche) por equipo, TOTAL FOH,
+  horas pagadas (30 min de descanso por cada 6 h), Min/Max h por persona (ámbar/rojo, Holiday/Sick
+  bajan el mínimo 1/5), HOURS CHECK, WHO'S ON FOR (Opening 09:00-10:30; Lunch 11:00-15:00 o sigue
+  ≥13:00; Dinner 16:00-18:00 o sigue ≥21:00; Closing termina 00:00-03:00) y leyenda.
+  Lunes y domingo cerrados; botón Monday on/off (private hire). Copy previous week.
+- **Imprimir / PDF:** una semana por hoja A4 horizontal (1040×710, escala si no cabe), solo la tabla
+  hasta TOTAL FOH + crédito al pie. Export month PDF = semanas del mes + página de horas por persona.
+- **HOME:** imprime con el nombre "PET Rota 17 Nov-21 Nov 2026" y luego ofrece abrir Workvivo.
+- **WhatsApp:** abre wa.me con "Today's Rota dd/mm" (hora de inicio solo en Opening y en Lunch para
+  quien no está en Opening). No se puede elegir el grupo automáticamente.
+- El antiguo `rota.html` de la raíz se eliminó; la colección vieja `rota_weeks` queda solo para Fiorella.
 
 ## 7. Pendientes / ideas
 

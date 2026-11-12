@@ -117,9 +117,24 @@ service cloud.firestore {
       allow read, write: if signedIn();
     }
 
-    // Rota: any signed-in user can read and write.
+    // Old rota (page removed): kept read/write for Fiorella only.
     match /rota_weeks/{weekId} {
-      allow read, write: if signedIn();
+      allow read, write: if isFiorella();
+    }
+
+    // Rota (operations/rota.html): the Operations team can read;
+    // only Fiorella and Milena can edit.
+    function canEditRota() {
+      return signedIn() && (request.auth.token.email == 'fiorella@petrus.local'
+                         || request.auth.token.email == 'milena@petrus.local');
+    }
+    match /rota2_config/{docId} {
+      allow read: if canOperations();
+      allow write: if canEditRota();
+    }
+    match /rota2_weeks/{weekId} {
+      allow read: if canOperations();
+      allow write: if canEditRota();
     }
 
     // Sommelier operations collections: any signed-in user can read and write.
