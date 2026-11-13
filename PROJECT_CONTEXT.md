@@ -42,7 +42,7 @@
 - **Editar platos:** Fiorella, Milena, Orson + **Irena** (solo platos, no producers).
 - **Editar producers:** solo Fiorella, Milena, Orson.
 - **Operations (bookings, seat plan, rota):** Fiorella, Milena, Orson, Liza (`canOperations()`).
-  La Rota de momento solo la edita Fiorella (`canEditRota()`); Milena solo ve hasta que Fiorella diga.
+  Rota: Fiorella edita todo; Milena edita solo las semanas (ver §6b).
 - **Cain, Tanvir, Johnny, Irena, Guest:** solo training.
 
 ## 4. Training → Food (`food-net.html` + `food-editor.html` + `producers-editor.html`)
@@ -100,8 +100,13 @@ Editor del plano de sala en un solo archivo. Todo el estado vive en `state`
 ## 6b. Operations → Rota (`operations/rota.html`)
 
 Versión web del Excel "Petrus Rota" (mismo aspecto blanco/azul, Calibri, sin cuadrícula).
-- **Acceso:** ven el equipo de Operations (`canOperations()`); de momento edita solo Fiorella
-  (Milena solo ve; para darle edición: añadirla a `EDITORS` en la página y a `canEditRota()`).
+- **Acceso:**
+  - **Fiorella:** todo (Index, tabla Team / Team order, WhatsApp). `EDITORS` + `canEditRota()`.
+  - **Milena** (`WEEK_EDITORS`, reglas `canEditRotaWeeks()`): entra SOLO desde Operations (el botón
+    Rota de la home se le oculta); sin Index (abre esta semana; Prev / This week / Next); edita horas,
+    covers, tables, KT, Copy previous week, Monday on/off; Print / PDF, Export month PDF, HOME; ve
+    HOURS, PAID HOURS, HOURS CHECK, WHO'S ON FOR. No edita el equipo ni usa WhatsApp.
+  - **Orson, Liza:** vista completa solo lectura (Index incluido).
   **Resto del equipo** (cualquier login menos guest; botón "Rota" en la home): vista de SOLO horario
   = título + semana + tabla hasta TOTAL FOH + crédito, con Prev / This week / Next; nada editable.
   Leen `rota2_config/public` (copia SIN min/max, se reescribe cada vez que se guarda el equipo) y
