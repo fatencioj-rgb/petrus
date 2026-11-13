@@ -874,12 +874,11 @@ function drawCard(d){
         L.forEach(function(p,i){
           var ly=by+HH+22+i*LH+34;
           if(i>0){ x.strokeStyle='#E3ECF7'; x.lineWidth=1; x.beginPath(); x.moveTo(bx+22,ly-36); x.lineTo(bx+CW-22,ly-36); x.stroke(); }
-          x.fillStyle=NAVY; x.font='34px '+FONT; x.textAlign='left'; x.fillText(p.name,bx+26,ly);
-          // team pill next to the name
-          var tg=teamTag(p.team), nw=x.measureText(p.name).width;
-          x.font='bold 19px '+FONT; var pw=x.measureText(tg.label).width+22, px0=bx+26+nw+12, py0=ly-25;
-          x.fillStyle=tg.bg; rr(px0,py0,pw,30,15,false); x.fill();
-          x.fillStyle=tg.fg; x.fillText(tg.label,px0+11,py0+21);
+          // team pill first (fixed width so all names line up), then the name
+          var tg=teamTag(p.team), PW=92, px0=bx+24, py0=ly-25;
+          x.fillStyle=tg.bg; rr(px0,py0,PW,30,15,false); x.fill();
+          x.font='bold 19px '+FONT; x.fillStyle=tg.fg; x.textAlign='center'; x.fillText(tg.label,px0+PW/2,py0+21);
+          x.fillStyle=NAVY; x.font='34px '+FONT; x.textAlign='left'; x.fillText(p.name,px0+PW+14,ly);
           if(p.time){ x.fillStyle=BLUE; x.font='32px '+FONT; x.textAlign='right'; x.fillText(p.time,bx+CW-26,ly); x.textAlign='left'; }
         });
       }
