@@ -208,8 +208,9 @@ table.rota.who td.nobody{background:var(--over);color:var(--overT);font-weight:7
 (function(){
 'use strict';
 
-var EDITORS = ['fiorella@petrus.local'];               // Milena: view only for now (add her back here + firestore.rules when Fiorella says)
-var VIEWERS = EDITORS.concat(['milena@petrus.local','orson@petrus.local','liza@petrus.local']);
+var EDITORS = ['fiorella@petrus.local'];               // full access (Index, team table, WhatsApp)
+var WEEK_EDITORS = ['milena@petrus.local'];            // weeks only: no Index, no team table, no WhatsApp; opens from Operations
+var VIEWERS = EDITORS.concat(WEEK_EDITORS, ['orson@petrus.local','liza@petrus.local']);
 var DEFAULT_START = '2026-11-09';
 var CREDIT = 'AUTOMATION \u00B7 FIORELLA ATENCIO';
 var HOME_URL = 'https://gordonramsayhome.workvivo.com/';
@@ -474,7 +475,7 @@ function renderIndex(){
 }
 
 function renderTeamTable(){
-  var dis=S.canEdit?'':' disabled', h='<div class="team-box"><h3>TEAM</h3><table class="tt"><tr><th>Name</th><th>Team</th><th>Active</th><th>Type</th><th>Order</th><th>Min h</th><th>Max h</th><th>Start</th>'+(S.canEdit?'<th></th>':'')+'</tr>';
+  var dis=S.canEditTeam?'':' disabled', h='<div class="team-box"><h3>TEAM</h3><table class="tt"><tr><th>Name</th><th>Team</th><th>Active</th><th>Type</th><th>Order</th><th>Min h</th><th>Max h</th><th>Start</th>'+(S.canEditTeam?'<th></th>':'')+'</tr>';
   var teams=teamOrderList();
   cfgTeam().forEach(function(p,i){
     h+='<tr class="'+(p.active===false?'inactive':'')+'" data-i="'+i+'">'+
@@ -486,22 +487,22 @@ function renderTeamTable(){
        '<td class="w-n c"><input data-f="min" value="'+esc(p.min||'')+'" style="text-align:center"'+dis+'></td>'+
        '<td class="w-n c"><input data-f="max" value="'+esc(p.max||'')+'" style="text-align:center"'+dis+'></td>'+
        '<td class="w-d c"><input type="date" data-f="start" value="'+esc(p.start||'')+'" title="First day: shown in the rota from the week of this date"'+dis+'></td>'+
-       (S.canEdit?'<td><button class="del" data-del="'+i+'" title="Remove">&times;</button></td>':'')+'</tr>';
+       (S.canEditTeam?'<td><button class="del" data-del="'+i+'" title="Remove">&times;</button></td>':'')+'</tr>';
   });
   h+='</table>';
-  if(S.canEdit) h+='<div class="bar"><button class="btn light" data-a="addp">+ Add person</button></div>';
-  h+='<h3>TEAM ORDER</h3><table class="tt"><tr><th>Team</th><th>Order</th>'+(S.canEdit?'<th></th>':'')+'</tr>';
+  if(S.canEditTeam) h+='<div class="bar"><button class="btn light" data-a="addp">+ Add person</button></div>';
+  h+='<h3>TEAM ORDER</h3><table class="tt"><tr><th>Team</th><th>Order</th>'+(S.canEditTeam?'<th></th>':'')+'</tr>';
   ((S.cfg&&S.cfg.teamOrder)||[]).forEach(function(t,i){
     h+='<tr data-o="'+i+'"><td class="w-team"><input data-g="team" value="'+esc(t.team)+'"'+dis+'></td><td class="w-n c"><input data-g="order" value="'+esc(t.order)+'" style="text-align:center"'+dis+'></td>'+
-       (S.canEdit?'<td><button class="del" data-delo="'+i+'" title="Remove">&times;</button></td>':'')+'</tr>';
+       (S.canEditTeam?'<td><button class="del" data-delo="'+i+'" title="Remove">&times;</button></td>':'')+'</tr>';
   });
   h+='</table>';
-  if(S.canEdit) h+='<div class="bar"><button class="btn light" data-a="addt">+ Add team</button></div>';
+  if(S.canEditTeam) h+='<div class="bar"><button class="btn light" data-a="addt">+ Add team</button></div>';
   h+='<div class="hint">Start = first working day: the person appears from the week of that date (leave empty if already working). Active = No hides the person from new weeks (weeks already filled keep them). Type = Agency highlights the name. Min h / Max h are weekly paid hours: on the week the hours turn amber under Min h and red over Max h; each Holiday / Sick day lowers Min h by 1/5.</div></div>';
   return h;
 }
 function bindTeamTable(app){
-  if(!S.canEdit) return;
+  if(!S.canEditTeam) return;
   app.querySelectorAll('.tt tr[data-i] [data-f]').forEach(function(el){
     el.addEventListener('change',function(){
       var i=+el.closest('tr').getAttribute('data-i'), f=el.getAttribute('data-f'), p=S.cfg.team[i], v=el.value.trim();
@@ -560,10 +561,12 @@ function renderWeek(keepFocus){
   h+='<div class="title">PETRUS &middot; ROTA</div>';
   h+='<div class="subtitle">Week '+isoWeek(m.mon)+' &nbsp;&middot;&nbsp; '+fmtDay(m.mon)+' - '+fmtDay(sun)+' '+sun.getFullYear()+(m.monOpen?' &nbsp;&middot;&nbsp; Monday open (private hire)':'')+'</div>';
   h+='<div class="bar">'+
-     '<button class="btn" data-a="index">&laquo; Index</button>'+
+     (S.noIndex?'':'<button class="btn" data-a="index">&laquo; Index</button>')+
      '<button class="btn blue" data-a="prev">&laquo; Prev</button>'+
+     (S.noIndex?'<button class="btn" data-a="thisweek">This week</button>':'')+
      '<button class="btn blue" data-a="next">Next &raquo;</button><span class="gap"></span>'+
-     '<button class="btn" data-a="print">Print / PDF</button><span class="gap"></span>'+
+     '<button class="btn" data-a="print">Print / PDF</button>'+
+     (S.noIndex?'<button class="btn blue" data-a="month">Export month PDF</button>':'')+'<span class="gap"></span>'+
      (S.canEdit?'<button class="btn blue" data-a="copy">Copy previous week</button><button class="btn gold" data-a="monday">Monday on/off</button><span class="gap"></span>':'')+
      '<button class="btn home" data-a="home" title="Open HOME GRRG (Workvivo)"><img src="home-grrg.png" alt="HOME"></button>'+
      (S.isOwner?'<button class="btn green" data-a="wa">WhatsApp</button>':'')+
@@ -734,6 +737,7 @@ function bindBar(app){
 }
 function act(a){
   if(S.staff && ['prev','next','thisweek'].indexOf(a)<0) return;      // staff: only move between weeks
+  if(S.noIndex && ['addp','addt','wa'].indexOf(a)>=0) return;          // week editors: no team table, no WhatsApp
   if(a==='index') return goIndex();
   if(a==='thisweek'){ var m=mondayOf(today()); if(m<mondayOf(periodStart())) m=mondayOf(periodStart()); return openWeek(ymd(m)); }
   if(a==='prev'){ var p=addDays(parseYmd(S.mon),-7); if(p<mondayOf(periodStart())) return toast('This is the first week of the rota.'); return openWeek(ymd(p)); }
@@ -748,6 +752,7 @@ function act(a){
   if(a==='addt'){ S.cfg.teamOrder=S.cfg.teamOrder||[]; S.cfg.teamOrder.push({team:'NEW TEAM',order:(S.cfg.teamOrder.length+1)}); saveCfgSoon(); return renderIndex(); }
 }
 function goIndex(){
+  if(S.noIndex) return act('thisweek');               // week editors have no Index
   try{ history.replaceState(null,'',location.pathname); }catch(e){}
   loadRange().then(renderIndex, renderIndex);
 }
@@ -990,13 +995,16 @@ auth.onAuthStateChanged(function(user){
   var email=String(user.email||'').toLowerCase();
   if(email.indexOf('guest')===0) return closedPage('The rota is only available for the Petrus team.');
   started=true;
-  S.user=user; S.canEdit=EDITORS.indexOf(email)>=0; S.isOwner=(email==='fiorella@petrus.local');
+  S.user=user; S.isOwner=(email==='fiorella@petrus.local');
+  S.canEditTeam=EDITORS.indexOf(email)>=0;                                   // team table / team order
+  S.noIndex=WEEK_EDITORS.indexOf(email)>=0;                                  // Milena: weeks only
+  S.canEdit=S.canEditTeam || S.noIndex;                                      // hours, covers, copy week, Monday on/off
   S.staff=VIEWERS.indexOf(email)<0;                  // rest of the team: timetable only, read only
   if(S.staff){ var back=document.querySelector('.top-bar a'); if(back) back.href='../index.html'; }
   loadCfg().then(S.staff?null:loadRange).then(function(){
     var h=(location.hash||'').replace('#','');
     if(/^\d{4}-\d{2}-\d{2}$/.test(h)) openWeek(ymd(mondayOf(parseYmd(h))));
-    else if(S.staff) act('thisweek');
+    else if(S.staff || S.noIndex) act('thisweek');
     else renderIndex();
   }).catch(function(err){
     document.getElementById('app').innerHTML='<div class="loading">Could not load the rota: '+esc(err&&err.message||err)+'</div>';

@@ -122,11 +122,14 @@ service cloud.firestore {
       allow read, write: if isFiorella();
     }
 
-    // Rota (operations/rota.html): the Operations team can read;
-    // only Fiorella can edit for now (Milena: view only until Fiorella says;
-    // to give her edit access add `|| request.auth.token.email == 'milena@petrus.local'`).
+    // Rota (operations/rota.html):
+    //  - team table (rota2_config): only Fiorella edits.
+    //  - weeks (rota2_weeks: hours, covers, tables, KT, Monday open): Fiorella and Milena edit.
     function canEditRota() {
       return isFiorella();
+    }
+    function canEditRotaWeeks() {
+      return isFiorella() || (signedIn() && request.auth.token.email == 'milena@petrus.local');
     }
     // Any Petrus team member (not the guest account): may READ the timetable.
     function isTeam() {
@@ -140,7 +143,7 @@ service cloud.firestore {
     }
     match /rota2_weeks/{weekId} {
       allow read: if isTeam();
-      allow write: if canEditRota();
+      allow write: if canEditRotaWeeks();
     }
 
     // Sommelier operations collections: any signed-in user can read and write.

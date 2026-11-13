@@ -466,6 +466,8 @@ auth.onAuthStateChanged((user) => {
     nav.style.display = 'flex';
     nav.querySelectorAll('.nav-btn').forEach(btn => {
       const section = btn.getAttribute('data-section');
+      // Milena opens the Rota from Operations, not from the home button.
+      if (section === 'rota' && String(user.email||'').toLowerCase() === 'milena@petrus.local') { btn.style.display = 'none'; return; }
       btn.style.display = (guest && section !== 'training') ? 'none' : 'block';
     });
 
