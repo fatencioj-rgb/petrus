@@ -799,13 +799,31 @@ function waData(t){
     if(L[c].length) any=true;
     lists.push(L[c].map(function(r){
       var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]));
-      return { name:r.name, time: showT ? fmtT(tMin(s)) : '' };
+      return { name:r.name, team:r.team, time: showT ? fmtT(tMin(s)) : '' };
     }));
   }
   if(!any) return {error:'There are no shifts for today ('+DAYS[k]+' '+fmtDM(t)+') yet.'};
-  return { date:t, k:k, lists:lists };
+  // covers / tables / KT for lunch (index 2k) and dinner (2k+1)
+  function svc(j){
+    var cv=infoNum((m.info.covers||[])[2*k+j]), tb=infoNum((m.info.tables||[])[2*k+j]), kt=infoNum((m.info.kt||[])[2*k+j]);
+    if(!cv && !tb && !kt) return '';
+    var parts=[]; if(cv) parts.push(cv+'C'); if(tb) parts.push(tb+'T'); if(kt) parts.push(kt+'KT');
+    return parts.join(' / ');
+  }
+  return { date:t, k:k, lists:lists, lunch:svc(0), dinner:svc(1) };
 }
 
+// Short team label + colours for the pill shown next to each name on the WhatsApp card.
+function teamTag(team){
+  var t=String(team||'').toUpperCase().trim(), map={
+    'MANAGEMENT':['MGMT','#1F3864','#FFFFFF'], 'MANAGER':['MGMT','#1F3864','#FFFFFF'],
+    'CDR':['CDR','#2F5597','#FFFFFF'], 'CDR/COMMIS':['CDR','#2F5597','#FFFFFF'],
+    'COMMIS':['COMMIS','#BDD7EE','#1F3864'],
+    'SOMMELIERS':['SOMM','#7B2C3B','#FFFFFF'], 'SOMMELIER':['SOMM','#7B2C3B','#FFFFFF'],
+    'RECEPTION':['REC','#BF9000','#FFFFFF'] };
+  var v=map[t] || [t.slice(0,6)||'TEAM','#E7E6E6','#1F3864'];
+  return { label:v[0], bg:v[1], fg:v[2] };
+}
 // Image card for WhatsApp: today's date, Opening / Lunch / Dinner / Closing in a 2x2 grid.
 function drawCard(d){
   var FONT='Calibri, Carlito, "Segoe UI", Arial, sans-serif', NAVY='#1F3864', BLUE='#2F5597', LINE='#9BB7D9', BAND='#DDEBF7';
@@ -823,6 +841,15 @@ function drawCard(d){
   var dt=d.date;
   x.fillStyle=BAND; x.font='34px '+FONT;
   x.fillText('TODAY  \u00B7  '+DAYS[d.k]+' '+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear(),P,138);
+  // covers / tables / KT, top right
+  x.textAlign='right';
+  [['Lunch',d.lunch,78],['Dinner',d.dinner,128]].forEach(function(s){
+    var val=s[1]||'-';
+    x.font='bold 32px '+FONT; x.fillStyle='#fff'; x.fillText(val,W-P,s[2]);
+    var vw=x.measureText(val).width;
+    x.font='28px '+FONT; x.fillStyle=BAND; x.fillText(s[0]+'  ',W-P-vw,s[2]);
+  });
+  x.textAlign='left';
   // cards
   var y=TOP;
   grid.forEach(function(r,ri){
@@ -843,6 +870,11 @@ function drawCard(d){
           var ly=by+HH+22+i*LH+34;
           if(i>0){ x.strokeStyle='#E3ECF7'; x.lineWidth=1; x.beginPath(); x.moveTo(bx+22,ly-36); x.lineTo(bx+CW-22,ly-36); x.stroke(); }
           x.fillStyle=NAVY; x.font='34px '+FONT; x.textAlign='left'; x.fillText(p.name,bx+26,ly);
+          // team pill next to the name
+          var tg=teamTag(p.team), nw=x.measureText(p.name).width;
+          x.font='bold 19px '+FONT; var pw=x.measureText(tg.label).width+22, px0=bx+26+nw+12, py0=ly-25;
+          x.fillStyle=tg.bg; rr(px0,py0,pw,30,15,false); x.fill();
+          x.fillStyle=tg.fg; x.fillText(tg.label,px0+11,py0+21);
           if(p.time){ x.fillStyle=BLUE; x.font='32px '+FONT; x.textAlign='right'; x.fillText(p.time,bx+CW-26,ly); x.textAlign='left'; }
         });
       }
