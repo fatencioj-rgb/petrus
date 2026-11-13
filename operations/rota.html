@@ -67,7 +67,7 @@ button,input,select{font-family:var(--font)}
 .tt input,.tt select{border:1px solid transparent;background:transparent;font-size:13px;color:inherit;padding:2px 3px;width:100%}
 .tt input:hover,.tt select:hover{border-color:var(--line)}
 .tt input:focus,.tt select:focus{outline:none;border-color:var(--blue);background:#fff}
-.tt .w-name{width:150px}.tt .w-team{width:130px}.tt .w-s{width:62px}.tt .w-t{width:84px}.tt .w-n{width:56px}.tt .w-d{width:128px}
+.tt .w-name{width:150px}.tt .w-team{width:130px}.tt .w-role{width:150px}.tt .w-s{width:62px}.tt .w-t{width:84px}.tt .w-n{width:56px}.tt .w-d{width:128px}
 .tt input[type=date]{font-size:12px}
 .tt .del{border:0;background:none;color:#c00000;cursor:pointer;font-size:15px;padding:0 4px;opacity:.5}
 .tt .del:hover{opacity:1}
@@ -181,6 +181,11 @@ table.rota.who td.nobody{background:var(--over);color:var(--overT);font-weight:7
 <div id="printRoot"></div>
 
 <datalist id="timeList"></datalist>
+<datalist id="roleList">
+  <option value="General Manager"><option value="Restaurant Manager"><option value="Assistant Manager"><option value="Maître d'">
+  <option value="Head Sommelier"><option value="Sommelier"><option value="Commis Sommelier">
+  <option value="Chef de Rang"><option value="Commis"><option value="Runner"><option value="Receptionist"><option value="Agency">
+</datalist>
 
 <!-- generic dialog -->
 <div class="dlg-overlay" id="dlg">
@@ -475,12 +480,13 @@ function renderIndex(){
 }
 
 function renderTeamTable(){
-  var dis=S.canEditTeam?'':' disabled', h='<div class="team-box"><h3>TEAM</h3><table class="tt"><tr><th>Name</th><th>Team</th><th>Active</th><th>Type</th><th>Order</th><th>Min h</th><th>Max h</th><th>Start</th>'+(S.canEditTeam?'<th></th>':'')+'</tr>';
+  var dis=S.canEditTeam?'':' disabled', h='<div class="team-box"><h3>TEAM</h3><table class="tt"><tr><th>Name</th><th>Team</th><th>Role</th><th>Active</th><th>Type</th><th>Order</th><th>Min h</th><th>Max h</th><th>Start</th>'+(S.canEditTeam?'<th></th>':'')+'</tr>';
   var teams=teamOrderList();
   cfgTeam().forEach(function(p,i){
     h+='<tr class="'+(p.active===false?'inactive':'')+'" data-i="'+i+'">'+
        '<td class="w-name"><input data-f="name" value="'+esc(p.name)+'"'+dis+'></td>'+
        '<td class="w-team"><select data-f="team"'+dis+'>'+teams.map(function(t){return '<option'+(t===String(p.team||'').toUpperCase()?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select></td>'+
+       '<td class="w-role"><input data-f="role" list="roleList" placeholder="Role" value="'+esc(p.role||'')+'"'+dis+'></td>'+
        '<td class="w-s c"><select data-f="active"'+dis+'><option'+(p.active!==false?' selected':'')+'>Yes</option><option'+(p.active===false?' selected':'')+'>No</option></select></td>'+
        '<td class="w-t c"><select data-f="type"'+dis+'><option'+(String(p.type).toLowerCase()!=='agency'?' selected':'')+'>Staff</option><option'+(String(p.type).toLowerCase()==='agency'?' selected':'')+'>Agency</option></select></td>'+
        '<td class="w-n c"><input data-f="order" value="'+esc(p.order===undefined?'':p.order)+'" style="text-align:center"'+dis+'></td>'+
