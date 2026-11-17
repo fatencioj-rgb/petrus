@@ -27,6 +27,7 @@ const db = firebase.firestore();
 var PETRUS_ACCESS = {
   'guest@petrus.local':    ['training'],
   'tanvir@petrus.local':   ['training'],
+  'jonathan@petrus.local': ['training'],
   'cain@petrus.local':     ['training'],
   'johnny@petrus.local':   ['training'],
   'irena@petrus.local':    ['training'],
@@ -49,6 +50,7 @@ var PETRUS_TEAM = [
   { email:'christian@petrus.local',name:'Christian' },
   { email:'liza@petrus.local',     name:'Liza' },
   { email:'tanvir@petrus.local',   name:'Tanvir' },
+  { email:'jonathan@petrus.local', name:'Jonathan' },
   { email:'cain@petrus.local',     name:'Cain' },
   { email:'johnny@petrus.local',   name:'Johnny' },
   { email:'irena@petrus.local',    name:'Irena' },
