@@ -776,13 +776,17 @@ function goIndex(){
 }
 function copyPrevious(){
   var mon=S.mon, prev=ymd(addDays(parseYmd(mon),-7));
-  loadWeek(prev).then(function(p){
+  Promise.all([loadWeek(prev), loadWeek(mon)]).then(function(res){
+    var p=res[0];
     var has=p && p.e && Object.keys(p.e).some(function(k){ return (p.e[k].v||[]).some(function(x){return String(x||'').trim();}); });
     if(!has) return dialog('Nothing to copy','The week of '+fmtDay(parseYmd(prev))+' has no shifts.');
-    confirmDlg('Copy previous week?','Copy all shifts from the week of '+fmtDay(parseYmd(prev))+' into this week?\nThe shifts now in this week will be replaced (covers are not copied).','Copy',function(){
-      var w=ensureWeekLocal(mon), e=JSON.parse(JSON.stringify(p.e));
-      w.e=e;
-      write(mon,{ monday:mon, mondayOpen:!!w.mondayOpen, info:w.info, e:e },false).then(function(){ renderWeek(false); });
+    confirmDlg('Copy previous week?','Copy the shifts (times only) from the week of '+fmtDay(parseYmd(prev))+' into this week?\nThe shifts now in this week will be replaced. Covers, tables and KT are not copied.','Copy',function(){
+      // only the shift times come from the previous week; this week keeps its own covers / tables / KT and Monday setting
+      var w=ensureWeekLocal(mon), e={};
+      Object.keys(p.e).forEach(function(k){ var x=p.e[k]; e[k]={ name:x.name, team:x.team, seq:x.seq, v:(x.v||blank14()).slice() }; });
+      var info={ covers:((w.info&&w.info.covers)||blank14()).slice(), tables:((w.info&&w.info.tables)||blank14()).slice(), kt:((w.info&&w.info.kt)||blank14()).slice() };
+      w.e=e; w.info=info;
+      write(mon,{ monday:mon, mondayOpen:!!w.mondayOpen, info:info, e:e },false).then(function(){ renderWeek(false); });
       renderWeek(false);
     });
   });
