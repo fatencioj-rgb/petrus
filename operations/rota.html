@@ -926,7 +926,14 @@ function whatsappToday(){
           navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){ toast('Image copied — paste it in the WhatsApp chat (Ctrl+V)'); },
             function(){ toast('Could not copy the image — use Download.',true); });
         }}];
-      if(canShare) btns.push({label:'Share',cls:'green',fn:function(){ navigator.share({files:[file],title:'Today\'s Rota'}).catch(function(){}); }});
+      // share ONLY the file: with a title/text, WhatsApp on iPhone treats it as text and does not open the image
+      if(canShare) btns.push({label:'Share',cls:'green',fn:function(){
+        navigator.share({files:[file]}).catch(function(err){
+          if(err && err.name==='AbortError') return;                 // closed the share menu
+          dialog('Share did not work','Tap "Download" to save the image, then in WhatsApp open the chat, tap + and choose the photo.',
+                 [{label:'Close',cls:'light'},{label:'Download',fn:function(){ var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove(); }}]);
+        });
+      }});
       dialog('Today\'s rota', canShare ? 'Press Share and choose WhatsApp, or copy the image and paste it in the chat.' : 'Copy the image and paste it in the WhatsApp chat (Ctrl+V), or download it.', btns,
         '<img src="'+url+'" alt="Today\'s rota" style="display:block;width:100%;max-height:58vh;object-fit:contain;border:1px solid var(--line);border-radius:8px;margin-bottom:12px">');
       document.querySelector('#dlg .dlg').style.maxWidth='520px';
