@@ -248,16 +248,80 @@ tr.drag-over td{border-top:2px solid var(--gold)}
     .header-fields{grid-template-columns:1fr 1fr}
 }
 </style>
+<style id="modern-skin">
+/* Modern Petrus look (screen only). Print sheets keep their own colours. */
+@media screen {
+:root{--green:#9d9650;--green-dark:#5e5829;--gold:#9d9650;--gold-light:#d3cfa6;--cream:#fbfaf4;--border:#e7e4cf;--soft:#f5f3e3;--ink:#23210f}
+body{background:#fff;color:var(--ink)}
+.topbar{background:#fff;max-width:1240px;margin:0 auto;padding:26px 48px 0}
+.topbar .logo img{display:block;height:60px;width:auto}
+.topbar a.back{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-dark);border-bottom:1px solid var(--gold-light);padding:8px 0;transition:color .2s,border-color .2s}
+.topbar a.back:hover{color:var(--gold);border-color:var(--gold)}
+.page{max-width:1240px;padding:0 48px 60px}
+.page-header{text-align:left;margin:clamp(24px,6vh,56px) 0 28px}
+.page-header .eyebrow{font-size:12px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+.page-header h1{font-weight:500;font-size:clamp(42px,6vw,76px);line-height:1.02;letter-spacing:-1px;color:var(--ink);margin:12px 0 0}
+.page-header h1 em{color:var(--gold);font-style:italic}
+
+.top-grid{grid-template-columns:170px 1fr;gap:16px;margin-bottom:22px}
+.upload-box{border:1.5px dashed var(--gold-light);border-radius:16px;background:var(--soft)}
+.upload-box:hover{border-color:var(--gold);background:#f0edd6}
+.upload-box p{color:var(--green-dark);font-size:.82rem;letter-spacing:.5px}
+.upload-status,.upload-status{color:var(--green-dark)}
+.header-fields{background:var(--soft);border:none;border-radius:14px;padding:14px 16px;gap:14px}
+.field-group label{color:var(--green-dark);letter-spacing:1.2px}
+.field-group input,.field-group select,.res-table-edit input,.res-table-edit select,.res-table-edit .r-allergy{background:#fff;border:1px solid var(--border);border-radius:8px}
+.field-group input,.field-group select{padding:7px 10px}
+.field-group input:focus,.field-group select:focus,.res-table-edit input:focus,.res-table-edit select:focus,.res-table-edit .r-allergy:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(157,150,80,.18)}
+
+.print-main-btn{background:#fff;border:1px solid var(--gold);color:var(--green-dark);border-radius:40px;padding:8px 26px;letter-spacing:.5px}
+.print-main-btn:hover{background:var(--gold);color:#fff}
+.print-options{border-radius:14px;box-shadow:0 14px 40px rgba(60,55,20,.14)}
+.print-size-label{color:var(--green-dark)}
+.print-options button{background:#fff;border-radius:20px;color:var(--ink)}
+.print-options button:hover{background:var(--gold);border-color:var(--gold);color:#fff}
+.saved-toggle{background:#fff;border:1px solid var(--gold-light);border-radius:40px;padding:6px 16px;color:var(--green-dark)}
+.saved-toggle:hover{border-color:var(--gold);background:var(--soft)}
+.saved-item{border-radius:20px 0 0 20px;background:#fff;color:var(--ink)}
+.saved-item:hover{border-color:var(--gold);color:var(--green-dark)}
+.saved-item-delete{border-radius:0 20px 20px 0;background:var(--soft)}
+.saved-item-delete:hover{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+.lock-input{background:#fff;border-radius:8px}
+.btn-unlock{background:var(--green-dark);color:#fff;border-radius:40px}
+.btn-unlock:hover{background:var(--gold)}
+
+.reservations-container{background:#fff;border:1px solid var(--border);border-radius:18px;padding:6px 10px 12px;box-shadow:0 10px 30px rgba(60,55,20,.06)}
+.res-table-edit th{background:var(--soft);color:var(--green-dark);padding:9px 5px;font-size:.58rem;letter-spacing:.8px;border-bottom:1px solid var(--border)}
+.res-table-edit thead tr:first-child th:first-child{border-top-left-radius:12px}
+.res-table-edit thead tr:first-child th:last-child{border-top-right-radius:12px}
+.res-table-edit th[colspan]{border-bottom:1px solid var(--border) !important}
+.res-table-edit tbody tr:hover td{background:#fcfbf5}
+.res-table-edit td{border-bottom:1px solid var(--border)}
+.drag-handle{color:var(--gold-light)}
+.drag-handle:hover{color:var(--gold)}
+tr.dragging{background:var(--soft)}
+.btn-remove-row:hover{color:#b03a2e}
+
+.actions{gap:12px;margin-top:6px}
+.btn{border-radius:40px;padding:10px 26px;letter-spacing:.5px}
+.btn-add{background:var(--gold);color:#fff}
+.btn-add:hover{background:var(--green-dark)}
+.btn-clear{background:var(--soft);color:var(--green-dark)}
+.btn-clear:hover{background:#ebe8cc}
+.btn-save{background:var(--green-dark);color:#fff}
+.btn-save:hover{background:var(--ink)}
+}
+</style>
 </head>
 <body>
 <div class="topbar">
-    <a href="operations.html">&larr; Back</a>
-    <span></span>
-    <span></span>
+    <a class="logo" href="index.html"><img src="petrus-logo.png" alt="Petrus"></a>
+    <a class="back" href="operations.html">&larr; Back</a>
 </div>
 <div class="page">
     <div class="page-header">
-        <h1>Bookings</h1>
+        <p class="eyebrow">Operations</p>
+        <h1>Bookings<em>.</em></h1>
     </div>
 
     <!-- TOP: Upload (left, full height) + controls stacked on the right -->
@@ -351,7 +415,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
         <div class="actions">
             <button class="btn btn-add" onclick="addEmptyRow()">+ Add</button>
             <button class="btn btn-clear" onclick="clearAll()">Clear</button>
-            <button class="btn" id="saveBtn" style="background:#5c1a1a;color:white" onclick="saveBooking()">Save</button>
+            <button class="btn btn-save" id="saveBtn" onclick="saveBooking()">Save</button>
             <span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span>
         </div>
 
@@ -1878,10 +1942,10 @@ function updateSaveButton() {
         var btn = document.getElementById('saveBtn');
         if (doc.exists) {
             btn.textContent = 'Update';
-            btn.style.background = '#5c1a1a';
+            btn.style.background = ''; // colour comes from .btn-save
         } else {
             btn.textContent = 'Save';
-            btn.style.background = '#5c1a1a';
+            btn.style.background = ''; // colour comes from .btn-save
         }
     });
 }
