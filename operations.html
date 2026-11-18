@@ -4,58 +4,192 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Operations — Petrus</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#ffffff">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --green:#5c1a1a; --green-dark:#2d0a0a; --gold:#b89650; --gold-light:#d4b87a; --cream:#faf7f1; --sans:'Inter',sans-serif; --serif:'Cormorant Garamond',serif; }
-body { font-family:var(--sans); background:var(--cream); color:#2c2c2c; min-height:100vh; }
-.top-bar { background:var(--green-dark); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
-.top-bar a { color:var(--gold); text-decoration:none; font-size:12px; letter-spacing:1px; text-transform:uppercase; }
-.top-bar a:hover { color:#fff; }
-.top-bar h2 { font-family:var(--serif); color:#fff; font-size:18px; margin:0; }
-.page { max-width:700px; margin:0 auto; padding:60px 24px; text-align:center; }
-.page h1 { font-family:var(--serif); font-size:34px; color:var(--green); margin-bottom:8px; }
-.page .sub { font-size:13px; color:#888; letter-spacing:1px; margin-bottom:40px; }
-.profiles { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; }
-.profile-card {
-  flex:1; min-width:200px; max-width:280px;
-  background:#fff; border:1px solid #e8e0d4; border-radius:10px;
-  padding:40px 24px; text-decoration:none; color:#2c2c2c;
-  transition:all 0.3s ease; text-align:center;
+
+:root {
+  --gold: #9d9650;        /* olive from the logo */
+  --gold-light: #d3cfa6;
+  --gold-dark: #5e5829;
+  --soft: #f5f3e3;
+  --line: #e7e4cf;
+  --ink: #23210f;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --sans: 'Inter', 'Segoe UI', sans-serif;
 }
-.profile-card:hover {
-  border-color:var(--gold); transform:translateY(-4px);
-  box-shadow:0 8px 30px rgba(92,26,26,0.08);
+
+body {
+  font-family: var(--sans);
+  background: #ffffff;
+  color: var(--ink);
+  min-height: 100vh;
 }
-.profile-card h3 {
-  font-family:var(--serif); font-size:22px; color:var(--green);
-  margin-bottom:8px; letter-spacing:1px;
+
+.container {
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 48px 28px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-.profile-card p { font-size:12px; color:#888; line-height:1.5; }
+
+/* Content block sits in the middle of the screen */
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+/* Header: logo left, back link right */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 0 0;
+}
+.logo img { display: block; height: 60px; width: auto; }
+.back {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gold-light);
+  transition: color .2s, border-color .2s;
+}
+.back:hover { color: var(--gold); border-color: var(--gold); }
+
+/* Hero */
+.hero { padding-top: clamp(28px, 8vh, 72px); }
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(42px, min(6.4vw, 9.5vh), 82px);
+  line-height: 1.02;
+  letter-spacing: -1px;
+  color: var(--ink);
+  margin: 12px 0 22px;
+}
+.hero h1 em { color: var(--gold); font-style: italic; }
+
+/* Rows */
+.rows {
+  counter-reset: sec;
+  border-top: 1px solid var(--line);
+  margin-top: clamp(20px, 4vh, 34px);
+}
+.row {
+  counter-increment: sec;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: clamp(9px, 1.7vh, 15px) 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background .25s ease, padding .25s ease, color .25s ease;
+}
+.row::before {
+  content: counter(sec, decimal-leading-zero);
+  width: 70px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+.row .name {
+  font-family: var(--serif);
+  font-size: clamp(32px, 4.4vw, 44px);
+  font-weight: 500;
+  letter-spacing: -.5px;
+  flex: 1 1 auto;
+}
+.row::after {
+  content: "\2192";
+  margin-left: auto;
+  font-size: 26px;
+  color: var(--gold-light);
+  transition: color .25s ease, transform .25s ease;
+}
+.row:hover {
+  background: linear-gradient(90deg, var(--soft), #ffffff);
+  padding-left: 22px;
+  color: var(--gold-dark);
+}
+.row:hover::after { color: var(--gold); transform: translateX(-8px); }
+
+.footer {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(94, 88, 41, 0.6);
+}
+.footer div + div { margin-top: 6px; }
+
+@media (max-width: 700px) {
+  .container { padding: 0 22px 24px; }
+  .site-header { flex-direction: column; gap: 12px; padding: 24px 0 0; }
+  .logo img { height: 56px; margin: 0 auto; }
+  .hero { padding-top: 44px; }
+  .hero h1 { margin: 12px 0 20px; letter-spacing: -.5px; }
+  .rows { margin-top: 26px; }
+  .row { padding: 16px 2px; }
+  .row::before { width: 44px; }
+  .row .name { font-size: 32px; }
+  .row::after { font-size: 22px; }
+  .row:hover { padding-left: 14px; }
+}
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <a href="index.html">&larr; Back</a>
-  <span></span>
+
+<div class="container">
+<main class="stage">
+  <header class="site-header">
+    <a class="logo" href="index.html"><img src="petrus-logo.png" alt="Petrus"></a>
+    <a class="back" href="index.html">&larr; Back</a>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">Front of House</p>
+    <h1>Operations<em>.</em></h1>
+  </section>
+
+  <nav class="rows">
+    <a href="bookings.html" class="row">
+      <span class="name">Bookings</span>
+    </a>
+    <a href="operations/seating.html" class="row">
+      <span class="name">Seat Plan</span>
+    </a>
+    <a href="operations/rota.html" class="row">
+      <span class="name">Rota</span>
+    </a>
+  </nav>
+</main>
+
+<div class="footer">
+  <div>&copy; 2026 &mdash; Internal Use Only</div>
+  <div>Automatization made by Fiorella A.</div>
 </div>
-<div class="page">
-  <h1>Operations</h1>
-  <p class="sub">Admin tools</p>
-  <div class="profiles">
-    <a href="bookings.html" class="profile-card">
-      <h3>Bookings</h3>
-      <p>Upload and manage daily reservations</p>
-    </a>
-    <a href="operations/seating.html" class="profile-card">
-      <h3>Seat Plan</h3>
-      <p>Design the floor &mdash; drag tables, set seats</p>
-    </a>
-    <a href="operations/rota.html" class="profile-card">
-      <h3>Rota</h3>
-      <p>Weekly shifts, paid hours &amp; who&rsquo;s on</p>
-    </a>
-  </div>
 </div>
 
 <!-- Firebase + Auth -->
