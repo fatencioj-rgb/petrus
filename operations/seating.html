@@ -217,19 +217,102 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   .ps-page:last-child{break-after:auto;page-break-after:auto}
 }
 </style>
+<style id="modern-skin">
+/* Modern Petrus look (screen only). The printed sheets and the off-screen fit test keep the original variables. */
+@media screen {
+:root{--green:#9d9650;--green-dark:#5e5829;--gold:#9d9650;--gold-light:#d3cfa6;--cream:#fbfaf4;--border:#e7e4cf;--soft:#f5f3e3;--ink:#23210f;
+  --table:#a39c57;--chair:#5e5829;--fixed:#3d3a1a}
+body{background:#fff;color:var(--ink)}
+.topbar{background:#fff;max-width:1400px;margin:0 auto;padding:26px 28px 0}
+.topbar .logo img{display:block;height:60px;width:auto}
+.topbar a.back{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-dark);border-bottom:1px solid var(--gold-light);padding:8px 0;transition:color .2s,border-color .2s}
+.topbar a.back:hover{color:var(--gold);border-color:var(--gold)}
+.page{padding:0 28px 50px}
+.page-header{text-align:left;margin:clamp(20px,5vh,44px) 0 22px}
+.page-header .sub{font-size:12px;font-weight:500;letter-spacing:3px;color:var(--gold)}
+.page-header h1{font-weight:500;font-size:clamp(40px,5vw,60px);line-height:1.02;letter-spacing:-1px;color:var(--ink);margin:10px 0 0}
+.page-header h1 em{color:var(--gold);font-style:italic}
+
+.plan-bar{justify-content:flex-start;gap:14px;margin-top:18px}
+.plan-input{width:380px;border:none;border-bottom:1.5px solid var(--gold-light);border-radius:0;background:transparent;color:var(--ink);font-size:1.7rem;padding:4px 2px;text-align:left}
+.plan-input:focus{border-bottom-color:var(--gold)}
+.plan-input::placeholder{color:#b9b58a}
+.plan-input.is-saved{border-bottom-color:transparent}
+.plan-input.need{border-bottom-color:#b03a2e}
+.plan-link{color:var(--green-dark)}
+.plan-link:hover{color:var(--gold)}
+.plan-flag{color:var(--green-dark)}
+
+.toolbar{background:var(--soft);border:none;border-radius:18px;padding:12px 14px;gap:8px 4px}
+.tool-group{border-right:1px solid #e0dcb8}
+.tool-label{color:var(--green-dark);font-weight:600;letter-spacing:1.4px}
+.btn{border-radius:40px;padding:9px 18px;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark)}
+.btn:hover{border-color:var(--gold);background:#fff;box-shadow:0 4px 14px rgba(94,88,41,.14)}
+.btn.primary{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+.btn.primary:hover{background:var(--ink);border-color:var(--ink)}
+.btn.danger{border-color:#e0b8b2;color:#a8362b}
+.btn.danger:hover{background:#a8362b;border-color:#a8362b;color:#fff}
+.btn:disabled{background:#fff;border-color:var(--border)}
+.seat-input{border:1px solid var(--gold-light);border-radius:40px;background:#fff}
+.seat-input:focus{border-color:var(--gold)}
+.counter{color:var(--green-dark);font-weight:600}
+.cloud-status{color:var(--green-dark)}
+
+.canvas-wrap{background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 14px 44px rgba(60,55,20,.08)}
+#canvas{background:radial-gradient(circle,#d9d5ad 1.3px,transparent 1.7px) 20px 20px/40px 40px,linear-gradient(180deg,#fefdf9,#faf8ef)}
+.unit.selected .seat-ring{outline:2px dashed var(--gold);outline-offset:6px;border-radius:14px}
+.unit.selected .chair{box-shadow:0 0 0 2px rgba(157,150,80,.5)}
+.chair{box-shadow:0 2px 5px rgba(60,55,20,.22)}
+.chair.filled{outline:2px solid #fff;box-shadow:0 0 0 3px var(--gold),0 2px 6px rgba(60,55,20,.25)}
+.table-shape{box-shadow:0 8px 22px rgba(60,55,20,.22),inset 0 -6px 14px rgba(60,55,20,.12),inset 0 4px 10px rgba(255,255,255,.22)}
+.table-round,.table-rect{background:linear-gradient(145deg,#b3ac66,#8f8846)}
+.table-label{color:#fff;text-shadow:0 1px 2px rgba(40,38,15,.35)}
+.fixed-el{background:linear-gradient(145deg,#4d4922,#2f2c14);box-shadow:0 8px 22px rgba(40,38,15,.28)}
+.fixed-el.rect{background:rgba(157,150,80,.12) !important;border:1.5px dashed #9d9650 !important;color:#5e5829 !important;box-shadow:none;border-radius:16px}
+.unit-ctrl{border:none;box-shadow:0 8px 24px rgba(60,55,20,.2)}
+.mini{background:var(--soft);color:var(--green-dark)}
+.mini:hover{background:var(--green-dark);color:#fff}
+.mini.x:hover{background:#a8362b;color:#fff}
+.mini-count{color:var(--green-dark)}
+
+.side-panel{background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 14px 44px rgba(60,55,20,.08);padding:18px 18px 20px}
+.gp-title{color:var(--ink)}
+.gp-sub{color:var(--gold)}
+.gp-pos{color:var(--green-dark)}
+.gp-input,.gp-other,.dp-other,.gp-label{border:1px solid var(--border);border-radius:10px;background:#fff}
+.gp-input:focus,.gp-label:focus,.dp-other:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(157,150,80,.18)}
+.gp-diet{border:1px solid var(--border);border-radius:10px;color:#9a966a}
+.gp-diet.has{background:var(--soft);border-color:var(--gold);color:var(--green-dark)}
+.gp-warn,.cloud-status.err{color:#a8362b}
+.gp-empty{color:var(--green-dark)}
+
+.dlg-overlay{background:rgba(35,33,15,.5);backdrop-filter:blur(3px)}
+.dlg{border-radius:22px;box-shadow:0 30px 80px rgba(35,33,15,.35)}
+.dlg-head h2,.po-title,.dp-title,.plan-title-row{color:var(--ink)}
+.plan-when,.po-note,.dp-group{color:var(--gold)}
+.plan-row{border-top-color:var(--border)}
+.print-opt{border:1px solid var(--border);border-radius:16px}
+.print-opt:hover,.print-opt:focus-visible{border-color:var(--gold);background:var(--soft)}
+.diet-pop{border:none;border-radius:18px;box-shadow:0 20px 60px rgba(35,33,15,.3)}
+.dp-opt{color:var(--ink)}
+.dp-opt input{accent-color:var(--green-dark)}
+
+.hint{color:var(--green-dark);opacity:.8}
+.footer{color:rgba(94,88,41,.65)}
+}
+</style>
 </head>
 <body>
 
 <div class="topbar">
-  <a href="../operations.html">&larr; Back</a>
-  <span class="title">Petrus</span>
-  <span></span>
+  <a class="logo" href="../index.html"><img src="../petrus-logo.png" alt="Petrus"></a>
+  <a class="back" href="../operations.html">&larr; Back</a>
 </div>
 
 <div class="page">
   <div class="page-header">
-    <h1>Seat Plan</h1>
     <p class="sub">Restaurant Floor</p>
+    <h1>Seat Plan<em>.</em></h1>
     <!-- Event name + Save. A new plan has an empty, editable name; once saved it shows the
          name and the button becomes Update (enabled when there are changes). -->
     <div class="plan-bar" id="planBar">
