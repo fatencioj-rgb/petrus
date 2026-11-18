@@ -123,6 +123,35 @@ table.rota.who td.lab{border-left:0}
 table.rota.who td.lab b{display:block;font-size:12.5px;color:var(--navy)}
 table.rota.who td.lab span{color:var(--blue);font-size:11px}
 table.rota.who td.nobody{background:var(--over);color:var(--overT);font-weight:700}
+/* tasks (Stocktake, Training…) */
+.tkb{display:inline-block;background:#FFE699;color:#7F6000;font-size:9.5px;font-weight:700;letter-spacing:.3px;border-radius:8px;padding:0 6px;line-height:14px;vertical-align:middle;margin-left:3px;text-transform:uppercase}
+table.rota tr.hastk td,table.rota tr.hastk th{border-bottom:0}
+table.rota tr.tkrow td{height:15px;padding:0 4px 2px;text-align:left;border-bottom:1px solid var(--line)}
+table.rota tr.tkrow td .tkb{margin-left:0}
+table.rota.who .wl{display:flex;align-items:center;justify-content:space-between;gap:3px;min-height:16px}
+table.rota.who .wl>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.rota.who .wl.busy>span:first-child{color:#8C8C8C}
+table.rota td.tkhit{cursor:pointer}
+table.rota td.dash.tkhit:hover{background:#FFE699;color:#7F6000}
+table.rota td.dash.tkhit:hover::after{content:'+';font-weight:700}
+table.rota tr.tkrow td.tkhit:hover .tkb{outline:1px solid #BF9000}
+/* task popover (anchored to the cell) */
+.tkpop{position:fixed;z-index:9200;width:300px;max-width:calc(100vw - 16px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:12px 14px;font-size:12.5px}
+.tkpop .tp-h{display:flex;flex-direction:column;gap:1px}
+.tkpop .tp-h b{font-size:16px;color:var(--navy)}
+.tkpop .tp-h span{color:var(--blue);font-size:12px}
+.tkpop .tp-sub,.tkpop .tp-note{font-size:11px;font-style:italic;color:var(--grey);margin:4px 0 8px}
+.tkpop .tp-note{margin:4px 0 10px}
+.tkpop .tp-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tkpop .tp-chip{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:14px;padding:4px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.tkpop .tp-chip.on{background:#FFE699;border-color:#BF9000;color:#7F6000}
+.tkpop .tp-other{border:1px solid var(--line);border-radius:14px;padding:4px 10px;font-size:12px;width:110px;color:var(--navy)}
+.tkpop .tp-other.on{background:#FFE699;border-color:#BF9000;color:#7F6000;font-weight:700}
+.tkpop .tp-time{display:flex;gap:10px;margin-top:10px}
+.tkpop .tp-time label{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--navy)}
+.tkpop .tp-time input{width:70px;border:1px solid var(--line);border-radius:6px;padding:3px 5px;font-size:12.5px;text-align:center;color:var(--navy)}
+.tkpop .tp-acts{display:flex;justify-content:flex-end;gap:8px}
+@media print{.tkpop{display:none}}
 .legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:11.5px;margin-top:14px}
 .legend b{margin-right:6px}
 .legend i{display:inline-block;width:34px;height:13px;border:1px solid var(--line);vertical-align:middle;margin-right:5px}
@@ -365,25 +394,59 @@ function buildModel(monStr){
       .forEach(function(x){
         var nm=String(x.p.name).trim(), K=nm.toUpperCase(); seq[K]=(seq[K]||0)+1;
         var key=nm+'#'+seq[K], v=(e[key]&&e[key].v)||blank14(); used[key]=true;
-        sec.rows.push(makeRow(key,nm,team,seq[K],v,x.p));
+        sec.rows.push(makeRow(key,nm,team,seq[K],v,x.p,(doc.tasks||{})[key]));
       });
     stored.forEach(function(s){                    // saved this week but not active now: kept so nothing disappears
       if(used[s.key] || s.team!==team) return;
       if(!(s.d.v||[]).some(function(x){return String(x||'').trim();})) return;
       used[s.key]=true;
-      sec.rows.push(makeRow(s.key,s.d.name,team,s.d.seq||1,s.d.v,personByName(s.d.name)||{}));
+      sec.rows.push(makeRow(s.key,s.d.name,team,s.d.seq||1,s.d.v,personByName(s.d.name)||{},(doc.tasks||{})[s.key]));
     });
     if(sec.rows.length) model.sections.push(sec);
   });
   return model;
 }
-function makeRow(key,name,team,seq,v,p){
+/* ---------------------------------------------------------------- tasks (Stocktake, Training…) */
+// Informative only (does NOT change hours): per person, per day one task {t:name, f:from, to:to}.
+// Empty from/to = the whole shift. Stored in the week doc: tasks{ "Name#n": [7 x {t,f,to}] }.
+var DEFAULT_TASKS = ['Stocktake','Training'];
+var SERVICE_WIN = [[540,660],[660,960],[960,1320],[1320,1620]];   // Opening, Lunch, Dinner, Closing (minutes)
+function taskList(){ var t=(S.cfg && S.cfg.tasks && S.cfg.tasks.length) ? S.cfg.tasks : DEFAULT_TASKS; return t.slice(); }
+function blank7t(){ var a=[]; for(var i=0;i<7;i++) a.push({t:'',f:'',to:''}); return a; }
+function taskOf(r,k){ var x=(r.tasks||[])[k]; return (x && x.t) ? x : null; }
+function shiftSpan(r,k){                                  // [start,end] in minutes, end after midnight > 1440
+  var a=tMin(r.v[2*k]), b=tMin(r.v[2*k+1]); if(a===null) return null;
+  a=a%1440; if(b===null) b=a; else { b=b%1440; if(b<=a) b+=1440; }
+  return [a,b];
+}
+function taskSpan(r,k){                                   // task window, or the whole shift
+  var x=taskOf(r,k), sp=shiftSpan(r,k); if(!x||!sp) return null;
+  var f=tMin(x.f), to=tMin(x.to);
+  if(f===null && to===null) return sp;
+  f=(f===null)?sp[0]:f%1440; to=(to===null)?sp[1]:to%1440;
+  if(f<sp[0]-1 && f<=180) f+=1440;
+  if(to<=f) to+=1440;
+  return [f,to];
+}
+function taskWhole(r,k){ var t=taskSpan(r,k), s=shiftSpan(r,k); return !!(t&&s&&t[0]<=s[0]&&t[1]>=s[1]); }
+// label under the shift: "TRAINING" (whole shift) or "STOCKTAKE 09:30–16:00"
+function taskLabel(r,k){
+  var x=taskOf(r,k), sp=taskSpan(r,k); if(!x||!sp) return '';
+  return taskWhole(r,k) ? x.t : x.t+' '+fmtT(sp[0])+'\u2013'+fmtT(sp[1]);
+}
+// is the person busy with the task during service c? (task window overlaps the service)
+function taskInService(r,k,c){
+  var sp=taskSpan(r,k); if(!sp || !staffMatch(c,r.v[2*k],r.v[2*k+1])) return false;
+  var w=SERVICE_WIN[c]; return sp[0]<w[1] && sp[1]>w[0];
+}
+function dayTasks(r,k){ var l=taskLabel(r,k); return l?[l]:[]; }
+function makeRow(key,name,team,seq,v,p,tasks){
   v=(v||blank14()).slice(); while(v.length<14) v.push('');
   var hours=0, off=0;
   for(var k=0;k<7;k++){ hours+=paidMin(v[2*k],v[2*k+1]); }
   v.forEach(function(x){ if(isWord(x,'Holiday')||isWord(x,'SICK')) off++; });
   var mn=num(p&&p.min,0), mx=num(p&&p.max,0), minEff=mn>0?Math.max(0,mn-mn/5*off):0;
-  return { key:key, name:name, team:team, seq:seq, v:v, agency:String((p&&p.type)||'').toLowerCase()==='agency',
+  return { key:key, name:name, team:team, seq:seq, v:v, tasks:(Array.isArray(tasks)&&tasks.length===7&&typeof tasks[0]==='object')?tasks:blank7t(), agency:String((p&&p.type)||'').toLowerCase()==='agency',
            hours:hours, min:minEff, max:mx>0?mx:0,
            under: mn>0 && hours < minEff*60-0.01, over: mx>0 && hours > mx*60+0.01 };
 }
@@ -413,14 +476,21 @@ function watchWeek(monStr){
     }
   }, function(){});
 }
-function isEditing(){ var a=document.activeElement; return a && a.classList && a.classList.contains('t'); }
+function isEditing(){ if(TP && TP.el) return true; var a=document.activeElement; return a && a.classList && a.classList.contains('t'); }
 document.addEventListener('focusout',function(){ setTimeout(function(){ if(S.pendingRender && !isEditing()){ S.pendingRender=false; if(S.view==='week') renderWeek(true); } },0); });
 
 /* ---------------------------------------------------------------- saving */
 function ensureWeekLocal(monStr){
   if(!S.weeks[monStr]) S.weeks[monStr]={ monday:monStr, mondayOpen:false, info:{covers:blank14(),tables:blank14(),kt:blank14()}, e:{} };
-  var w=S.weeks[monStr]; w.info=w.info||{covers:blank14(),tables:blank14(),kt:blank14()}; w.e=w.e||{};
+  var w=S.weeks[monStr]; w.info=w.info||{covers:blank14(),tables:blank14(),kt:blank14()}; w.e=w.e||{}; w.tasks=w.tasks||{};
   return w;
+}
+function saveTask(monStr,row,k,obj){
+  var w=ensureWeekLocal(monStr), cur=w.tasks[row.key];
+  cur=(Array.isArray(cur)&&cur.length===7&&typeof cur[0]==='object') ? JSON.parse(JSON.stringify(cur)) : blank7t();
+  cur[k]=obj||{t:'',f:'',to:''}; w.tasks[row.key]=cur;
+  var patch={ monday:monStr, tasks:{} }; patch.tasks[row.key]=cur;
+  return write(monStr, patch, true);
 }
 function saveCell(monStr,row,idx,value){
   var w=ensureWeekLocal(monStr), cur=(w.e[row.key]&&w.e[row.key].v)||blank14();
@@ -572,6 +642,7 @@ function renderStaffWeek(){
   bindBar(app);
 }
 function renderWeek(keepFocus){
+  if(TP.el) closeTaskPop();
   if(S.staff) return renderStaffWeek();
   var focusId=null, a=document.activeElement;
   if(keepFocus!==false && a && a.getAttribute && a.getAttribute('data-cell')) focusId=a.getAttribute('data-cell');
@@ -642,7 +713,8 @@ function rotaTable(m,opts){
     if(H) h+='<td class="hs">'+fmtH(sh,true)+'</td>'; h+='</tr>';
     totH+=sh;
     sec.rows.forEach(function(r){
-      h+='<tr class="r"><td class="nm'+(r.agency?' ag':'')+'">'+esc(r.name)+'</td>';
+      var anyT=false, tl=[]; for(k=0;k<7;k++){ tl.push(dayTasks(r,k)); if(tl[k].length) anyT=true; }
+      h+='<tr class="r'+(anyT?' hastk':'')+'"><td class="nm'+(r.agency?' ag':'')+'">'+esc(r.name)+'</td>';
       for(k=0;k<7;k++){
         var s=r.v[2*k], e=r.v[2*k+1], cl=dayClosed(k,m.monOpen), kc='';
         if(!cl){ if(isWord(s,'Holiday')) kc=' k-hol'; else if(isWord(s,'SICK')) kc=' k-sick'; else if(isWord(s,'TBC')||isWord(e,'TBC')) kc=' k-tbc'; else if(isClosingEnd(e)) kc=' k-close'; }
@@ -652,11 +724,22 @@ function rotaTable(m,opts){
           h+='<td colspan="3" class="ds txt'+base+'">'+inp(r,2*k,s,rowIdx,2*k)+'</td>'; continue;
         }
         h+='<td class="ds'+base+'">'+(E&&!cl?inp(r,2*k,s,rowIdx,2*k):esc(s))+'</td>';
-        h+='<td class="dash'+base+'">'+(String(e||'').trim()?'-':'')+'</td>';
+        var tkHit = E && !cl && isTime(s);                    // editors: click the dash to add a task (Stocktake, Training…)
+        h+='<td class="dash'+base+(tkHit?' tkhit':'')+'"'+(tkHit?' data-tk="'+esc(r.key)+'|'+k+'" title="Add a task (Stocktake, Training…)"':'')+'>'+(String(e||'').trim()?'-':'')+'</td>';
         h+='<td class="'+base.trim()+'">'+(E&&!cl?inp(r,2*k+1,e,rowIdx,2*k+1):esc(e))+'</td>';
       }
       if(H) h+='<td class="hs'+(r.over?' o':(r.under?' u':''))+'">'+fmtH(r.hours,true)+'</td>';
       h+='</tr>'; rowIdx++;
+      // tasks (Stocktake, Training…) in a small line under the shift
+      if(anyT){
+        h+='<tr class="tkrow"><td class="nm"></td>';
+        for(k=0;k<7;k++){
+          var clt=dayClosed(k,m.monOpen)?' cl':'', lbl=tl[k].map(function(t){return '<span class="tkb">'+esc(t)+'</span>';}).join(' ');
+          var hit=E && tl[k].length ? ' data-tk="'+esc(r.key)+'|'+k+'" title="Edit task"' : '';
+          h+='<td colspan="3" class="ds'+clt+(hit?' tkhit':'')+'"'+hit+'>'+lbl+'</td>';
+        }
+        if(H) h+='<td class="hs"></td>'; h+='</tr>';
+      }
     });
   });
   h+=spacer(m,H);
@@ -701,7 +784,10 @@ function whoTable(m){
       if(dayClosed(k,m.monOpen)){ h+='<td colspan="3" class="cl"></td>'; continue; }
       var L=lists[k][c];
       if(!L.length) h+='<td colspan="3"'+((c===0||c===3)?' class="nobody">NOBODY':'>-')+'</td>';
-      else h+='<td colspan="3">'+L.map(function(r){return esc(r.name);}).join('<br>')+'</td>';
+      else h+='<td colspan="3">'+L.map(function(r){
+        var busy=taskInService(r,k,c), x=taskOf(r,k);
+        return '<div class="wl'+(busy?' busy':'')+'"><span>'+esc(r.name)+'</span>'+(busy?'<span class="tkb">'+esc(x.t)+'</span>':'')+'</div>';
+      }).join('')+'</td>';
     }
     h+='</tr>';
   }
@@ -720,6 +806,60 @@ function hoursPanel(m){
     '<div class="note">Min h / Max h are set per person in the Team table on the Index. Each Holiday or Sick day lowers the minimum by 1/5. This panel, the hours, Who\'s on for and the legend are not printed.</div></div>';
 }
 
+/* ---------------------------------------------------------------- task popover */
+var TP={ el:null, anchor:null, row:null, k:0, mon:null };
+function closeTaskPop(){
+  if(TP.el){ TP.el.remove(); TP.el=null; }
+  window.removeEventListener('scroll',placeTaskPop,true); window.removeEventListener('resize',placeTaskPop);
+  document.removeEventListener('mousedown',taskPopOutside,true);
+  if(S.pendingRender && S.view==='week'){ S.pendingRender=false; renderWeek(false); }
+}
+function taskPopOutside(e){ if(TP.el && !TP.el.contains(e.target)) closeTaskPop(); }
+function placeTaskPop(){
+  if(!TP.el || !TP.anchor || !document.body.contains(TP.anchor)) return;
+  var r=TP.anchor.getBoundingClientRect(), pw=TP.el.offsetWidth, ph=TP.el.offsetHeight, vw=window.innerWidth, vh=window.innerHeight;
+  var left=Math.max(8, Math.min(r.left+r.width/2-pw/2, vw-pw-8)), top=r.bottom+6;
+  if(top+ph>vh-8 && r.top-ph-6>8) top=r.top-ph-6;          // above if there is no room below
+  TP.el.style.left=left+'px'; TP.el.style.top=Math.max(8,top)+'px';
+}
+function openTaskPop(anchor,row,k){
+  closeTaskPop();
+  var x=taskOf(row,k)||{t:'',f:'',to:''}, opts=taskList(), d=addDays(parseYmd(S.mon),k), sp=shiftSpan(row,k);
+  var other = x.t && opts.indexOf(x.t)<0 ? x.t : '';
+  var el=document.createElement('div'); el.className='tkpop';
+  el.innerHTML=
+    '<div class="tp-h"><b>Task</b><span>'+esc(row.name)+' &middot; '+fmtDay(d)+(sp?' &middot; '+fmtT(sp[0])+'\u2013'+fmtT(sp[1]):'')+'</span></div>'+
+    '<div class="tp-sub">For information only — the hours do not change.</div>'+
+    '<div class="tp-chips">'+opts.map(function(o){ return '<button type="button" class="tp-chip'+(o===x.t?' on':'')+'" data-v="'+esc(o)+'">'+esc(o)+'</button>'; }).join('')+
+    '<input class="tp-other'+(other?' on':'')+'" placeholder="Other…" value="'+esc(other)+'"></div>'+
+    '<div class="tp-time"><label>From <input class="tp-f" list="timeList" value="'+esc(x.f||'')+'" placeholder="start"></label>'+
+    '<label>To <input class="tp-to" list="timeList" value="'+esc(x.to||'')+'" placeholder="end"></label></div>'+
+    '<div class="tp-note">Leave From / To empty if it takes the whole shift.</div>'+
+    '<div class="tp-acts"><button type="button" class="btn light tp-clear">Clear</button><button type="button" class="btn tp-done">Done</button></div>';
+  document.body.appendChild(el);
+  TP.el=el; TP.anchor=anchor; TP.row=row; TP.k=k; TP.mon=S.mon;
+  var chosen=x.t;
+  function pick(v){ chosen=v; el.querySelectorAll('.tp-chip').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===v); });
+                    var o=el.querySelector('.tp-other'); o.classList.toggle('on', !!v && opts.indexOf(v)<0); if(opts.indexOf(v)>=0) o.value=''; }
+  el.querySelectorAll('.tp-chip').forEach(function(b){ b.onclick=function(){ pick(b.getAttribute('data-v')); }; });
+  el.querySelector('.tp-other').addEventListener('input',function(e){ var v=e.target.value.trim(); if(v) pick(v); else if(opts.indexOf(chosen)<0) pick(''); });
+  function done(){
+    var f=normValue(el.querySelector('.tp-f').value), to=normValue(el.querySelector('.tp-to').value);
+    if(!isTime(f)) f=''; if(!isTime(to)) to='';
+    if(!chosen){ toast('Choose a task (or press Clear).',true); return; }
+    // the whole shift typed as From/To = keep it simple, no times
+    if(sp && f && to && tMin(f)%1440===sp[0] && (tMin(to)%1440)===(sp[1]%1440)){ f=''; to=''; }
+    saveTask(TP.mon,row,k,{t:chosen,f:f,to:to}); closeTaskPop(); renderWeek(false);
+  }
+  el.querySelector('.tp-done').onclick=done;
+  el.querySelector('.tp-clear').onclick=function(){ saveTask(TP.mon,row,k,{t:'',f:'',to:''}); closeTaskPop(); renderWeek(false); };
+  el.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); done(); } else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeTaskPop(); } });
+  placeTaskPop();
+  window.addEventListener('scroll',placeTaskPop,true); window.addEventListener('resize',placeTaskPop);   // stays open when the tablet keyboard opens
+  setTimeout(function(){ document.addEventListener('mousedown',taskPopOutside,true); },0);
+  var first=el.querySelector('.tp-chip.on')||el.querySelector('.tp-chip'); if(first) first.focus();
+}
+
 // covers / tables / KT saved earlier as a time by mistake ("13:00", "06:00") -> show the number typed (13, 6)
 function infoNum(v){
   var s=String(v===undefined||v===null?'':v).trim(), m=s.match(/^(\d{1,2}):(\d{2})$/);
@@ -729,6 +869,12 @@ function infoNum(v){
 function bindCells(app,m){
   if(!S.canEdit) return;
   var rows={}; m.sections.forEach(function(s){ s.rows.forEach(function(r){ rows[r.key]=r; }); });
+  app.querySelectorAll('[data-tk]').forEach(function(el){
+    el.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var p=el.getAttribute('data-tk').split('|'), r=rows[p[0]]; if(r) openTaskPop(el, r, +p[1]);
+    });
+  });
   app.querySelectorAll('input.t').forEach(function(el){
     el.addEventListener('change',function(){
       var isInfo=el.hasAttribute('data-info'), i=+el.getAttribute('data-i');
@@ -786,7 +932,7 @@ function copyPrevious(){
       Object.keys(p.e).forEach(function(k){ var x=p.e[k]; e[k]={ name:x.name, team:x.team, seq:x.seq, v:(x.v||blank14()).slice() }; });
       var info={ covers:((w.info&&w.info.covers)||blank14()).slice(), tables:((w.info&&w.info.tables)||blank14()).slice(), kt:((w.info&&w.info.kt)||blank14()).slice() };
       w.e=e; w.info=info;
-      write(mon,{ monday:mon, mondayOpen:!!w.mondayOpen, info:info, e:e },false).then(function(){ renderWeek(false); });
+      write(mon,{ monday:mon, mondayOpen:!!w.mondayOpen, info:info, e:e, tasks:(w.tasks||{}) },false).then(function(){ renderWeek(false); });
       renderWeek(false);
     });
   });
@@ -809,7 +955,7 @@ function waText(t){
     txt+='\n*'+heads[c]+'*\n';
     if(L[c].length){ any=true; L[c].forEach(function(r){
       var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]));
-      txt+='\u2022 '+r.name+(showT?' '+fmtT(tMin(s)):'')+'\n';
+      txt+='\u2022 '+r.name+(showT?' '+fmtT(tMin(s)):'')+(taskInService(r,k,c)?' \u2014 _'+taskLabel(r,k)+'_':'')+'\n';
     }); }
     else txt+=(c===0||c===3)?'\u26A0\uFE0F NOBODY\n':'-\n';
   }
@@ -826,7 +972,10 @@ function waData(t){
     if(L[c].length) any=true;
     lists.push(L[c].map(function(r){
       var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]));
-      return { name:r.name, team:r.team, time: showT ? fmtT(tMin(s)) : '' };
+      var busy=taskInService(r,k,c), x=taskOf(r,k), sp=taskSpan(r,k);
+      return { name:r.name, team:r.team, time: showT ? fmtT(tMin(s)) : '',
+               task: busy ? String(x.t).toUpperCase() : '',
+               taskTime: busy && !taskWhole(r,k) ? fmtT(sp[0])+'\u2013'+fmtT(sp[1]) : '' };
     }));
   }
   if(!any) return {error:'There are no shifts for today ('+DAYS[k]+' '+fmtDM(t)+') yet.'};
@@ -855,11 +1004,22 @@ function teamTag(team){
 function drawCard(d){
   var FONT='Calibri, Carlito, "Segoe UI", Arial, sans-serif', NAVY='#1F3864', BLUE='#2F5597', LINE='#9BB7D9', BAND='#DDEBF7';
   var heads=['OPENING','LUNCH','DINNER','CLOSING'], W=1080, P=48, G=24, CW=(W-2*P-G)/2, LH=50, HH=70, TOP=206;
-  var grid=[[0,1],[2,3]];
-  var rowH=grid.map(function(r){ return HH+22+Math.max(1,d.lists[r[0]].length,d.lists[r[1]].length)*LH+18; });
-  var H=TOP+rowH[0]+G+rowH[1]+84;
-  var c=document.createElement('canvas'); c.width=W; c.height=H;
+  var grid=[[0,1],[2,3]], TL=38, PW=92;
+  var c=document.createElement('canvas'); c.width=W; c.height=200;
   var x=c.getContext('2d');
+  // where each person's task pill goes: next to the name, or on a second line if it would touch the time
+  function taskText(p){ return p.task ? p.task+(p.taskTime?' '+p.taskTime:'') : ''; }
+  function pillW(t){ x.font='bold 19px '+FONT; return x.measureText(t).width+22; }
+  d.lists.forEach(function(L){ L.forEach(function(p){
+    p.wrap=false; if(!p.task) return;
+    x.font='34px '+FONT; var nameEnd=24+PW+14+x.measureText(p.name).width+12;
+    x.font='32px '+FONT; var timeStart=CW-26-(p.time?x.measureText(p.time).width+14:0);
+    p.wrap = nameEnd+pillW(taskText(p)) > timeStart;
+  }); });
+  function listH(L){ var h=0; L.forEach(function(p){ h+=LH+(p.wrap?TL:0); }); return Math.max(LH,h); }
+  var rowH=grid.map(function(r){ return HH+22+Math.max(listH(d.lists[r[0]]),listH(d.lists[r[1]]))+18; });
+  var H=TOP+rowH[0]+G+rowH[1]+84;
+  c.height=H; x=c.getContext('2d');
   function rr(px,py,w,h,r,top){ x.beginPath(); if(x.roundRect){ x.roundRect(px,py,w,h,top?[r,r,0,0]:r); } else { x.rect(px,py,w,h); } }
   x.fillStyle='#fff'; x.fillRect(0,0,W,H);
   // header
@@ -893,15 +1053,24 @@ function drawCard(d){
           x.fillStyle='#9C0006'; x.font='bold 32px '+FONT; x.fillText('NOBODY',bx+36,by+HH+18+35);
         } else { x.fillStyle='#8C8C8C'; x.font='32px '+FONT; x.fillText('-',bx+26,by+HH+22+34); }
       } else {
+        var yy=by+HH+22;
         L.forEach(function(p,i){
-          var ly=by+HH+22+i*LH+34;
+          var ly=yy+34;
           if(i>0){ x.strokeStyle='#E3ECF7'; x.lineWidth=1; x.beginPath(); x.moveTo(bx+22,ly-36); x.lineTo(bx+CW-22,ly-36); x.stroke(); }
           // team pill first (fixed width so all names line up), then the name
-          var tg=teamTag(p.team), PW=92, px0=bx+24, py0=ly-25;
+          var tg=teamTag(p.team), px0=bx+24, py0=ly-25;
           x.fillStyle=tg.bg; rr(px0,py0,PW,30,15,false); x.fill();
           x.font='bold 19px '+FONT; x.fillStyle=tg.fg; x.textAlign='center'; x.fillText(tg.label,px0+PW/2,py0+21);
-          x.fillStyle=NAVY; x.font='34px '+FONT; x.textAlign='left'; x.fillText(p.name,px0+PW+14,ly);
+          x.fillStyle=p.task?'#5A6A85':NAVY; x.font='34px '+FONT; x.textAlign='left'; x.fillText(p.name,px0+PW+14,ly);
+          var nameEnd=px0+PW+14+x.measureText(p.name).width;
           if(p.time){ x.fillStyle=BLUE; x.font='32px '+FONT; x.textAlign='right'; x.fillText(p.time,bx+CW-26,ly); x.textAlign='left'; }
+          // task (Stocktake, Training…): busy during this service
+          if(p.task){
+            var tt=taskText(p), tw=pillW(tt), tx0=p.wrap?px0+PW+14:nameEnd+12, ty0=p.wrap?ly+TL-25:py0;
+            x.fillStyle='#FFE699'; rr(tx0,ty0,tw,30,15,false); x.fill();
+            x.font='bold 19px '+FONT; x.fillStyle='#7F6000'; x.textAlign='left'; x.fillText(tt,tx0+11,ty0+21);
+          }
+          yy+=LH+(p.wrap?TL:0);
         });
       }
     });
