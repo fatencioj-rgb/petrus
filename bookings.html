@@ -341,7 +341,45 @@ tr.dragging{background:var(--soft)}
 .bk-chip.on{background:#8f8846;border-color:#8f8846;color:#fff}
 .page-header .eyebrow{color:#a29b5d}
 .page-header h1 em{color:#b1aa6c}
+
+/* --- Allergy and voucher tags (details open in small pop-ups) --- */
+.a-hidden,.v-hidden{display:none !important}
+.a-cell{min-width:190px}
+.v-cell{min-width:250px}
+.abtn,.vbtn{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:none;background:none;padding:2px;cursor:pointer;text-align:left;font:inherit;max-width:100%}
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:30px;padding:3px 10px;font-size:11px;font-weight:500;border:1px solid var(--gold-light);background:var(--soft);color:var(--green-dark);white-space:nowrap;line-height:1.35;transition:border-color .2s}
+.tag.al{background:#fbeeec;border-color:#ecc7c1;color:#a8362b;font-weight:600}
+.tag.oth{font-style:italic}
+.tag.more{background:#fff}
+.tag.vo{background:#fff;border-color:var(--gold);color:var(--ink);max-width:340px;overflow:hidden;text-overflow:ellipsis}
+.tag.vo b{font-weight:600}
+.tag.empty{background:#fff;color:#9a966a;border-style:dashed}
+.abtn:hover .tag,.vbtn:hover .tag,.abtn:focus-visible .tag,.vbtn:focus-visible .tag{border-color:var(--gold)}
+.abtn:focus-visible,.vbtn:focus-visible{outline:none}
+.bk-pop{position:fixed;z-index:900;background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 56px rgba(35,33,15,.26);padding:16px 18px 16px;font-family:var(--sans);max-height:calc(100vh - 16px);overflow:auto;width:min(400px,calc(100vw - 16px))}
+.bk-pop.narrow{width:min(340px,calc(100vw - 16px))}
+.bk-pop h4{font-family:var(--serif);font-size:24px;font-weight:500;line-height:1;color:var(--ink);margin:0}
+.bk-pop small{display:block;font-size:11px;color:#8a8650;margin:4px 0 10px}
+.bp-grp,.bp-lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-dark);margin:11px 0 6px}
+.bp-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.bp-ck{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink);cursor:pointer;padding:2px 0}
+.bp-ck input{accent-color:#8f8846;margin:0;width:14px;height:14px}
+.bp-in,.bp-other,.bp-other-prov{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:10px;font:13px var(--sans);color:var(--ink);background:#fff}
+.bp-in:focus,.bp-other:focus,.bp-other-prov:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(177,170,108,.22)}
+.bp-other-prov{margin-top:8px}
+.bp-in.short{width:150px}
+.bp-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.bp-chip{padding:6px 14px;border-radius:30px;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark);font:500 12px var(--sans);cursor:pointer}
+.bp-chip.dash{border-style:dashed}
+.bp-chip:hover{border-color:var(--gold)}
+.bp-chip.on{background:#c8c28d;border-color:#c8c28d;color:#2f2c14}
+.bp-act{display:flex;justify-content:space-between;margin-top:16px}
+.bp-btn{padding:8px 20px;border-radius:30px;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark);font:500 12px var(--sans);cursor:pointer}
+.bp-btn:hover{border-color:var(--gold)}
+.bp-btn.pr{background:#8f8846;border-color:#8f8846;color:#fff}
 }
+@media print{.bk-pop{display:none !important}}
 </style>
 </head>
 <body>
@@ -419,10 +457,8 @@ tr.dragging{background:var(--soft)}
                         <th rowspan="2">Sec</th>
                         <th rowspan="2">Menu</th>
                         <th colspan="2" style="text-align:center;border-bottom:1px solid rgba(255,255,255,0.3)">Occasion</th>
-                        <th rowspan="2">Allergy / Req</th>
-                        <th rowspan="2">Prov</th>
-                        <th rowspan="2">Code</th>
-                        <th rowspan="2">£</th>
+                        <th rowspan="2" class="th-allergy">Allergies / Req</th>
+                        <th rowspan="2" class="th-voucher">Voucher</th>
                         <th rowspan="2">Notes</th>
                         <th rowspan="2"></th>
                     </tr>
@@ -1117,10 +1153,11 @@ function mergeFromCSV(rows) {
 }
 
 // === ROW MANAGEMENT ===
-function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher, visits, allergyPos, voucherCode, voucherValue, occasionPos, star, voucherProvider) {
+function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher, visits, allergyPos, voucherCode, voucherValue, occasionPos, star, voucherProvider, voucherPin) {
     // Handle old-style calls where voucher is a single field
     if (!voucherCode && voucher) { voucherCode = voucher; }
     if (!voucherProvider) voucherProvider = '';
+    if (!voucherPin) voucherPin = '';
     if (!allergyPos) allergyPos = '';
     if (!occasionPos) occasionPos = '';
     if (!voucherCode) voucherCode = '';
@@ -1182,16 +1219,22 @@ function addRow(time, pax, name, table, menu, occasion, allergy, notes, voucher,
             '<option value="Welcome"'+((occasion||'')==='Welcome'?' selected':'')+'>Welcome</option>'+
             '<option value="Reunion"'+((occasion||'')==='Reunion'?' selected':'')+'>Reunion</option>'+
         '</select></td>' +
-        '<td><textarea class="r-allergy" rows="2">'+esc(allergy)+'</textarea></td>' +
-        '<td><select class="r-vprovider">'+
+        '<td class="a-cell"><button type="button" class="abtn" title="Allergies / requirements"></button>' +
+        '<textarea class="r-allergy a-hidden" rows="2">'+esc(allergy)+'</textarea></td>' +
+        '<td class="v-cell"><button type="button" class="vbtn" title="Voucher"></button><div class="v-hidden">' +
+        '<select class="r-vprovider">'+
+
             '<option value=""'+(!(voucherProvider)?' selected':'')+'>—</option>'+
             '<option value="GRR"'+((voucherProvider||'')==='GRR'?' selected':'')+'>GRR</option>'+
             '<option value="Buyagift"'+((voucherProvider||'')==='Buyagift'?' selected':'')+'>Buyagift</option>'+
             '<option value="Virgin"'+((voucherProvider||'')==='Virgin'?' selected':'')+'>Virgin</option>'+
             '<option value="Deposit"'+((voucherProvider||'')==='Deposit'?' selected':'')+'>Deposit</option>'+
-        '</select></td>' +
-        '<td><input type="text" value="'+esc(voucherCode||'')+'" class="r-vcode"></td>' +
-        '<td><input type="text" value="'+esc(voucherValue||'')+'" class="r-vvalue" placeholder="£"></td>' +
+            ((voucherProvider && ['GRR','Buyagift','Virgin','Deposit'].indexOf(voucherProvider) < 0) ? '<option value="'+esc(voucherProvider)+'" data-custom="1" selected>'+esc(voucherProvider)+'</option>' : '')+
+        '</select>' +
+        '<input type="text" value="'+esc(voucherCode||'')+'" class="r-vcode">' +
+        '<input type="text" value="'+esc(voucherPin||'')+'" class="r-vpin">' +
+        '<input type="text" value="'+esc(voucherValue||'')+'" class="r-vvalue" placeholder="£">' +
+        '</div></td>' +
         '<td><input type="text" value="'+esc(notes||'')+'" class="r-notes"></td>' +
         '<td><button class="btn-remove-row" onclick="this.closest(\'tr\').remove();recalc();">&#215;</button></td>';
     tbody.appendChild(tr);
@@ -1384,6 +1427,7 @@ function gatherRows() {
             voucherProvider: tr.querySelector('.r-vprovider').value,
             voucherCode: tr.querySelector('.r-vcode').value,
             voucherValue: tr.querySelector('.r-vvalue').value,
+            voucherPin: (tr.querySelector('.r-vpin') || {}).value || '',
             section: secOverride,
             star: starVal
         });
@@ -1982,7 +2026,7 @@ function loadBooking(key) {
         var tbody = document.getElementById('resBody');
         tbody.innerHTML = '';
         data.rows.forEach(function(r) {
-            addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"");
+            addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"", r.voucherPin||"");
         });
         document.getElementById('formArea').classList.add('visible');
         updateSaveButton();
@@ -2190,6 +2234,225 @@ addRow = function() {
     applyFilter();
   });
   refresh();
+})();
+</script>
+<script>
+// Allergies and vouchers: tidy tags in the table, details in small pop-ups.
+// The original fields (textarea / select / inputs) stay in each row, hidden, so CSV import,
+// saving and printing keep reading exactly the same values.
+(function(){
+  var ALLERGENS = ['Shellfish','Prawn','Crab','Lobster','Mollusc','Fish Allergy','Peanut','Nut','Gluten Free','Wheat','Dairy Free','Lactose','Egg','Soy','Sesame','Mustard','Sulphite','Lupin','Celery'];
+  var DIETS = ['Vegetarian','Vegan','Pescatarian','Halal','Kosher','No Pork','No Beef','No Lamb','No Alcohol'];
+  var PROVIDERS = ['GRR','Buyagift','Virgin','Deposit'];
+  var body = document.getElementById('resBody');
+  if (!body) return;
+  var pop = null;
+
+  function h(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function core(t){ return String(t).replace(/^\d+\s*x\s+/i, '').trim().toLowerCase(); }
+  function kindOf(t){
+    var c = core(t), i;
+    for (i = 0; i < ALLERGENS.length; i++) if (ALLERGENS[i].toLowerCase() === c) return 'a';
+    for (i = 0; i < DIETS.length; i++) if (DIETS[i].toLowerCase() === c) return 'd';
+    return '';
+  }
+  // "Shellfish, Vegetarian (no egg), 2x Nut" -> 3 items (commas inside brackets do not split)
+  function splitTokens(str){
+    var out = [], cur = '', depth = 0, s = String(str || '');
+    for (var i = 0; i < s.length; i++){
+      var ch = s.charAt(i);
+      if (ch === '(') depth++; else if (ch === ')') depth = Math.max(0, depth - 1);
+      if ((ch === ',' || ch === '\n') && depth === 0){ if (cur.trim()) out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  }
+  function field(tr, sel){ var el = tr.querySelector(sel); return el ? String(el.value || '').trim() : ''; }
+  function tag(txt, cls){ return '<span class="tag' + (cls ? ' ' + cls : '') + '">' + h(txt) + '</span>'; }
+
+  // ---- what the table shows ----
+  function refreshRowTags(tr){
+    var ta = tr.querySelector('.r-allergy'), ab = tr.querySelector('.abtn');
+    if (ta && ab){
+      var tk = splitTokens(ta.value), html = '';
+      if (!tk.length) html = tag('+ Add', 'empty');
+      else {
+        tk.slice(0, 2).forEach(function(t){ var k = kindOf(t); html += tag(t, k === 'a' ? 'al' : (k === 'd' ? '' : 'oth')); });
+        if (tk.length > 2) html += tag('+' + (tk.length - 2), 'more');
+      }
+      ab.innerHTML = html;
+      ab.title = tk.length ? tk.join(', ') : 'Allergies / requirements';
+    }
+    var vb = tr.querySelector('.vbtn');
+    if (vb){
+      var parts = [], pv = field(tr, '.r-vprovider'), code = field(tr, '.r-vcode'), pin = field(tr, '.r-vpin'), amt = field(tr, '.r-vvalue');
+      if (pv) parts.push('<b>' + h(pv) + '</b>');
+      if (code) parts.push(h(code));
+      if (pin) parts.push('PIN ' + h(pin));
+      if (amt) parts.push('<b>' + h(amt) + '</b>');
+      vb.innerHTML = parts.length ? '<span class="tag vo">' + parts.join(' &middot; ') + '</span>' : tag('+ Voucher', 'empty');
+      vb.title = parts.length ? 'Edit voucher' : 'Add a voucher';
+    }
+  }
+
+  // ---- pop-up plumbing (opens under its button, or above if there is no room) ----
+  function closePop(){ if (pop){ pop.el.remove(); pop = null; } }
+  function place(){
+    if (!pop) return;
+    if (!document.body.contains(pop.anchor)){ closePop(); return; }
+    var a = pop.anchor.getBoundingClientRect(), el = pop.el, w = el.offsetWidth, hh = el.offsetHeight;
+    var left = Math.max(8, Math.min(a.left, window.innerWidth - w - 8));
+    var top = a.bottom + 8;
+    if (top + hh > window.innerHeight - 8) top = Math.max(8, a.top - hh - 8);
+    el.style.left = left + 'px'; el.style.top = top + 'px';
+  }
+  function showPop(anchor, el){
+    closePop();
+    document.body.appendChild(el);
+    pop = { el: el, anchor: anchor };
+    place();
+  }
+  function fire(el, type){ el.dispatchEvent(new Event(type, { bubbles: true })); }
+
+  // ---- allergies ----
+  function openAllergy(btn){
+    var tr = btn.closest('tr'), ta = tr.querySelector('.r-allergy');
+    var tokens = splitTokens(ta.value);
+    var name = field(tr, '.r-name');
+    var el = document.createElement('div'); el.className = 'bk-pop';
+    function has(label){ return tokens.some(function(t){ return core(t) === label.toLowerCase(); }); }
+    function box(label){ return '<label class="bp-ck"><input type="checkbox" data-opt="' + h(label) + '"' + (has(label) ? ' checked' : '') + '><span>' + h(label) + '</span></label>'; }
+    function sync(){ ta.value = tokens.join(', '); fire(ta, 'input'); refreshRowTags(tr); }
+    el.innerHTML = '<h4>Allergies / Requirements</h4><small>' + h(name || 'This booking') + ' &middot; filled from the CSV &mdash; you can change it</small>' +
+      '<div class="bp-grp">Allergies</div><div class="bp-grid">' + ALLERGENS.map(box).join('') + '</div>' +
+      '<div class="bp-grp">Diet</div><div class="bp-grid">' + DIETS.map(box).join('') + '</div>' +
+      '<div class="bp-grp">Other</div><input type="text" class="bp-other" placeholder="Type anything else&hellip;" value="' + h(tokens.filter(function(t){ return !kindOf(t); }).join(', ')) + '">' +
+      '<div class="bp-act"><button type="button" class="bp-btn" data-act="clear">Clear</button><button type="button" class="bp-btn pr" data-act="done">Done</button></div>';
+    el.addEventListener('change', function(e){
+      var c = e.target;
+      if (!c.matches || !c.matches('input[type=checkbox]')) return;
+      var lab = c.getAttribute('data-opt').toLowerCase();
+      tokens = tokens.filter(function(t){ return core(t) !== lab; });
+      if (c.checked) tokens.push(c.getAttribute('data-opt'));
+      sync();
+    });
+    el.querySelector('.bp-other').addEventListener('input', function(){
+      tokens = tokens.filter(function(t){ return kindOf(t); }).concat(splitTokens(this.value));
+      sync();
+    });
+    el.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-act]') : null;
+      if (!b) return;
+      if (b.getAttribute('data-act') === 'done'){ closePop(); return; }
+      tokens = [];
+      el.querySelectorAll('input[type=checkbox]').forEach(function(c){ c.checked = false; });
+      el.querySelector('.bp-other').value = '';
+      sync();
+    });
+    showPop(btn, el);
+  }
+
+  // ---- vouchers ----
+  function openVoucher(btn){
+    var tr = btn.closest('tr');
+    var sel = tr.querySelector('.r-vprovider'), code = tr.querySelector('.r-vcode'), pin = tr.querySelector('.r-vpin'), amt = tr.querySelector('.r-vvalue');
+    var name = field(tr, '.r-name');
+    var cur = sel.value, custom = !!cur && PROVIDERS.indexOf(cur) < 0;
+    var el = document.createElement('div'); el.className = 'bk-pop narrow';
+    el.innerHTML = '<h4>Voucher</h4><small>' + h(name || 'This booking') + ' &mdash; shown as one line in the table</small>' +
+      '<div class="bp-lbl">Provider</div><div class="bp-chips">' +
+      PROVIDERS.map(function(p){ return '<button type="button" class="bp-chip' + (cur === p ? ' on' : '') + '" data-prov="' + p + '">' + p + '</button>'; }).join('') +
+      '<button type="button" class="bp-chip dash' + (custom ? ' on' : '') + '" data-prov="__other">Other&hellip;</button></div>' +
+      '<input type="text" class="bp-other-prov" placeholder="Provider name" value="' + (custom ? h(cur) : '') + '" style="display:' + (custom ? 'block' : 'none') + '">' +
+      '<div class="bp-two"><div><div class="bp-lbl">Code</div><input type="text" class="bp-in" data-f="code" value="' + h(code.value) + '"></div>' +
+      '<div><div class="bp-lbl">PIN</div><input type="text" class="bp-in" data-f="pin" value="' + h(pin.value) + '"></div></div>' +
+      '<div class="bp-lbl">Amount</div><input type="text" class="bp-in short" data-f="amt" placeholder="&pound;" value="' + h(amt.value) + '">' +
+      '<div class="bp-act"><button type="button" class="bp-btn" data-act="clear">Clear</button><button type="button" class="bp-btn pr" data-act="done">Done</button></div>';
+    var other = el.querySelector('.bp-other-prov');
+    function setProvider(v){
+      if (v && PROVIDERS.indexOf(v) < 0){
+        var o = sel.querySelector('option[data-custom]');
+        if (!o){ o = document.createElement('option'); o.setAttribute('data-custom', '1'); sel.appendChild(o); }
+        o.value = v; o.textContent = v;
+      }
+      sel.value = v;
+      fire(sel, 'change'); refreshRowTags(tr);
+    }
+    function markChips(v, isOther){
+      el.querySelectorAll('.bp-chip').forEach(function(c){
+        var pv = c.getAttribute('data-prov');
+        c.classList.toggle('on', pv === '__other' ? isOther : (!isOther && pv === v));
+      });
+    }
+    el.addEventListener('click', function(e){
+      var chip = e.target.closest ? e.target.closest('.bp-chip') : null;
+      if (chip){
+        var pv = chip.getAttribute('data-prov');
+        if (pv === '__other'){
+          other.style.display = 'block'; other.focus(); markChips('', true); setProvider(other.value.trim());
+        } else {
+          var again = chip.classList.contains('on');
+          other.style.display = 'none';
+          setProvider(again ? '' : pv); markChips(again ? '' : pv, false);
+        }
+        place(); return;
+      }
+      var b = e.target.closest ? e.target.closest('[data-act]') : null;
+      if (!b) return;
+      if (b.getAttribute('data-act') === 'done'){ closePop(); return; }
+      [[code, 'code'], [pin, 'pin'], [amt, 'amt']].forEach(function(x){
+        x[0].value = ''; fire(x[0], 'input'); fire(x[0], 'change');
+        el.querySelector('[data-f="' + x[1] + '"]').value = '';
+      });
+      other.value = ''; other.style.display = 'none'; setProvider(''); markChips('', false);
+      place();
+    });
+    other.addEventListener('input', function(){ setProvider(this.value.trim()); });
+    el.addEventListener('input', function(e){
+      var f = e.target.getAttribute && e.target.getAttribute('data-f');
+      if (!f) return;
+      var target = f === 'code' ? code : (f === 'pin' ? pin : amt);
+      target.value = e.target.value; fire(target, 'input'); refreshRowTags(tr);
+    });
+    el.addEventListener('change', function(e){
+      var f = e.target.getAttribute && e.target.getAttribute('data-f');
+      if (!f) return;
+      var target = f === 'code' ? code : (f === 'pin' ? pin : amt);
+      fire(target, 'change');
+    });
+    showPop(btn, el);
+    var first = el.querySelector('[data-f="code"]'); if (first) first.focus();
+  }
+
+  // ---- wiring ----
+  body.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.abtn, .vbtn') : null;
+    if (!b) return;
+    if (pop && pop.anchor === b){ closePop(); return; }
+    if (b.classList.contains('abtn')) openAllergy(b); else openVoucher(b);
+  });
+  document.addEventListener('mousedown', function(e){
+    if (!pop) return;
+    if (pop.el.contains(e.target)) return;
+    if (e.target.closest && e.target.closest('.abtn, .vbtn')) return;   // its own click handler decides
+    closePop();
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && pop){ closePop(); e.stopPropagation(); }
+  }, true);
+  window.addEventListener('scroll', function(e){ if (pop && !pop.el.contains(e.target)) place(); }, true);
+  window.addEventListener('resize', place);
+  window.addEventListener('beforeprint', closePop);
+  // every new row (typed, CSV, loaded) gets its tags
+  new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      if (m.target !== body) return;
+      m.addedNodes.forEach(function(n){ if (n.nodeType === 1 && n.tagName === 'TR') refreshRowTags(n); });
+    });
+  }).observe(body, { childList: true });
+  window.refreshRowTags = refreshRowTags;
+  body.querySelectorAll('tr').forEach(refreshRowTags);
 })();
 </script>
 </body>
