@@ -217,7 +217,25 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
   .ps-page:last-child{break-after:auto;page-break-after:auto}
 }
 </style>
-<style id="modern-skin">
+<style id="print-skin">
+/* The printed sheets use the same olive look as the screen (the colours and table finish of #modern-skin, which is screen-only). */
+@media print{
+#printRoot{--green:#9d9650;--green-dark:#5e5829;--gold:#9d9650;--gold-light:#d3cfa6;--table:#a39c57;--chair:#5e5829;--fixed:#3d3a1a}
+.pf-stage{background:#fff}
+.pf-stage .chair{box-shadow:0 1px 2px rgba(60,55,20,.25)}
+.pf-stage .chair.filled{outline:2px solid #fff;box-shadow:0 0 0 3px #9d9650}
+.pf-stage .table-shape{box-shadow:0 3px 8px rgba(60,55,20,.22),inset 0 -6px 14px rgba(60,55,20,.12),inset 0 4px 10px rgba(255,255,255,.22)}
+.pf-stage .table-round,.pf-stage .table-rect{background:linear-gradient(145deg,#b3ac66,#8f8846)}
+.pf-stage .table-label{color:#fff;text-shadow:0 1px 2px rgba(40,38,15,.35)}
+.pf-stage .fixed-el{background:linear-gradient(145deg,#4d4922,#2f2c14);box-shadow:0 4px 10px rgba(40,38,15,.28)}
+.pf-stage .fixed-el.rect{background:rgba(157,150,80,.12) !important;border:1.5px dashed #9d9650 !important;color:#5e5829 !important;box-shadow:none;border-radius:16px}
+.ps-head h1{color:#23210f;letter-spacing:1px}
+.pf-event,.pl-name{color:#23210f}
+.pl-pos{color:#5e5829}
+.pl-list li{border-bottom-color:#e7e4cf}
+.pf-credit{color:#8f8b5e}
+}
+</style><style id="modern-skin">
 /* Modern Petrus look (screen only). The printed sheets and the off-screen fit test keep the original variables. */
 @media screen {
 :root{--green:#9d9650;--green-dark:#5e5829;--gold:#9d9650;--gold-light:#d3cfa6;--cream:#fbfaf4;--border:#e7e4cf;--soft:#f5f3e3;--ink:#23210f;
