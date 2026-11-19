@@ -335,6 +335,40 @@ tr:last-child td { border-bottom:none; }
   .dish-card .dish-name{font-size:26px}
 }
 }
+@media screen{
+/* Food entry screen and menu view */
+.fn-eyebrow{font-size:12px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:#a29b5d;margin:clamp(22px,5vh,48px) 0 0}
+.fn-eyebrow + .section-title{margin-top:8px}
+.fn-back{background:none;border:none;border-bottom:1px solid var(--gold-light);padding:2px 0;margin:0 0 14px;font:500 11px var(--sans);letter-spacing:1.5px;text-transform:uppercase;color:var(--green-dark);cursor:pointer}
+.fn-back:hover{color:var(--gold);border-color:var(--gold)}
+.fn-lbl{font-size:10px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:var(--green-dark);margin:6px 0 14px;display:flex;align-items:center;gap:12px}
+.fn-lbl::after{content:"";flex:1;height:1px;background:var(--border)}
+.fn-menus{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-bottom:34px}
+.fn-mc{cursor:pointer}
+.fn-mc-ph{aspect-ratio:4/5;border-radius:20px;position:relative;overflow:hidden;background:var(--bg-soft) center/cover no-repeat;transition:transform .25s ease,box-shadow .25s ease}
+.fn-mc-ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(35,33,15,0) 45%,rgba(35,33,15,.55) 100%)}
+.fn-mc:hover .fn-mc-ph{transform:translateY(-3px);box-shadow:0 14px 34px rgba(60,55,20,.18)}
+.fn-mc-ph .cnt{position:absolute;left:16px;bottom:14px;z-index:2;color:#fff;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:500}
+.fn-mc-ph .arr{position:absolute;right:14px;bottom:10px;z-index:2;color:#fff;font-size:24px;transition:transform .25s ease}
+.fn-mc:hover .arr{transform:translateX(4px)}
+.fn-mc-nm{font-family:var(--serif);font-weight:500;font-size:32px;line-height:1.05;letter-spacing:-.4px;color:var(--ink);margin:12px 0 6px}
+.fn-mc-vars{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:10px;font-weight:500;padding:3px 9px;border-radius:30px;background:var(--bg-soft);color:var(--green-dark);border:1px solid var(--border)}
+.fn-also{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.fn-ac{display:flex;align-items:center;gap:14px;padding:10px;border:1px solid var(--border);border-radius:16px;background:#fff;cursor:pointer;transition:border-color .2s}
+.fn-ac:hover{border-color:var(--gold)}
+.fn-ac .th{width:64px;height:64px;border-radius:12px;flex:0 0 auto;background:var(--bg-soft) center/cover no-repeat}
+.fn-ac b{display:block;font-family:var(--serif);font-weight:500;font-size:21px;line-height:1.1;color:var(--ink)}
+.fn-ac small{font-size:11px;color:var(--wine-soft)}
+.fn-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.fn-lk{font:500 12px var(--sans);color:var(--green-dark);border:1px solid var(--gold-light);border-radius:40px;padding:8px 16px;background:#fff;cursor:pointer;transition:all .2s}
+.fn-lk:hover{background:var(--soft,#f5f3e3);border-color:var(--gold)}
+@media (max-width:1000px){.fn-menus{grid-template-columns:repeat(2,1fr)}.fn-also{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:700px){
+  .fn-menus{gap:14px}.fn-mc-ph{aspect-ratio:1/1;border-radius:16px}.fn-mc-nm{font-size:24px}.fn-mc-vars{display:none}
+  .fn-also{gap:10px}.fn-ac{padding:8px;gap:10px}.fn-ac .th{width:48px;height:48px}.fn-ac b{font-size:17px}
+}
+}
 </style>
 
 <script src="platform.js"></script><script src="brand.js"></script>
@@ -354,12 +388,15 @@ tr:last-child td { border-bottom:none; }
 
   <!-- MENUS -->
   <section class="section">
-    <h2 class="section-title" id="fn-section-title">The Menu</h2>
+    <div class="fn-eyebrow" id="fn-eyebrow"></div>
+    <h2 class="section-title" id="fn-section-title">Food</h2>
     <p class="section-sub" id="fn-section-sub">Tap a dish to learn it.</p>
+    <div id="fn-crumb"></div>
     <div class="tabs" id="fn-menu-tabs"></div>
     <input type="search" id="fn-search" class="fn-search" placeholder="Search a dish…" oninput="renderDishes()" aria-label="Search a dish">
 
     <!-- Dishes grid (shown for every menu tab) -->
+    <div class="fn-landing" id="fn-landing" style="display:none"></div>
     <div class="dish-grid" id="fn-dish-grid"></div>
 
     <!-- Allergy table (shown only when the Allergens tab is selected) -->
@@ -500,7 +537,7 @@ function nonAllergen(tag){
 }
 
 /* ── Menus / dishes ── */
-let selectedFN = 'all';
+let selectedFN = 'home';
 
 function availableMenus(){
   const base = (typeof getAvailableMenuDefinitions === 'function')
@@ -549,7 +586,12 @@ function dishesForMenu(menuId){
   }
   // Ordered by course first, then the dish's global `order` (set by dragging in
   // the editor) — so the sequence is consistent across every menu.
-  const byOwnMenus = visible.filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0);
+  let byOwnMenus = visible.filter(d => Array.isArray(d.menus) && d.menus.indexOf(menuId) >= 0);
+  // Canapes / amuse bouche and petit fours are the first and last steps of every main menu.
+  if(['prestige','discovery','a_la_carte','lunch'].indexOf(menuId) >= 0){
+    const shared = visible.filter(d => Array.isArray(d.menus) && (d.menus.indexOf('canapes_amuse') >= 0 || d.menus.indexOf('petit_fours') >= 0) && byOwnMenus.indexOf(d) < 0);
+    byOwnMenus = byOwnMenus.concat(shared);
+  }
   if(byOwnMenus.length){
     return byOwnMenus.sort(byCourseThen(d => d.order || 0));
   }
@@ -558,117 +600,204 @@ function dishesForMenu(menuId){
   return names.map(n => visible.find(d => d.name === n)).filter(Boolean);
 }
 
+/* ── Food: menus landing, menu view with variations, back-button routing ── */
+const MAIN_MENUS = ['prestige','discovery','a_la_carte','lunch'];
+const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood','Gluten free'];
+let selectedDiet = 'Regular';
+(function(){
+  const p = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+  if(p.get('m')) selectedFN = p.get('m');
+  if(p.get('d')) selectedDiet = p.get('d');
+})();
+
+function menuName(id){
+  const m = availableMenus().find(x => x.id === id);
+  return m ? m.label.replace(/\s+menu$/i, '') : id;
+}
+function dietsOfDishIn(d, menuId){
+  const dbm = d.dietByMenu && d.dietByMenu[menuId];
+  return Array.isArray(dbm) && dbm.length ? dbm : ['Regular'];
+}
+function hasDietIn(d, menuId, tag){
+  return dietsOfDishIn(d, menuId).some(x => (x||'').trim().toLowerCase() === tag.toLowerCase());
+}
+// Variations that exist in a menu, in a fixed order.
+function menuDiets(menuId){
+  const list = dishesForMenu(menuId);
+  return DIET_SECTIONS.filter(t => list.some(d => hasDietIn(d, menuId, t)));
+}
+// A representative photo for a menu: the middle dish that has one.
+function heroOf(list, used){
+  const withImg = list.filter(d => firstImage(d));
+  if(!withImg.length) return '';
+  const mid = Math.floor(withImg.length / 2);
+  // Start from the middle dish and move outwards until we find a photo no other card is using.
+  for(let k = 0; k < withImg.length; k++){
+    for(const idx of [mid + k, mid - k]){
+      if(idx < 0 || idx >= withImg.length) continue;
+      const img = firstImage(withImg[idx]);
+      if(!used || !used.has(img)){ if(used) used.add(img); return img; }
+    }
+  }
+  return firstImage(withImg[mid]);
+}
+function imgCss(img){ return /^data:/i.test(img) ? img : encodeURI(img); }
+function dishCount(n){ return n + (n === 1 ? ' dish' : ' dishes'); }
+
+function hashState(){
+  const p = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+  return { m: p.get('m') || 'home', d: p.get('d') || 'Regular' };
+}
+function applyHash(){
+  const s = hashState();
+  selectedFN = s.m; selectedDiet = s.d;
+  if(selectedFN !== 'home' && !availableMenus().some(x => x.id === selectedFN)) selectedFN = 'home';
+  renderMenuTabs();
+  renderDishes();
+  window.scrollTo(0, 0);
+}
+function setHash(m, d){
+  const h = '#m=' + encodeURIComponent(m) + ((d && d !== 'Regular') ? '&d=' + encodeURIComponent(d) : '');
+  if(location.hash === h) applyHash(); else location.hash = h;   // hashchange runs applyHash
+}
+window.addEventListener('hashchange', applyHash);
+function selectMenuFN(id){
+  const sb = document.getElementById('fn-search'); if(sb) sb.value = '';
+  setHash(id, 'Regular');
+}
+function selectDiet(tag){ setHash(selectedFN, tag); }
+
 function renderMenuTabs(){
   const tabs = document.getElementById('fn-menu-tabs');
-  tabs.innerHTML = availableMenus().map(m =>
-    `<button class="tab${m.id===selectedFN?' active':''}" onclick="selectMenuFN('${m.id}')">${esc(m.label)}</button>`
-  ).join('');
+  const crumb = document.getElementById('fn-crumb');
+  if(selectedFN === 'home'){ crumb.innerHTML = ''; tabs.innerHTML = ''; tabs.style.display = 'none'; return; }
+  crumb.innerHTML = '<button type="button" class="fn-back" onclick="selectMenuFN(\'home\')">&larr; All menus</button>';
+  if(MAIN_MENUS.indexOf(selectedFN) >= 0){
+    const ds = menuDiets(selectedFN);
+    if(ds.length){
+      tabs.style.display = 'flex';
+      tabs.innerHTML = ['Regular'].concat(ds).map(t =>
+        `<button class="tab${t===selectedDiet?' active':''}" onclick="selectDiet('${t}')">${esc(t)}</button>`).join('');
+      return;
+    }
+  }
+  tabs.innerHTML = ''; tabs.style.display = 'none';
 }
 
-function selectMenuFN(id){ selectedFN = id; renderMenuTabs(); renderDishes(); }
+function renderLanding(){
+  const wrap = document.getElementById('fn-landing');
+  const has = id => availableMenus().some(m => m.id === id);
+  const onKey = id => `onkeydown="if(event.key==='Enter')selectMenuFN('${id}')"`;
+  const usedHeroes = new Set();
+  const card = id => {
+    const list = dishesForMenu(id), hero = heroOf(list, usedHeroes), ds = menuDiets(id);
+    return `<div class="fn-mc" role="button" tabindex="0" onclick="selectMenuFN('${id}')" ${onKey(id)}>
+      <div class="fn-mc-ph${hero?'':' empty'}"${hero ? ` style="background-image:url('${imgCss(hero)}')"` : ''}><span class="cnt">${dishCount(list.length)}</span><span class="arr">&rarr;</span></div>
+      <div class="fn-mc-nm">${esc(menuName(id))}</div>
+      ${ds.length ? `<div class="fn-mc-vars">${ds.map(t => `<span class="pill">${esc(t)}</span>`).join('')}</div>` : ''}
+    </div>`;
+  };
+  const mains = MAIN_MENUS.filter(has);
+  const also = ['cheese','new_dishes'].filter(has).map(id => {
+    const list = dishesForMenu(id);
+    if(!list.length) return '';
+    const hero = heroOf(list, usedHeroes);
+    return `<div class="fn-ac" role="button" tabindex="0" onclick="selectMenuFN('${id}')" ${onKey(id)}>
+      <div class="th${hero?'':' empty'}"${hero ? ` style="background-image:url('${imgCss(hero)}')"` : ''}></div>
+      <div><b>${esc(menuName(id))}</b><small>${dishCount(list.length)}</small></div></div>`;
+  }).join('');
+  const total = FN_DISHES.filter(d => !d.hidden).length;
+  wrap.innerHTML =
+    (mains.length ? `<div class="fn-lbl">Menus</div><div class="fn-menus">${mains.map(card).join('')}</div>` : '')
+    + (also ? `<div class="fn-lbl">Also</div><div class="fn-also">${also}</div>` : '')
+    + `<div class="fn-links"><button type="button" class="fn-lk" onclick="selectMenuFN('all')">All dishes &middot; ${total}</button>`
+    + `<button type="button" class="fn-lk" onclick="selectMenuFN('allergens')">Allergy reference</button>`
+    + `<button type="button" class="fn-lk" onclick="selectMenuFN('producers')">Our producers</button></div>`;
+}
 
 function renderDishes(){
   const grid = document.getElementById('fn-dish-grid');
   const allergyWrap = document.getElementById('fn-allergy-wrap');
   const supplierGrid = document.getElementById('supplier-grid');
+  const landing = document.getElementById('fn-landing');
   const title = document.getElementById('fn-section-title');
   const sub = document.getElementById('fn-section-sub');
-
+  const eyebrow = document.getElementById('fn-eyebrow');
   const searchBox = document.getElementById('fn-search');
+  const setHead = (eb, t, s) => { if(eyebrow) eyebrow.textContent = eb; if(title) title.textContent = t; if(sub) sub.textContent = s; };
+  const q = (searchBox ? searchBox.value : '').trim().toLowerCase();
 
-  // Allergy reference is its own tab: show the table, hide the dish grid.
+  landing.style.display = 'none';
+  // Allergy reference and producers are their own views.
   if(selectedFN === 'allergens'){
-    grid.style.display = 'none';
-    allergyWrap.style.display = 'block';
-    supplierGrid.style.display = 'none';
+    grid.style.display = 'none'; allergyWrap.style.display = 'block'; supplierGrid.style.display = 'none';
     if(searchBox) searchBox.style.display = 'none';
-    if(title) title.textContent = 'Allergy Reference';
-    if(sub) sub.textContent = 'Complete allergen listing for every dish.';
+    setHead('Food \u00b7 Reference', 'Allergy Reference', 'Complete allergen listing for every dish.');
     renderAllergies();
     return;
   }
-  // Our producers is its own tab too.
   if(selectedFN === 'producers'){
-    grid.style.display = 'none';
-    allergyWrap.style.display = 'none';
-    supplierGrid.style.display = '';
+    grid.style.display = 'none'; allergyWrap.style.display = 'none'; supplierGrid.style.display = '';
     if(searchBox) searchBox.style.display = 'none';
-    if(title) title.textContent = 'Our Producers';
-    if(sub) sub.textContent = 'Know who grows and catches our ingredients — these are the stories guests want to hear.';
+    setHead('Food \u00b7 Reference', 'Our Producers', 'Know who grows and catches our ingredients \u2014 these are the stories guests want to hear.');
     renderSuppliers();
     return;
   }
-  grid.style.display = '';
-  allergyWrap.style.display = 'none';
-  supplierGrid.style.display = 'none';
+  allergyWrap.style.display = 'none'; supplierGrid.style.display = 'none';
   if(searchBox) searchBox.style.display = 'block';
-  if(title){ const mm = availableMenus().find(m => m.id === selectedFN); title.textContent = mm ? mm.label : 'The Menu'; }
-  if(sub) sub.textContent = 'Tap a dish to learn it.';
 
-  const q = (searchBox ? searchBox.value : '').trim().toLowerCase();
-  let list;
+  // Entry screen: choose a menu.
+  if(selectedFN === 'home' && !q){
+    grid.style.display = 'none'; landing.style.display = 'block';
+    currentList = [];
+    setHead('Front of House \u00b7 Training', 'Food', 'Choose a menu to learn it \u00b7 ' + FN_DISHES.filter(d => !d.hidden).length + ' dishes');
+    renderLanding();
+    return;
+  }
+  grid.style.display = '';
+
+  let list, numbered = false, shown;
   if(q){
-    // Search runs across the WHOLE menu (every dish), not just the active tab.
+    // Search runs across every dish.
     list = FN_DISHES.filter(d => !d.hidden)
       .filter(d => (d.name||'').toLowerCase().includes(q) || (d.desc||'').toLowerCase().includes(q))
       .sort(byCourseThen(d => d.order || 0));
+    shown = list;
+    setHead('Food \u00b7 Search', 'Search results', dishCount(list.length) + ' \u00b7 tap a dish to learn it.');
   } else {
     list = dishesForMenu(selectedFN);
+    shown = list;
+    if(MAIN_MENUS.indexOf(selectedFN) >= 0){
+      // One variation at a time; dishes in service order, numbered.
+      if(selectedDiet !== 'Regular' && menuDiets(selectedFN).indexOf(selectedDiet) < 0) selectedDiet = 'Regular';
+      shown = list.filter(d => hasDietIn(d, selectedFN, selectedDiet));
+      numbered = true;
+    }
+    const diet = (numbered && selectedDiet !== 'Regular') ? ' \u00b7 ' + selectedDiet : '';
+    setHead('Food \u00b7 Menu', menuName(selectedFN), dishCount(shown.length) + diet + ' \u00b7 tap a dish to learn it.');
   }
-  if(sub) sub.textContent = list.length + (list.length === 1 ? ' dish' : ' dishes') + ' \u00b7 tap a dish to learn it.';
-  if(!list.length){
+  if(!shown.length){
     currentList = [];
     grid.innerHTML = q
-      ? `<p style="opacity:.6">No dishes match “${esc(q)}”.</p>`
-      : '<p style="opacity:.6">No dishes in this menu yet.</p>';
+      ? `<p style="opacity:.6">No dishes match \u201c${esc(q)}\u201d.</p>`
+      : '<p style="opacity:.6">No dishes here yet.</p>';
     return;
   }
 
-  // currentList is the flat sequence of rendered cards (so the modal/pencil
-  // index lines up even when a dish appears in more than one diet section).
+  // currentList is the flat sequence of rendered cards, so the sheet and the pencil line up.
   currentList = [];
-  let html = '';
   const pushCard = (d) => {
     const i = currentList.length;
     currentList.push(d);
     const pencil = canEdit
-      ? `<button class="dish-edit-btn" title="Edit this dish" onclick="editDishFromCard(event, ${i})" aria-label="Edit dish">✎</button>`
+      ? `<button class="dish-edit-btn" title="Edit this dish" onclick="editDishFromCard(event, ${i})" aria-label="Edit dish">\u270e</button>`
       : '';
     return `<article class="dish-card" onclick="openDishModal(${i})">
-       <div class="dish-media-wrap">${dishMediaHtml(d)}${pencil}</div>
+       <div class="dish-media-wrap">${dishMediaHtml(d, numbered ? i + 1 : 0)}${pencil}</div>
        <div class="dish-body">${dishCardInner(d)}</div>
      </article>`;
   };
-  const gridBlock = (dishes) => `<div class="dish-grid-inner">${dishes.map(pushCard).join('')}</div>`;
-
-  // Diet sub-sections only on A la carte, Lunch, Prestige and Discovery (and not while searching).
-  const DIET_SECTIONS = ['Vegetarian','Pescatarian','No seafood','Gluten free'];
-  const groupByDiet = !q && ['a_la_carte','lunch','prestige','discovery'].indexOf(selectedFN) >= 0;
-
-  // The diets a dish has FOR THE CURRENT MENU (per-menu model). Falls back to
-  // Regular for older dishes that have no dietByMenu entry for this menu.
-  const dietsForMenu = (d) => {
-    const dbm = d.dietByMenu && d.dietByMenu[selectedFN];
-    return Array.isArray(dbm) && dbm.length ? dbm : ['Regular'];
-  };
-  const hasDietHere = (d, tag) =>
-    dietsForMenu(d).some(x => (x||'').trim().toLowerCase() === tag.toLowerCase());
-
-  if(groupByDiet){
-    // Regular flow: dishes marked "Regular" for this menu (default for legacy).
-    const regular = list.filter(d => hasDietHere(d, 'Regular'));
-    if(regular.length) html += gridBlock(regular);
-    // Then one sub-section per diet; a dish can appear in several.
-    DIET_SECTIONS.forEach(tag => {
-      const items = list.filter(d => hasDietHere(d, tag));
-      if(!items.length) return;
-      html += `<h3 class="diet-subhead">${esc(tag)}</h3>` + gridBlock(items);
-    });
-  } else {
-    html = gridBlock(list);
-  }
-
-  grid.innerHTML = html;
+  grid.innerHTML = `<div class="dish-grid-inner">${shown.map(pushCard).join('')}</div>`;
 }
 
 // The list currently shown in the grid, so the modal can look up a dish by index.
@@ -689,12 +818,13 @@ function editDishFromCard(ev, i){
   window.location.href = 'food-editor.html' + (id ? ('?edit=' + encodeURIComponent(id)) : '');
 }
 
-function dishMediaHtml(d){
+function dishMediaHtml(d, num){
   const img = firstImage(d);
   const imgUrl = /^data:/i.test(img) ? img : encodeURI(img);
+  const label = (num ? num + ' \u00b7 ' : '') + esc(d.course||'');
   return img
-    ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">${esc(d.course||'')}</span></div>`
-    : `<div class="dish-media empty"><span class="dish-course">${esc(d.course||'')}</span></div>`;
+    ? `<div class="dish-media" style="background-image:url('${imgUrl}')"><span class="dish-course">${label}</span></div>`
+    : `<div class="dish-media empty"><span class="dish-course">${label}</span></div>`;
 }
 
 // Builds the inner body markup for a dish, shared by the grid card and the modal.
