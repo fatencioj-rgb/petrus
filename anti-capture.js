@@ -29,17 +29,17 @@
     el.setAttribute('role', 'alert');
     el.style.cssText = [
       'position:fixed', 'inset:0', 'z-index:2147483647',
-      'background:rgba(45,10,10,0.96)', 'color:#faf7f1',
+      'background:rgba(252,251,245,0.98)', 'color:#23210f',
       'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
       'text-align:center', 'padding:40px 24px',
       "font-family:'Cormorant Garamond','Georgia',serif"
     ].join(';');
     el.innerHTML =
-      '<div style="font-size:42px;color:#b89650;margin-bottom:16px;">Screenshots are not permitted</div>'
-      + '<p style="font-family:\'Inter\',sans-serif;font-size:14px;letter-spacing:0.5px;line-height:1.6;color:#d4b87a;max-width:460px;">'
+      '<div style="font-size:42px;color:#23210f;margin-bottom:16px;">Screenshots are not permitted</div>'
+      + '<p style="font-family:\'Inter\',sans-serif;font-size:14px;letter-spacing:0.5px;line-height:1.6;color:#5e5829;max-width:460px;">'
       + (msg || 'This material is confidential and for internal use only. Capturing, copying or sharing it is against policy and is logged to your account.')
       + '</p>'
-      + '<button id="petrus-capture-dismiss" style="margin-top:28px;font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#d4b87a;background:transparent;border:1px solid rgba(184,150,80,0.4);border-radius:6px;padding:10px 22px;cursor:pointer;">I understand</button>';
+      + '<button id="petrus-capture-dismiss" style="margin-top:28px;font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5e5829;background:#fff;border:1px solid #b1aa6c;border-radius:40px;padding:10px 24px;cursor:pointer;">I understand</button>';
     document.body.appendChild(el);
     var btn = document.getElementById('petrus-capture-dismiss');
     if (btn) btn.addEventListener('click', function () { el.remove(); });

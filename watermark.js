@@ -42,7 +42,7 @@
     var svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">'
       + '<text x="0" y="100" transform="rotate(-30 160 100)" '
-      + 'fill="rgba(92,26,26,0.22)" font-family="Inter,Segoe UI,sans-serif" '
+      + 'fill="rgba(94,88,41,0.26)" font-family="Inter,Segoe UI,sans-serif" '
       + 'font-size="15" font-weight="600">' + label + '</text></svg>';
     var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 

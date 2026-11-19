@@ -87,13 +87,13 @@ var PETRUS_BASE = /\/operations\//.test(window.location.pathname) ? '../' : '';
 function showPetrusNoAccess() {
   var overlay = document.createElement('div');
   overlay.id = 'petrus-no-access';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#2d0a0a;color:#faf7f1;'
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;color:#23210f;'
     + 'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;'
     + "font-family:'Cormorant Garamond','Georgia',serif;";
   overlay.innerHTML =
-    '<div style="font-size:40px;color:#b89650;margin-bottom:14px;">Apologies, you don\u2019t have access.</div>'
-    + '<p style="font-family:\'Inter\',sans-serif;font-size:13px;letter-spacing:1px;color:#d4b87a;opacity:0.85;margin-bottom:28px;">This section is restricted for your account.</p>'
-    + '<a href="' + PETRUS_BASE + 'index.html" style="font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#d4b87a;border:1px solid rgba(184,150,80,0.4);border-radius:6px;padding:10px 22px;text-decoration:none;">\u2190 Back to home</a>';
+    '<div style="font-size:40px;color:#23210f;margin-bottom:14px;">Apologies, you don\u2019t have access.</div>'
+    + '<p style="font-family:\'Inter\',sans-serif;font-size:13px;letter-spacing:1px;color:#5e5829;opacity:0.9;margin-bottom:28px;">This section is restricted for your account.</p>'
+    + '<a href="' + PETRUS_BASE + 'index.html" style="font-family:\'Inter\',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#5e5829;border:1px solid #b1aa6c;border-radius:40px;padding:10px 24px;text-decoration:none;">\u2190 Back to home</a>';
   // Try to hide the real content underneath.
   try { document.body.style.overflow = 'hidden'; } catch (e) {}
   document.body.appendChild(overlay);
