@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seat Plan — Petrus</title>
+<title>Events — Petrus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -414,7 +414,7 @@ body{background:#fff;color:var(--ink)}
   <div class="page-header">
     <div class="ph-title">
       <p class="sub">Restaurant Floor</p>
-      <h1>Seat Plan<em>.</em></h1>
+      <h1>Events<em>.</em></h1>
     </div>
     <!-- Event name + Save. A new plan has an empty, editable name; once saved it shows the
          name and the button becomes Update (enabled when there are changes). -->
@@ -703,7 +703,7 @@ function syncFromCloud(){
     if (!synced && hasLocalPlan && planSignature(remote) !== planSignature()){
       // First time this device meets the cloud and both hold different plans.
       var useCloud = confirm(
-        'The cloud already has a saved Seat Plan, and this device has a different one.\n\n' +
+        'The cloud already has a saved event plan, and this device has a different one.\n\n' +
         'OK = load the cloud plan (this device\'s plan is backed up first).\n' +
         'Cancel = keep this device\'s plan and upload it (replaces the cloud plan).');
       if (!useCloud){ cloudSaveNow(); return; }
@@ -1897,7 +1897,7 @@ function buildPrintSheets(mode){
   function head(idx){
     var no = sheets.length > 1 ? '<span class="ps-sheetno">Sheet ' + (idx + 1) + ' of ' + sheets.length + '</span>' : '';
     return mk('div', 'ps-head',
-      '<div class="ps-title"><div class="ps-kicker">Seat Plan</div><div class="ps-event">' + esc(planName || 'Event') + '</div></div>' +
+      '<div class="ps-title"><div class="ps-kicker">Events</div><div class="ps-event">' + esc(planName || 'Event') + '</div></div>' +
       '<div class="pf-meta"><span class="pf-credit">' + PS_CREDIT + '</span>' + no + '</div>');
   }
   sheets.forEach(function(sh, idx){
