@@ -1,0 +1,112 @@
+/* Petrus modern look: shared by every page except the Rota (blue/white).
+   Screen only, so printed sheets and PDFs keep their own colours.
+   Palette: white, logo olive, soft cream-olive lines. No burgundy. */
+@media screen {
+:root{
+  /* family 1: --green / --gold / --cream */
+  --green:#8f8846; --green-dark:#5e5829; --gold:#b1aa6c; --gold-light:#dcd8b0; --cream:#fff; --pink:#f6f4e6;
+  /* family 2: --grn / --gld / --crm (somm-* pages) */
+  --grn:#8f8846; --grn2:#5e5829; --gld:#b1aa6c; --crm:#fff;
+  /* family 3: --wine / --bg (food and wine training) */
+  --wine:#5e5829; --wine-soft:#7d7740; --bg:#fff; --bg-soft:#f5f3e3; --surface:#fff; --text:#23210f;
+  --border:#e7e4cf; --soft:#f5f3e3; --ink:#23210f;
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'Inter','Segoe UI',sans-serif;
+  --s:'Inter','Segoe UI',sans-serif; --f:'Cormorant Garamond',Georgia,serif;
+}
+body{background:#fff;color:var(--ink);font-family:var(--sans)}
+::selection{background:#e6e2b8}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#b1aa6c !important;box-shadow:0 0 0 3px rgba(177,170,108,.22)}
+
+/* ---- Shared page header: logo left, actions right, big serif title ---- */
+.m-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.m-top .m-logo img{display:block;height:60px;width:auto}
+.m-top .back-link{margin-left:auto}.m-top .m-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.m-back,.back-link{font-size:12px !important;letter-spacing:1.5px !important;text-transform:uppercase;color:var(--green-dark) !important;opacity:1 !important;text-decoration:none;padding:8px 0;border-bottom:1px solid var(--gold-light);display:inline-block;transition:color .2s,border-color .2s}
+.m-back:hover,.back-link:hover{color:var(--gold) !important;border-color:var(--gold)}
+.m-pill,#editorLink,#producerEditorLink,#printLink{font:500 11px var(--sans) !important;letter-spacing:1px !important;text-transform:uppercase;color:var(--green-dark) !important;opacity:1 !important;background:#fff !important;border:1px solid var(--gold-light) !important;border-radius:40px !important;padding:8px 18px !important;text-decoration:none;cursor:pointer;transition:all .2s}
+.m-pill:hover,#editorLink:hover,#producerEditorLink:hover,#printLink:hover{background:#c8c28d !important;border-color:#c8c28d !important;color:#2f2c14 !important}
+.m-eyebrow{font-size:12px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:#a29b5d;margin:clamp(24px,6vh,56px) 0 0}
+.m-title,.section-title{font-family:var(--serif);font-weight:500;font-size:clamp(42px,6vw,76px);line-height:1.02;letter-spacing:-1px;color:var(--ink);margin:12px 0 10px}
+.m-title::after,.section-title::after{content:".";color:var(--gold)}
+.section-sub{color:#7a7640;opacity:1;font-size:14px;margin-bottom:26px}
+
+/* ---- Training pages (food and wine) ---- */
+.container{max-width:1240px;padding:26px 48px 80px}
+.tab{border-radius:40px;border:1px solid var(--border);color:var(--green-dark);background:#fff}
+.tab:hover{border-color:var(--gold);color:var(--green-dark)}
+.tab.active{background:#8f8846;border-color:#8f8846;color:#fff}
+.fn-search,.wn-search{border-radius:40px;border:1px solid var(--border);background:#fff;color:var(--ink)}
+.dish-card,.wine-card{border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(60,55,20,.06)}
+.dish-card:hover,.wine-card:hover{box-shadow:0 14px 36px rgba(60,55,20,.14)}
+.dish-modal,.wine-modal{border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 64px rgba(35,33,15,.28)}
+.dish-modal-overlay,.wine-modal-overlay{background:rgba(35,33,15,.5)}
+.dish-media.empty::after{color:rgba(94,88,41,.3)}
+.dish-name,.diet-subhead{color:var(--ink)}
+.diet-subhead{border-bottom:1px solid var(--border)}
+.dish-course{border-radius:30px;color:var(--green-dark)}
+.dish-edit-btn,.dish-modal-close,.wine-modal-close{color:var(--green-dark)}
+@media (max-width:700px){.container{padding:22px 20px 60px}.m-top{flex-direction:column;align-items:flex-start}.m-top .m-logo{align-self:center;margin:0 auto}}
+
+/* ---- Editors (food, wine, producers) ---- */
+.page-title{font-family:var(--serif) !important;font-weight:500;font-size:clamp(38px,5vw,64px) !important;line-height:1.02;letter-spacing:-1px;color:var(--ink) !important;margin:clamp(20px,5vh,44px) 0 6px !important}
+.page-title::after{content:".";color:var(--gold)}
+.page-sub{color:#7a7640 !important;opacity:1 !important}
+.gate h1{color:var(--ink);font-weight:500}
+.card{border-radius:18px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(60,55,20,.06)}
+.card h3,.menu-group-title,.list-item .n,.drag-item .n{color:var(--ink)}
+label{color:var(--green-dark)}
+input,textarea,select{border-radius:10px}
+.btn{border-radius:40px;background:#8f8846;color:#fff;padding:10px 24px}
+.btn:hover{background:#7a7439}
+.btn.ghost{background:#fff;border:1px solid var(--gold-light);color:var(--green-dark)}
+.btn.ghost:hover{border-color:var(--gold);background:var(--soft)}
+#save-notify-btn{background:#5e5829 !important;color:#fff !important}
+.list-item,.drag-item,.dbm-row{border-radius:14px}
+.drag-item.dragover{border-color:var(--gold);box-shadow:0 0 0 3px rgba(177,170,108,.22)}
+.check{border-radius:30px}
+.check input{accent-color:#8f8846}
+.ms-toggle{border-radius:10px}
+.ms-panel{border-radius:14px;box-shadow:0 14px 40px rgba(60,55,20,.16)}
+.dbm-menu,.preview-label,.wine-row .wine-label,.wp-row .wp-label,.k-item b,.setup-line b{color:var(--green-dark)}
+.rte{border-radius:10px}
+.rte-toolbar button{border-radius:8px}
+.star{color:#b1aa6c}
+.chip.diet{background:#eef0dc;border-color:#d6dab0;color:#5e6a2a}
+
+/* ---- Sommeliers pages (.tb/.pg and .top-bar/.page layouts) ---- */
+.tb,.top-bar{background:#fff !important;max-width:1240px;margin:0 auto;padding:26px 48px 0 !important;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.tb::before,.top-bar::before{content:"";order:-1;flex:0 0 auto;width:180px;height:60px;background:url(petrus-logo.png) left center/contain no-repeat}
+.tb a,.top-bar a{color:var(--green-dark) !important;font-size:12px !important;letter-spacing:1.5px !important;text-transform:uppercase;padding:8px 0;border-bottom:1px solid var(--gold-light);transition:color .2s,border-color .2s}
+.tb a:hover,.top-bar a:hover{color:var(--gold) !important;border-color:var(--gold)}
+.tb a:first-of-type,.top-bar a:first-of-type{margin-left:auto}.tb>span:empty,.top-bar>span:empty{display:none}
+.tb h2,.top-bar h2{color:var(--ink) !important}
+.pg,.page{max-width:1240px !important;padding-left:48px !important;padding-right:48px !important}
+.pg>h1,.page h1,.page>.header-row h1{font-family:var(--serif) !important;font-weight:500 !important;font-size:clamp(40px,5.4vw,68px) !important;line-height:1.02;letter-spacing:-1px;color:var(--ink) !important;margin:clamp(18px,4vh,40px) 0 18px !important}
+.pg>h1::after,.page h1::after{content:".";color:var(--gold)}
+.page .sub{color:#7a7640 !important}
+.tab,.expand-btn,.restock-btn,.btn-sm,.shift-btn{border-radius:40px !important;border:1px solid var(--border) !important;background:#fff !important;color:var(--green-dark) !important}
+.tab:hover,.expand-btn:hover,.restock-btn:hover,.shift-btn:hover{background:var(--soft) !important;border-color:var(--gold) !important;color:var(--green-dark) !important}
+.tab.on,.shift-btn.on,.shift-btn.active,.tag-opt.on{background:#8f8846 !important;border-color:#8f8846 !important;color:#fff !important}
+.today-feed,.orders-box,.carousel-box,.add-box,.notes-box,.card{background:#fff;border:1px solid var(--border) !important;border-radius:18px !important;box-shadow:0 10px 30px rgba(60,55,20,.06)}
+.today-feed .feed-title,.orders-head .ttl,.carousel-header .c-title,.feed-item .f-author{color:var(--ink)}
+.add-box h3{color:var(--gold-dark,#5e5829)}
+.tbl{border-radius:14px}
+.tbl th{background:var(--soft) !important;color:var(--green-dark) !important;border-bottom:1px solid var(--border)}
+.tbl td{border-bottom:1px solid var(--border) !important}
+.tbl tr:hover td{background:#fcfbf5 !important}
+.btn-add,.btn-save,.btn-primary,.btn{border-radius:40px;background:#8f8846;color:#fff}
+.btn-add:hover,.btn-save:hover,.btn:hover{background:#7a7439}
+.fields input,.fields select,.ord-search,textarea,select,input[type=text],input[type=number],input[type=date],input[type=search]{border-color:var(--border) !important;border-radius:10px !important}
+.ac-list{border-radius:0 0 12px 12px;box-shadow:0 14px 40px rgba(60,55,20,.16)}
+.ac-item:hover{background:var(--soft)}
+.sm,.status-msg{background:#5e5829 !important;color:#fff !important;border-radius:40px !important}
+.tag-opt{border-radius:30px}
+@media (max-width:700px){.tb,.top-bar{padding:20px 20px 0 !important}.pg,.page{padding-left:20px !important;padding-right:20px !important}.tb::before,.top-bar::before{width:130px;height:48px}}
+/* Wine notes page (.topbar without logo) */
+.topbar:not(:has(.logo)){background:#fff !important;max-width:860px;margin:0 auto;padding:26px 24px 0 !important;display:flex;align-items:center;justify-content:space-between}
+.topbar:not(:has(.logo))::before{content:"";order:-1;width:180px;height:60px;background:url(petrus-logo.png) left center/contain no-repeat}
+.topbar:not(:has(.logo)) a{color:var(--green-dark) !important;font-size:12px !important;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--gold-light)}
+.topbar:not(:has(.logo)) .title{display:none}
+.wine-card{border-radius:16px;border:1px solid var(--border) !important}
+h1.page-title{font-weight:500;color:var(--ink);font-size:clamp(38px,5vw,60px)}
+}
