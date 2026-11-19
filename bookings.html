@@ -341,6 +341,7 @@ tr.dragging{background:var(--soft)}
 .bk-chip.on{background:#8f8846;border-color:#8f8846;color:#fff}
 .page-header .eyebrow{color:#a29b5d}
 .page-header h1 em{color:#b1aa6c}
+.cmd-bar.drag-over{outline:2px dashed #b1aa6c;outline-offset:-5px}
 
 /* --- Allergy and voucher tags (details open in small pop-ups) --- */
 .a-hidden,.v-hidden{display:none !important}
@@ -2105,7 +2106,7 @@ function autoLoadBooking() {
             var tbody = document.getElementById('resBody');
             tbody.innerHTML = '';
             data.rows.forEach(function(r) {
-                addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"");
+                addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"", r.voucherPin||"");
             });
             document.getElementById('formArea').classList.add('visible');
         }
@@ -2115,11 +2116,11 @@ function autoLoadBooking() {
 }
 
 // === FILE DRAG & DROP ===
-var uploadBox = document.querySelector('.upload-box');
-uploadBox.addEventListener('dragover', function(e){e.preventDefault();uploadBox.style.borderColor='var(--gold)';});
-uploadBox.addEventListener('dragleave', function(){uploadBox.style.borderColor='var(--border)';});
+var uploadBox = document.querySelector('.cmd-bar') || document.querySelector('.upload-box') || document.body;   // drop a CSV on the command bar
+uploadBox.addEventListener('dragover', function(e){e.preventDefault();uploadBox.classList.add('drag-over');});
+uploadBox.addEventListener('dragleave', function(){uploadBox.classList.remove('drag-over');});
 uploadBox.addEventListener('drop', function(e){
-    e.preventDefault(); uploadBox.style.borderColor='var(--border)';
+    e.preventDefault(); uploadBox.classList.remove('drag-over');
     var file = e.dataTransfer.files[0];
     if (file && file.name.endsWith('.csv')) {
         document.getElementById('csvFile').files = e.dataTransfer.files;
@@ -2290,7 +2291,8 @@ addRow = function() {
       if (pv) parts.push('<b>' + h(pv) + '</b>');
       if (code) parts.push(h(code));
       if (pin) parts.push('PIN ' + h(pin));
-      if (amt) parts.push('<b>' + h(amt) + '</b>');
+      amt = amt.replace(/^[\u00a3\u20ac\s]+/, '').trim();
+      if (amt) parts.push('<b>&pound;' + h(amt) + '</b>');
       vb.innerHTML = parts.length ? '<span class="tag vo">' + parts.join(' &middot; ') + '</span>' : tag('+ Voucher', 'empty');
       vb.title = parts.length ? 'Edit voucher' : 'Add a voucher';
     }
@@ -2413,7 +2415,8 @@ addRow = function() {
       var f = e.target.getAttribute && e.target.getAttribute('data-f');
       if (!f) return;
       var target = f === 'code' ? code : (f === 'pin' ? pin : amt);
-      target.value = e.target.value; fire(target, 'input'); refreshRowTags(tr);
+      target.value = (f === 'amt') ? e.target.value.replace(/^[\u00a3\u20ac\s]+/, '').trim() : e.target.value;
+      fire(target, 'input'); refreshRowTags(tr);
     });
     el.addEventListener('change', function(e){
       var f = e.target.getAttribute && e.target.getAttribute('data-f');
