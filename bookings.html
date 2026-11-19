@@ -251,7 +251,7 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 <style id="modern-skin">
 /* Modern Petrus look (screen only). Print sheets keep their own colours. */
 @media screen {
-:root{--green:#9d9650;--green-dark:#5e5829;--gold:#9d9650;--gold-light:#d3cfa6;--cream:#fbfaf4;--border:#e7e4cf;--soft:#f5f3e3;--ink:#23210f}
+:root{--green:#b1aa6c;--green-dark:#5e5829;--gold:#b1aa6c;--gold-light:#dcd8b0;--cream:#fbfaf4;--border:#ece9d3;--soft:#f6f4e6;--ink:#23210f}
 body{background:#fff;color:var(--ink)}
 .topbar{background:#fff;max-width:1240px;margin:0 auto;padding:26px 48px 0}
 .topbar .logo img{display:block;height:60px;width:auto}
@@ -275,11 +275,11 @@ body{background:#fff;color:var(--ink)}
 .field-group input:focus,.field-group select:focus,.res-table-edit input:focus,.res-table-edit select:focus,.res-table-edit .r-allergy:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(157,150,80,.18)}
 
 .print-main-btn{background:#fff;border:1px solid var(--gold);color:var(--green-dark);border-radius:40px;padding:8px 26px;letter-spacing:.5px}
-.print-main-btn:hover{background:var(--gold);color:#fff}
+.print-main-btn:hover{background:#c8c28d;border-color:#c8c28d;color:#2f2c14}
 .print-options{border-radius:14px;box-shadow:0 14px 40px rgba(60,55,20,.14)}
 .print-size-label{color:var(--green-dark)}
 .print-options button{background:#fff;border-radius:20px;color:var(--ink)}
-.print-options button:hover{background:var(--gold);border-color:var(--gold);color:#fff}
+.print-options button:hover{background:#c8c28d;border-color:#c8c28d;color:#2f2c14}
 .saved-toggle{background:#fff;border:1px solid var(--gold-light);border-radius:40px;padding:6px 16px;color:var(--green-dark)}
 .saved-toggle:hover{border-color:var(--gold);background:var(--soft)}
 .saved-item{border-radius:20px 0 0 20px;background:#fff;color:var(--ink)}
@@ -304,12 +304,43 @@ tr.dragging{background:var(--soft)}
 
 .actions{gap:12px;margin-top:6px}
 .btn{border-radius:40px;padding:10px 26px;letter-spacing:.5px}
-.btn-add{background:var(--gold);color:#fff}
-.btn-add:hover{background:var(--green-dark)}
+.btn-add{background:#c8c28d;color:#2f2c14;font-weight:600}
+.btn-add:hover{background:#b9b378}
 .btn-clear{background:var(--soft);color:var(--green-dark)}
 .btn-clear:hover{background:#ebe8cc}
-.btn-save{background:var(--green-dark);color:#fff}
-.btn-save:hover{background:var(--ink)}
+.btn-save{background:#8f8846;color:#fff;font-weight:600}
+.btn-save:hover{background:#7a7439}
+
+/* --- Command bar, summary strip and section filters --- */
+.top-grid{display:block;margin-bottom:12px}
+.cmd-bar{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;background:var(--soft);border-radius:18px;padding:14px 16px}
+.cmd-upload{border:none;border-radius:40px;padding:10px 20px;background:#c8c28d;color:#2f2c14;font:600 12px var(--sans);letter-spacing:.4px;cursor:pointer;transition:background .2s}
+.cmd-upload:hover{background:#b9b378}
+.cmd-bar .saved-toggle{padding:9px 18px;font-size:12px}
+.cmd-sep{width:1px;align-self:stretch;background:#e2deba;margin:0 2px}
+.cmd-field{display:flex;flex-direction:column;gap:3px}
+.cmd-field label{font-size:9px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--green-dark)}
+.cmd-field input,.cmd-field select{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font:13px var(--sans);color:var(--ink);min-width:110px}
+.cmd-field input:focus,.cmd-field select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(177,170,108,.22)}
+.cmd-field select{-webkit-appearance:none;appearance:none;padding-right:32px;font-weight:500;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' fill='none' stroke='%235e5829' stroke-width='1.6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+#covers,#tables{width:92px;min-width:0}
+.cmd-grow{flex:1}
+.cmd-bar .print-options{left:auto;right:0}
+.cmd-bar .btn-save{padding:10px 30px}
+.cmd-status{min-height:18px;display:flex;gap:14px;padding:6px 8px 0;font-size:12px}
+.cmd-status .upload-status{margin:0}
+.saved-drawer{padding:6px 4px 0}
+.bk-summary{display:flex;align-items:center;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+.bk-stats{display:flex;gap:6px;flex-wrap:wrap}
+.bk-stat{display:inline-flex;align-items:baseline;gap:6px;padding:4px 11px;border-radius:30px;background:var(--soft);font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--green-dark);font-weight:600}
+.bk-stat b{font-size:13px;letter-spacing:0;color:var(--ink);font-weight:600}
+.bk-stat.warn b{color:#a8362b}
+.bk-filters{margin-left:auto;display:flex;gap:6px}
+.bk-chip{padding:5px 13px;border-radius:30px;border:1px solid var(--border);background:#fff;color:var(--green-dark);font:500 11px var(--sans);cursor:pointer;transition:all .2s}
+.bk-chip:hover{border-color:var(--gold)}
+.bk-chip.on{background:#8f8846;border-color:#8f8846;color:#fff}
+.page-header .eyebrow{color:#a29b5d}
+.page-header h1 em{color:#b1aa6c}
 }
 </style>
 </head>
@@ -324,36 +355,22 @@ tr.dragging{background:var(--soft)}
         <h1>Bookings<em>.</em></h1>
     </div>
 
-    <!-- TOP: Upload (left, full height) + controls stacked on the right -->
+    <!-- Command bar: load, service details, output -->
     <div class="top-grid">
-        <!-- Left: upload, stretches to match the right column's height -->
-        <div class="upload-box" onclick="document.getElementById('csvFile').click()">
-            <p>&#8593; Upload CSV</p>
-            <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
-        </div>
-
-        <!-- Right: header fields, then print, then saved bookings -->
-        <div class="controls-col">
-            <div class="header-fields">
-                <div class="field-group">
-                    <label>Service</label>
-                    <select id="service"><option value="LUNCH">LUNCH</option><option value="DINNER">DINNER</option></select>
-                </div>
-                <div class="field-group">
-                    <label>Date</label>
-                    <input type="date" id="serviceDate">
-                </div>
-                <div class="field-group">
-                    <label>Covers</label>
-                    <input type="number" id="covers" min="0" placeholder="—">
-                </div>
-                <div class="field-group">
-                    <label>Tables</label>
-                    <input type="number" id="tables" min="0" placeholder="—">
-                </div>
-            </div>
-
-            <!-- Print dropdown: expands horizontally -->
+        <div class="cmd-bar">
+            <button type="button" class="cmd-upload" onclick="document.getElementById('csvFile').click()">&#8593; Upload CSV</button>
+            <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="display:none">
+            <button class="saved-toggle" id="savedToggle" onclick="toggleSavedDrawer()">Saved bookings &#9662;</button>
+            <span class="cmd-sep"></span>
+            <div class="cmd-field"><label for="service">Service</label>
+                <select id="service"><option value="LUNCH">LUNCH</option><option value="DINNER">DINNER</option></select></div>
+            <div class="cmd-field"><label for="serviceDate">Date</label>
+                <input type="date" id="serviceDate"></div>
+            <div class="cmd-field"><label for="covers">Covers</label>
+                <input type="number" id="covers" min="0" placeholder="&mdash;"></div>
+            <div class="cmd-field"><label for="tables">Tables</label>
+                <input type="number" id="tables" min="0" placeholder="&mdash;"></div>
+            <span class="cmd-grow"></span>
             <div class="print-menu">
                 <button class="print-main-btn" id="printMainBtn" onclick="togglePrintMenu()">Print ▾</button>
                 <div class="print-options" id="printOptions">
@@ -369,20 +386,26 @@ tr.dragging{background:var(--soft)}
                     </div>
                 </div>
             </div>
-
-            <div class="upload-status" id="uploadStatus"></div>
-
-            <!-- Saved bookings: drawer expands to the right -->
-            <div class="saved-menu">
-                <button class="saved-toggle" id="savedToggle" onclick="toggleSavedDrawer()">Saved bookings ▾</button>
-                <div class="saved-drawer" id="savedDrawer">
-                    <div id="savedList"></div>
-                </div>
+            <button class="btn btn-save" id="saveBtn" onclick="saveBooking()">Save</button>
+        </div>
+        <div class="cmd-status"><span class="upload-status" id="uploadStatus"></span><span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span></div>
+        <div class="saved-drawer" id="savedDrawer"><div id="savedList"></div></div>
+    </div>
+    <div class="form-area" id="formArea">
+        <div class="bk-summary">
+            <div class="bk-stats">
+                <span class="bk-stat"><b id="stBookings">0</b> Bookings</span>
+                <span class="bk-stat"><b id="stCovers">0</b> Covers</span>
+                <span class="bk-stat warn"><b id="stAllergies">0</b> Allergies</span>
+                <span class="bk-stat"><b id="stOccasions">0</b> Occasions</span>
+            </div>
+            <div class="bk-filters" id="secFilters">
+                <button type="button" class="bk-chip on" data-sec="all">All</button>
+                <button type="button" class="bk-chip" data-sec="S1">Section 1</button>
+                <button type="button" class="bk-chip" data-sec="S2">Section 2</button>
+                <button type="button" class="bk-chip" data-sec="KT">KT</button>
             </div>
         </div>
-    </div>
-
-    <div class="form-area" id="formArea">
         <div class="reservations-container">
             <table class="res-table-edit">
                 <thead>
@@ -415,8 +438,6 @@ tr.dragging{background:var(--soft)}
         <div class="actions">
             <button class="btn btn-add" onclick="addEmptyRow()">+ Add</button>
             <button class="btn btn-clear" onclick="clearAll()">Clear</button>
-            <button class="btn btn-save" id="saveBtn" onclick="saveBooking()">Save</button>
-            <span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span>
         </div>
 
         <!-- print-index kept for legacy, hidden via CSS -->
@@ -2129,6 +2150,47 @@ addRow = function() {
     // Size all columns after the DOM settles so widths stay uniform
     setTimeout(sizeAllAutoInputs, 0);
 };
+</script>
+<script>
+// Summary strip and section filter above the table. Display only: save/print read all rows.
+(function(){
+  var body = document.getElementById('resBody');
+  if (!body) return;
+  var filter = 'all';
+  function setN(id, n){ var el = document.getElementById(id); if (el) el.textContent = n; }
+  function secLabel(tr){ var b = tr.querySelector('.sec-badge'); return b ? b.textContent.trim() : ''; }
+  function applyFilter(){
+    body.querySelectorAll('tr').forEach(function(tr){
+      var l = secLabel(tr);
+      tr.style.display = (filter === 'all' || l === filter || l === '\u2014') ? '' : 'none';   // unsorted rows always stay visible
+    });
+  }
+  function updateStats(){
+    var n = 0, c = 0, al = 0, oc = 0;
+    body.querySelectorAll('tr').forEach(function(tr){
+      var px = tr.querySelector('.r-pax'), nm = tr.querySelector('.r-name');
+      var pv = (px && parseInt(px.value, 10)) || 0;
+      if (!pv && !(nm && nm.value.trim())) return;            // an empty new row is not a booking yet
+      n++;
+      c += pv;
+      var a = tr.querySelector('.r-allergy'); if (a && a.value.trim()) al++;
+      var o = tr.querySelector('.r-occasion'); if (o && o.value) oc++;
+    });
+    setN('stBookings', n); setN('stCovers', c); setN('stAllergies', al); setN('stOccasions', oc);
+  }
+  function refresh(){ updateStats(); applyFilter(); }
+  new MutationObserver(refresh).observe(body, { childList: true, subtree: true });
+  body.addEventListener('input', updateStats);
+  body.addEventListener('change', updateStats);
+  document.getElementById('secFilters').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.bk-chip') : null;
+    if (!b) return;
+    filter = b.getAttribute('data-sec');
+    this.querySelectorAll('.bk-chip').forEach(function(x){ x.classList.toggle('on', x === b); });
+    applyFilter();
+  });
+  refresh();
+})();
 </script>
 </body>
 </html>
