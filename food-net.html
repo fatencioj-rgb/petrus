@@ -196,6 +196,10 @@ tr:last-child td { border-bottom:none; }
 .ds-cred{text-align:right;white-space:nowrap}
 .ds-cred .t{font-size:8px;letter-spacing:.4px;color:#8a7f6e}
 .ds-cred .b{font-family:var(--serif);font-size:13px;color:var(--wine);letter-spacing:2px}
+.ro-brand{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1;white-space:nowrap}
+.ro-brand .n{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:15px;letter-spacing:-.2px;color:#23210f}
+.ro-brand .n em{font-style:italic;color:#9d9650}
+.ro-brand .b{margin-top:3px;font-family:'Inter',sans-serif;font-size:6.5px;font-weight:400;letter-spacing:.24em;text-transform:uppercase;color:#5e5829}
 .ds-photo{width:100%;height:230px;object-fit:cover;border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
 .ds-announce{font-family:var(--serif);font-size:16px;font-style:italic;line-height:1.5;color:var(--wine-soft);border-left:3px solid var(--border);padding-left:12px;margin-bottom:12px}
 .ds-desc{font-size:13.5px;line-height:1.6;margin-bottom:14px}
@@ -268,6 +272,22 @@ tr:last-child td { border-bottom:none; }
 .dm-main .dm-quote,.dm-main .dm-desc{font-size:15px}
 .dm-main .dm-sec + .dm-sec{margin-top:6px}
 .dm-lbl:first-child{margin-top:16px}
+#dish-modal-content{transition:opacity .14s ease,transform .14s ease}
+#dish-modal-content.dm-out-l{opacity:0;transform:translateX(-28px)}
+#dish-modal-content.dm-out-r{opacity:0;transform:translateX(28px)}
+#dish-modal-content.dm-in-r{animation:dmInR .34s cubic-bezier(.2,.7,.2,1)}
+#dish-modal-content.dm-in-l{animation:dmInL .34s cubic-bezier(.2,.7,.2,1)}
+@keyframes dmInR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes dmInL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes dmUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.dm-in-r .dm-kp,.dm-in-l .dm-kp,.dm-in-r .dm-prod,.dm-in-l .dm-prod{animation:dmUp .42s cubic-bezier(.2,.7,.2,1) both}
+.dm-in-r .dm-kp:nth-child(2),.dm-in-l .dm-kp:nth-child(2){animation-delay:.06s}
+.dm-in-r .dm-kp:nth-child(3),.dm-in-l .dm-kp:nth-child(3){animation-delay:.11s}
+.dm-in-r .dm-kp:nth-child(4),.dm-in-l .dm-kp:nth-child(4){animation-delay:.16s}
+.dm-in-r .dm-kp:nth-child(5),.dm-in-l .dm-kp:nth-child(5){animation-delay:.21s}
+.dm-in-r .dm-kp:nth-child(6),.dm-in-l .dm-kp:nth-child(6){animation-delay:.26s}
+.dm-in-r .dm-kp:nth-child(n+7),.dm-in-l .dm-kp:nth-child(n+7){animation-delay:.3s}
+@media (prefers-reduced-motion:reduce){#dish-modal-content,#dish-modal-content *{animation:none!important;transition:none!important}}
 .dm-side .dm-speech{margin-top:2px}
 .dm-side .dm-quote{font-size:19px;line-height:1.38}
 .dm-main .dm-descr .dm-desc{margin:0 0 4px;font-size:14px}
@@ -816,22 +836,42 @@ function updateModalFoot(){
       + `<button type="button" class="dm-btn pri" onclick="dishModalGo(1)" ${modalIdx===modalList.length-1?'disabled':''}>Next &rsaquo;</button>`;
   } else { f.style.display = 'none'; f.innerHTML = ''; }
 }
-function showDishModal(){
+function showDishModal(dir){
   const d = modalList[modalIdx];
   if(!d) return;
   const content = document.getElementById('dish-modal-content');
-  content.innerHTML = dishDetailHtml(d);
-  content.scrollTop = 0;
-  document.getElementById('dish-modal').classList.add('two');
+  const overlay = document.getElementById('dish-modal-overlay');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const swap = () => {
+    const cur = modalList[modalIdx];
+    if(!cur) return;                     // closed or switched to a producer meanwhile
+    content.innerHTML = dishDetailHtml(cur);
+    content.scrollTop = 0;
+    document.getElementById('dish-modal').classList.add('two');
+  };
   updateModalFoot();
-  document.getElementById('dish-modal-overlay').classList.add('open');
+  if(dir && !reduce && overlay.classList.contains('open')){
+    // Slide the old dish out (opposite to the direction we go), then slide the new one in.
+    clearTimeout(content._t1); clearTimeout(content._t2);
+    content.classList.remove('dm-in-r','dm-in-l','dm-out-l','dm-out-r');
+    content.classList.add(dir > 0 ? 'dm-out-l' : 'dm-out-r');
+    content._t1 = setTimeout(() => {
+      swap();
+      content.classList.remove('dm-out-l','dm-out-r');
+      content.classList.add(dir > 0 ? 'dm-in-r' : 'dm-in-l');
+      content._t2 = setTimeout(() => content.classList.remove('dm-in-r','dm-in-l'), 520);
+    }, 140);
+  } else {
+    swap();
+  }
+  overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 function dishModalGo(n){
   const k = modalIdx + n;
   if(k < 0 || k >= modalList.length) return;
   modalIdx = k;
-  showDishModal();
+  showDishModal(n);
 }
 // Open the pop-up for the dish at the given index of the current list.
 function openDishModal(i){
@@ -1175,6 +1215,12 @@ window.addEventListener('afterprint', function(){
   }
 });
 
+// Restaurant Ops mark for the printed sheets (names from platform.js).
+function roBrand(){
+  var P = window.PLATFORM || { name: 'Restaurant', accent: 'Ops', by: 'Fiorella Atencio' };
+  return '<span class="ro-brand"><span class="n">' + esc(P.name || 'Restaurant') + ' <em>' + esc(P.accent || 'Ops') + '</em></span>' +
+         '<span class="b">by ' + esc(P.by || 'Fiorella Atencio') + '</span></span>';
+}
 // One printable training sheet for a dish (uses the same fields as the on-screen card/modal).
 function dishSheetHtml(d, withPhotos){
   var menus = (Array.isArray(d.menus) ? d.menus : []).map(menuLabel);
@@ -1217,7 +1263,7 @@ function dishSheetHtml(d, withPhotos){
     '<div class="ds-head"><div>' +
       (d.course ? '<div class="ds-course">' + esc(d.course) + '</div>' : '') +
       '<div class="ds-name">' + esc(d.name||'') + '</div>' + menusBlock +
-    '</div><div class="ds-cred"><div class="t">Automatization made by</div><div class="b">Fiorella A.</div></div></div>' +
+    '</div><div class="ds-cred">' + roBrand() + '</div></div>' +
     photo + announceBlock + descBlock + chipsBlock + wineBlock + setupBlock + knowBlock +
   '</div></section>';
 }
