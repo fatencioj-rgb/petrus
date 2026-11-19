@@ -55,7 +55,7 @@
     var name = document.createElement('span'); name.className = 'bm-name';
     name.appendChild(document.createTextNode((P.name || 'Restaurant') + ' '));
     var em = document.createElement('em'); em.textContent = P.accent || 'Ops'; name.appendChild(em);
-    var by = document.createElement('span'); by.className = 'bm-by'; by.textContent = 'by ' + (P.by || '');
+    var by = document.createElement('span'); by.className = 'bm-by'; by.textContent = (P.by || '');
     plat.appendChild(name); plat.appendChild(by);
     var dv = document.createElement('span'); dv.className = 'bm-dv';
     var img;

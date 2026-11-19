@@ -422,7 +422,7 @@ body {
     <div class="brandbar">
       <div class="platform">
         <div class="wm" id="platName">Restaurant <em>Ops</em></div>
-        <div class="by" id="platBy">by Fiorella Atencio</div>
+        <div class="by" id="platBy">Fiorella Atencio</div>
       </div>
       <div class="dv"></div>
       <div class="logo">
@@ -493,7 +493,7 @@ body {
 
   <div class="footer" style="margin-top:auto;padding-top:16px;text-align:center;">
     &copy; 2026 — Internal Use Only
-    <div style="margin-top:6px;font-size:10px;letter-spacing:1px;color:rgba(94,88,41,0.6);"><em id="platFoot">Restaurant Ops &middot; by Fiorella Atencio</em></div>
+    <div style="margin-top:6px;font-size:10px;letter-spacing:1px;color:rgba(94,88,41,0.6);"><em id="platFoot">Restaurant Ops &middot; Fiorella Atencio</em></div>
   </div>
 </div>
 
@@ -521,14 +521,14 @@ body {
 (function(){ var P=window.PLATFORM; if(!P) return; var R=P.restaurant||{};
   var set=function(id,fn){ var e=document.getElementById(id); if(e) fn(e); };
   set('platName',function(e){ e.textContent=P.name+' '; var m=document.createElement('em'); m.textContent=P.accent; e.appendChild(m); });
-  set('platBy',function(e){ e.textContent='by '+P.by; });
+  set('platBy',function(e){ e.textContent=P.by; });
   set('restLogo',function(e){ e.src=R.logo; e.alt=R.name; });
   set('restName',function(e){ e.textContent=R.name; });
   var D=P.departments||{};
   set('deptFoh',function(e){ if(D.foh) e.textContent=D.foh; });
   set('deptMgmt',function(e){ if(D.mgmt) e.textContent=D.mgmt; });
   set('deptBoh',function(e){ if(D.boh) e.textContent=D.boh; });
-  set('platFoot',function(e){ e.textContent=P.name+' '+P.accent+' \u00b7 by '+P.by; });
+  set('platFoot',function(e){ e.textContent=P.name+' '+P.accent+' \u00b7 '+P.by; });
   document.title=P.name+' '+P.accent+' \u2014 '+R.name;
 })();
 </script><script src="auth.js"></script>

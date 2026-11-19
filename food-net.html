@@ -1349,7 +1349,7 @@ window.addEventListener('afterprint', function(){
 function roBrand(){
   var P = window.PLATFORM || { name: 'Restaurant', accent: 'Ops', by: 'Fiorella Atencio' };
   return '<span class="ro-brand"><span class="n">' + esc(P.name || 'Restaurant') + ' <em>' + esc(P.accent || 'Ops') + '</em></span>' +
-         '<span class="b">by ' + esc(P.by || 'Fiorella Atencio') + '</span></span>';
+         '<span class="b">' + esc(P.by || 'Fiorella Atencio') + '</span></span>';
 }
 // One printable training sheet for a dish (uses the same fields as the on-screen card/modal).
 function dishSheetHtml(d, withPhotos){
