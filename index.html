@@ -374,8 +374,14 @@ body {
 .recent-time { color: var(--gold-dark); font-size: 12px; opacity: 0.85; white-space:nowrap; }
 .recent-empty { color: var(--gold-dark); font-size: 12px; opacity: 0.8; text-align:center; padding: 6px 0; }
 
+  .brandbar { display: flex; align-items: center; }
+  .platform .wm { font-family: var(--serif); font-weight: 500; font-size: 26px; letter-spacing: -.3px; color: var(--ink); line-height: 1; }
+  .platform .wm em { font-style: italic; color: var(--gold); }
+  .platform .by { font-size: 9px; letter-spacing: 2.4px; text-transform: uppercase; color: var(--gold-dark); margin-top: 6px; }
+  .brandbar .dv { width: 1px; align-self: stretch; background: var(--gold-light); margin: 6px 22px; }
 @media (max-width: 600px) {
-  .container { padding: 0 22px 24px; }
+  .brandbar { flex-direction: column; gap: 10px; }
+  .brandbar .dv { display: none; }  .container { padding: 0 22px 24px; }
   .site-header { flex-direction: column; justify-content: center; gap: 10px; padding: 24px 0 0; text-align: center; }
   .logo img { height: 56px; margin: 0 auto; }
   .hero { padding-top: 44px; }
@@ -394,8 +400,15 @@ body {
 <div class="container">
 <main class="stage">
   <header class="site-header">
-    <div class="logo">
-      <img src="petrus-logo.png" alt="Petrus">
+    <div class="brandbar">
+      <div class="platform">
+        <div class="wm" id="platName">Restaurant <em>Ops</em></div>
+        <div class="by" id="platBy">by Fiorella Atencio</div>
+      </div>
+      <div class="dv"></div>
+      <div class="logo">
+        <img id="restLogo" src="petrus-logo.png" alt="Petrus">
+      </div>
     </div>
     <!-- User status (shown when logged in) -->
     <div class="user-status" id="userStatus">
@@ -405,7 +418,7 @@ body {
   </header>
 
   <section class="hero">
-    <p class="subtitle">Front of House</p>
+    <p class="subtitle" id="restArea">Petrus &middot; Front of House</p>
     <h1 class="greeting" id="greeting">Welcome.</h1>
   </section>
 
@@ -422,7 +435,7 @@ body {
 
   <!-- Login prompt (shown when NOT logged in) -->
   <div id="loginPrompt" style="display:none;">
-    <p style="color:var(--gold-dark);font-size:13px;margin-bottom:24px;">Sign in to access the site</p>
+    <p style="color:var(--gold-dark);font-size:13px;margin-bottom:24px;">Sign in to <b id="restName">Petrus</b></p>
     <form id="loginForm" onsubmit="return submitDirectLogin(event)" style="max-width:320px;margin:0;display:flex;flex-direction:column;gap:12px;text-align:left;">
       <input type="text" id="directUser" placeholder="User" autocomplete="username" autocapitalize="none"
         style="width:100%;padding:14px 16px;background:transparent;border:1px solid rgba(138, 130, 65,0.5);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;">
@@ -450,7 +463,7 @@ body {
 
   <div class="footer" style="margin-top:auto;padding-top:16px;text-align:center;">
     &copy; 2026 — Internal Use Only
-    <div style="margin-top:6px;font-size:10px;letter-spacing:1px;color:rgba(94,88,41,0.6);"><em>Website developed by Fiorella Atencio</em></div>
+    <div style="margin-top:6px;font-size:10px;letter-spacing:1px;color:rgba(94,88,41,0.6);"><em id="platFoot">Restaurant Ops &middot; by Fiorella Atencio</em></div>
   </div>
 </div>
 
@@ -473,7 +486,19 @@ body {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
-<script src="auth.js"></script>
+<script src="platform.js"></script>
+<script>
+(function(){ var P=window.PLATFORM; if(!P) return; var R=P.restaurant||{};
+  var set=function(id,fn){ var e=document.getElementById(id); if(e) fn(e); };
+  set('platName',function(e){ e.textContent=P.name+' '; var m=document.createElement('em'); m.textContent=P.accent; e.appendChild(m); });
+  set('platBy',function(e){ e.textContent='by '+P.by; });
+  set('restLogo',function(e){ e.src=R.logo; e.alt=R.name; });
+  set('restArea',function(e){ e.textContent=R.name+' \u00b7 '+R.area; });
+  set('restName',function(e){ e.textContent=R.name; });
+  set('platFoot',function(e){ e.textContent=P.name+' '+P.accent+' \u00b7 by '+P.by; });
+  document.title=P.name+' '+P.accent+' \u2014 '+R.name;
+})();
+</script><script src="auth.js"></script>
 <script src="push.js"></script>
 
 <script>
