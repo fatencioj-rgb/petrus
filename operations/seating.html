@@ -218,23 +218,33 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 }
 </style>
 <style id="print-skin">
-/* The printed sheets use the same olive look as the screen (the colours and table finish of #modern-skin, which is screen-only). */
-@media print{
+/* Event sheet. Not limited to @media print: the off-screen copy used to test the fit needs the same sizes. */
 #printRoot{--green:#9d9650;--green-dark:#5e5829;--gold:#9d9650;--gold-light:#d3cfa6;--table:#a39c57;--chair:#5e5829;--fixed:#3d3a1a}
-.pf-stage{background:#fff}
-.pf-stage .chair{box-shadow:0 1px 2px rgba(60,55,20,.25)}
-.pf-stage .chair.filled{outline:2px solid #fff;box-shadow:0 0 0 3px #9d9650}
-.pf-stage .table-shape{box-shadow:0 3px 8px rgba(60,55,20,.22),inset 0 -6px 14px rgba(60,55,20,.12),inset 0 4px 10px rgba(255,255,255,.22)}
-.pf-stage .table-round,.pf-stage .table-rect{background:linear-gradient(145deg,#b3ac66,#8f8846)}
-.pf-stage .table-label{color:#fff;text-shadow:0 1px 2px rgba(40,38,15,.35)}
-.pf-stage .fixed-el{background:linear-gradient(145deg,#4d4922,#2f2c14);box-shadow:0 4px 10px rgba(40,38,15,.28)}
-.pf-stage .fixed-el.rect{background:rgba(157,150,80,.12) !important;border:1.5px dashed #9d9650 !important;color:#5e5829 !important;box-shadow:none;border-radius:16px}
-.ps-head h1{color:#23210f;letter-spacing:1px}
-.pf-event,.pl-name{color:#23210f}
-.pl-pos{color:#5e5829}
-.pl-list li{border-bottom-color:#e7e4cf}
-.pf-credit{color:#8f8b5e}
-}
+.ps-head{height:66px;margin-bottom:14px;padding:0;border-bottom:none;align-items:flex-start}
+.ps-title{min-width:0}
+.ps-kicker{font-family:var(--sans);font-size:9px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:#9d9650}
+.ps-event{font-family:var(--serif);font-weight:500;font-size:38px;line-height:1.1;letter-spacing:-.3px;color:#23210f;margin-top:4px;max-width:860px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.pf-meta{font-size:8px;line-height:1.5}
+.pf-credit{margin-top:0;font-style:italic;color:#8f8b5e}
+.ps-sheetno{display:block;margin-top:4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#5e5829}
+.ps-body{gap:24px}
+.ps-floor.big{flex:0 0 100%!important}
+
+/* guest lists: equal boxes in a grid */
+.ps-lists{display:grid;grid-auto-rows:1fr;align-content:start;column-count:auto;font-size:var(--pl-font,11px)}
+.pl-block{margin:0;min-width:0}
+.pl-head{border-bottom:1px solid #d3cfa6;margin-bottom:4px;padding-bottom:2px}
+.pl-name{font-size:calc(var(--pl-font,11px) + 5px);font-weight:600;color:#23210f;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.pl-list li{border-bottom:none}
+.pl-pos{color:#9d9650;font-weight:500}
+.pl-guest{color:#23210f}
+
+/* the floor drawn like a plan: flat, thin olive lines; a filled chair = a named guest */
+.pf-stage .table-shape{background:#ece9cf!important;border:1.2px solid #9d9650;box-shadow:none!important}
+.pf-stage .table-label{color:#5e5829!important;text-shadow:none!important}
+.pf-stage .chair{background:#fff!important;color:#5e5829!important;border:1px solid #9d9650;box-shadow:none!important;outline:none!important}
+.pf-stage .chair.filled{background:#9d9650!important;color:#fff!important}
+.pf-stage .fixed-el,.pf-stage .fixed-el.rect{background:transparent!important;border:1.2px dashed #9d9650!important;color:#5e5829!important;box-shadow:none!important}
 </style><style id="modern-skin">
 /* Modern Petrus look (screen only). The printed sheets and the off-screen fit test keep the original variables. */
 @media screen {
@@ -491,11 +501,11 @@ body{background:#fff;color:var(--ink)}
     <div class="print-opts">
       <button type="button" class="print-opt" data-mode="one">
         <svg width="66" height="46" viewBox="0 0 66 46" aria-hidden="true"><rect x="1" y="1" width="64" height="44" rx="3" fill="#fff" stroke="#b89650"/><rect x="6" y="9" width="20" height="17" rx="2" fill="#b89650" opacity=".6"/><g stroke="#5c1a1a" stroke-width="1.4" opacity=".65"><line x1="32" y1="10" x2="42" y2="10"/><line x1="32" y1="16" x2="42" y2="16"/><line x1="32" y1="22" x2="42" y2="22"/><line x1="32" y1="28" x2="42" y2="28"/><line x1="47" y1="10" x2="58" y2="10"/><line x1="47" y1="16" x2="58" y2="16"/><line x1="47" y1="22" x2="58" y2="22"/><line x1="47" y1="28" x2="58" y2="28"/></g></svg>
-        <span><span class="po-title">All on one sheet</span><span class="po-desc">Mini floor on the left, guest lists by table on the right.</span></span>
+        <span><span class="po-title">All on one sheet</span><span class="po-desc">Floor plan on the left, each table&rsquo;s guests in equal boxes on the right.</span></span>
       </button>
       <button type="button" class="print-opt" data-mode="two">
         <svg width="66" height="46" viewBox="0 0 66 46" aria-hidden="true"><rect x="1" y="3" width="30" height="40" rx="3" fill="#fff" stroke="#b89650"/><rect x="5" y="12" width="22" height="22" rx="2" fill="#b89650" opacity=".6"/><rect x="35" y="3" width="30" height="40" rx="3" fill="#fff" stroke="#b89650"/><g stroke="#5c1a1a" stroke-width="1.4" opacity=".65"><line x1="39" y1="10" x2="46" y2="10"/><line x1="39" y1="16" x2="46" y2="16"/><line x1="39" y1="22" x2="46" y2="22"/><line x1="39" y1="28" x2="46" y2="28"/><line x1="39" y1="34" x2="46" y2="34"/><line x1="52" y1="10" x2="60" y2="10"/><line x1="52" y1="16" x2="60" y2="16"/><line x1="52" y1="22" x2="60" y2="22"/><line x1="52" y1="28" x2="60" y2="28"/><line x1="52" y1="34" x2="60" y2="34"/></g></svg>
-        <span><span class="po-title">Two sheets</span><span class="po-desc">Sheet 1: the floor, large. Sheet 2: the tables, in columns.</span></span>
+        <span><span class="po-title">Two sheets</span><span class="po-desc">Sheet 1: the floor, large. Sheet 2: each table&rsquo;s guests in equal boxes.</span></span>
       </button>
     </div>
     <p class="po-note">In the print window, choose &ldquo;Save as PDF&rdquo; as the printer to get a PDF file.</p>
@@ -1699,25 +1709,27 @@ function deleteSaved(id){
 })();
 
 // ── Printing ─────────────────────────────────────────────────────
-// One landscape sheet (A4, 10 mm margins): the whole floor in miniature on the left, and
-// on the right the guest list of every table (Table 1, Table 2…) in narrow columns.
-// The text size and number of columns are chosen automatically — roomiest first — by
-// testing each option in an off-screen copy until everything fits. Only if a plan is too
-// big even at the tightest setting do the remaining tables continue on extra sheets.
-// Every sheet is headed "Seat Plan" with "PETRUS - <name the plan was saved under>".
-var PS_W = 1040, PS_H = 710, PS_HEAD = 80;        // sheet size and header height (incl. credit line), in CSS px
+// An event sheet (A4 landscape, 10 mm margins): the event name, the floor drawn like a plan
+// (filled chairs = seated guest) and, beside it, one box per table with its named guests.
+// Every box is the same width and height, laid out in a regular grid (Table 1, 2, 3… row by row),
+// so no table takes more room than another. Empty seats and summary figures are left out.
+// The text size, number of columns and floor width are chosen automatically by testing each
+// option in an off-screen copy: widest floor and largest text first. If the lists can't fit next
+// to the floor, the floor gets the first sheet and the lists continue on the next ones.
+var PS_W = 1040, PS_H = 710, PS_HEAD = 80;        // sheet size and header height (incl. credit), in CSS px
 var PS_BODY_H = PS_H - PS_HEAD;
 var PS_CREDIT = 'Automatization made by Fiorella A.';
-var PS_FLOOR_W = 400, PS_GAP = 18, PS_COL_GAP = 14;
-var PS_LISTS_W = PS_W - PS_FLOOR_W - PS_GAP;      // width left for the lists next to the mini floor
-var PS_DENSITY = [                                // roomiest → tightest (colW = target column width)
-  { font: 12,  line: 17,   colW: 195 },
-  { font: 11,  line: 15,   colW: 195 },
-  { font: 11,  line: 15,   colW: 140 },
-  { font: 10,  line: 13.5, colW: 140 },
-  { font: 9,   line: 12,   colW: 112 },
-  { font: 8,   line: 10.5, colW: 112 },
-  { font: 7.5, line: 10,   colW: 92  }
+var PS_GAP = 24;                                  // between the floor and the lists
+var PS_CELL_GAP_X = 18, PS_CELL_GAP_Y = 14;       // between table boxes
+var PS_MIN_CELL_W = 125;                          // narrowest table box
+var PS_FLOOR_WIDTHS = [560, 470, 380];            // tried in this order
+var PS_DENSITY = [                                // roomiest → tightest
+  { font: 12,  line: 17   },
+  { font: 11,  line: 15.5 },
+  { font: 10,  line: 14   },
+  { font: 9,   line: 12.5 },
+  { font: 8,   line: 11   },
+  { font: 7.5, line: 10   }
 ];
 
 function mk(tag, cls, html){
@@ -1745,61 +1757,70 @@ function psDietHtml(u, i){
     return '<span class="' + cls + '">' + esc(t) + '</span>';
   }).join(', ');
 }
-// One table's block: heading + one short line per seat (number + guest name + a slim
-// allergies / diet column, only for tables that have at least one note).
+// One table's box: "Table 1" + one line per NAMED seat (seat number, guest, allergies / diet).
+// Tables with nobody named yet are left off the lists (they still show on the floor).
 function psBlockHtml(u){
-  var seated = 0, items = '';
+  var items = '';
   for (var i = 0; i < u.seats; i++){
-    var n = guestName(u, i), dh = psDietHtml(u, i);
-    if (n) seated++;
-    // The note only takes the width it needs, and only on the rows that have one.
+    var n = guestName(u, i);
+    if (!n) continue;
+    var dh = psDietHtml(u, i);
     items += '<li><span class="pl-pos">' + (i + 1) + '</span><span class="pl-guest">' + esc(n) + '</span>' +
              (dh ? '<span class="pl-diet">' + dh + '</span>' : '') + '</li>';
   }
-  return '<div class="pl-block"><div class="pl-head"><span class="pl-name">Table ' + esc(u.label) + '</span>' +
-         '<span class="pl-meta">' + seated + '/' + u.seats + '</span></div><ul class="pl-list">' + items + '</ul></div>';
+  if (!items) return '';
+  return '<div class="pl-block"><div class="pl-head"><span class="pl-name">Table ' + esc(u.label) + '</span></div>' +
+         '<ul class="pl-list">' + items + '</ul></div>';
 }
-function psCols(W, d){ return Math.max(1, Math.floor((W + PS_COL_GAP) / (d.colW + PS_COL_GAP))); }
-function psListStyle(W, d){
-  return 'width:' + W + 'px;height:' + PS_BODY_H + 'px;column-count:' + psCols(W, d) + ';--pl-font:' + d.font + 'px;--pl-line:' + d.line + 'px';
+// Equal columns; rows all as tall as the tallest box (grid-auto-rows: 1fr).
+function psGridStyle(W, cols, d){
+  return 'width:' + W + 'px;grid-template-columns:repeat(' + cols + ',minmax(0,1fr));' +
+         'column-gap:' + PS_CELL_GAP_X + 'px;row-gap:' + PS_CELL_GAP_Y + 'px;--pl-font:' + d.font + 'px;--pl-line:' + d.line + 'px';
 }
-// Does this HTML fit in a W × body-height box at density d? Rendered off-screen at full size;
-// if the columns run out of room, the browser adds extra columns to the right (wider than the box).
-function psFits(html, W, d){
+// Does this grid fit in W × body height? Rendered off-screen at full size and measured.
+function psGridFits(html, W, cols, d){
   var holder = document.createElement('div');
   holder.className = 'ps-measure';
-  holder.innerHTML = '<div class="ps-lists" style="' + psListStyle(W, d) + '">' + html + '</div>';
+  holder.innerHTML = '<div class="ps-lists" style="' + psGridStyle(W, cols, d) + '">' + html + '</div>';
   document.body.appendChild(holder);
   var el = holder.firstChild;
-  var ok = el.scrollWidth <= el.clientWidth + 1;
+  var ok = el.offsetHeight <= PS_BODY_H && el.scrollWidth <= el.clientWidth + 1;
   holder.parentNode.removeChild(holder);
   return ok;
 }
-// Split the table blocks into sheets. The first sheet's lists are firstW wide (narrower when the
-// mini floor sits beside them); any further sheet is full width.
-function psPaginate(blocks, firstW){
-  var pages = [], i = 0, first = true;
-  while (i < blocks.length){
-    var W = first ? firstW : PS_W, rest = blocks.slice(i), pick = null;
-    for (var k = 0; k < PS_DENSITY.length && !pick; k++){
-      if (psFits(rest.join(''), W, PS_DENSITY[k])) pick = PS_DENSITY[k];
-    }
-    if (pick){ pages.push({ blocks: rest, d: pick, W: W, first: first }); break; }
-    // Too much even at the tightest setting: put as many whole tables as fit on this sheet.
-    var tight = PS_DENSITY[PS_DENSITY.length - 1], n = rest.length - 1;
-    while (n > 1 && !psFits(rest.slice(0, n).join(''), W, tight)) n--;
-    pages.push({ blocks: rest.slice(0, n), d: tight, W: W, first: first });
-    i += n; first = false;
+// Largest text first; for each text size, the fewest columns that fit (wider boxes, fewer wrapped names).
+function psGridFit(blocks, W, minFont){
+  var html = blocks.join('');
+  var maxC = Math.max(1, Math.min(blocks.length, Math.floor((W + PS_CELL_GAP_X) / (PS_MIN_CELL_W + PS_CELL_GAP_X))));
+  for (var k = 0; k < PS_DENSITY.length; k++){
+    var d = PS_DENSITY[k];
+    if (d.font < minFont) break;
+    for (var c = 1; c <= maxC; c++) if (psGridFits(html, W, c, d)) return { cols: c, d: d };
+  }
+  return null;
+}
+// Full-width list sheets: as many whole tables per sheet as fit.
+function psGridPages(blocks, W){
+  var pages = [], rest = blocks.slice();
+  while (rest.length){
+    var fit = psGridFit(rest, W, 0);
+    if (fit){ pages.push({ blocks: rest, fit: fit }); break; }
+    var n = rest.length - 1;
+    while (n > 1 && !(fit = psGridFit(rest.slice(0, n), W, 0))) n--;
+    if (!fit) fit = { cols: Math.max(1, Math.floor((W + PS_CELL_GAP_X) / (PS_MIN_CELL_W + PS_CELL_GAP_X))), d: PS_DENSITY[PS_DENSITY.length - 1] };
+    pages.push({ blocks: rest.slice(0, n), fit: fit });
+    rest = rest.slice(n);
   }
   return pages;
 }
 
 // The whole floor, scaled to fit opts.w × the sheet body. Labels are enlarged (sizes in px on
 // paper) so they stay readable when the floor is shrunk.
-var PS_MINI = { w: PS_FLOOR_W, cap: 1,   tl: 12, fl: 9,  cn: 6.5, cls: 'ps-floor' };       // beside the lists
-var PS_BIG  = { w: PS_W,       cap: 1.4, tl: 15, fl: 12, cn: 9,   cls: 'ps-floor big' };   // a sheet of its own
+function psMini(w){ return { w: w, cap: 1, tl: 12, fl: 9, cn: 6.5, cls: 'ps-floor' }; }      // beside the lists
+var PS_BIG = { w: PS_W, cap: 1.4, tl: 15, fl: 12, cn: 9, cls: 'ps-floor big' };              // a sheet of its own
 function psFloor(opts){
   var wrap = mk('div', opts.cls);
+  wrap.style.flex = '0 0 ' + opts.w + 'px';
   var nodes = Array.prototype.slice.call(canvas.children);
   if (!nodes.length){ wrap.appendChild(mk('p', 'pf-none', 'No tables placed yet.')); return wrap; }
   var PAD = 10, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -1832,70 +1853,64 @@ function psFloor(opts){
   return wrap;
 }
 
-// mode 'one': a single sheet with the mini floor and the guest lists together.
+// mode 'one': the floor and the guest lists on one sheet (lists continue on more sheets only if needed).
 // mode 'two': sheet 1 is the floor alone (large); the guest lists start on sheet 2.
 var printMode = 'one';
 function buildPrintSheets(mode){
   mode = (mode === 'one' || mode === 'two') ? mode : printMode;
-  var oneSheet = mode !== 'two';
   var root = document.getElementById('printRoot');
   if (!root) return;
   root.innerHTML = '';
 
-  var covers = 0, named = 0;
-  state.units.forEach(function(u){
-    covers += u.seats;
-    for (var i = 0; i < u.seats; i++) if (guestName(u, i)) named++;
-  });
   var nameField = document.getElementById('planNameInput');       // also uses a name typed but not saved yet
   var planName = (state.meta && state.meta.id) ? state.meta.name : (nameField ? nameField.value.trim() : '');
-  var today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  // "PETRUS - GR 60's": the event name is printed exactly as it was saved.
-  var subHtml = '<div class="pf-sub"><span class="pf-brand">Petrus</span>' +
-    (planName ? '<span class="pf-dash">-</span><span class="pf-event">' + esc(planName) + '</span>' : '') + '</div>';
-  var stats = state.units.length + ' tables &middot; ' + covers + ' covers &middot; ' + named + ' guests named<br>' + today;
-
   var blocks = state.units.slice()
     .sort(function(a, b){ return naturalCompare(a.label, b.label); })
-    .map(psBlockHtml);
-  // A small key under the header text whenever any seat has an allergy / diet note.
-  var anyDiet = state.units.some(function(u){
-    for (var i = 0; i < u.seats; i++) if (guestTags(u, i).length) return true;
-    return false;
-  });
-  var legend = anyDiet ? '<span class="pf-legend"><b>Red</b> = allergy &middot; plain = diet &middot; <i>italic</i> = note</span>' : '';
-  // Credit sits in the header (top-right, under the date) so it can't be cut off at the page edge.
-  var credit = '<span class="pf-credit">' + PS_CREDIT + '</span>';
-  function head(rightHtml){
-    return mk('div', 'ps-head', '<div><h1>Seat Plan</h1>' + subHtml + '</div><div class="pf-meta">' + rightHtml + credit + legend + '</div>');
+    .map(psBlockHtml)
+    .filter(Boolean);
+
+  // Work out the sheets: { floor: opts | null, lists: { blocks, fit, W } | null }
+  var sheets = [];
+  function listSheets(){
+    psGridPages(blocks, PS_W).forEach(function(p){ sheets.push({ floor: null, lists: { blocks: p.blocks, fit: p.fit, W: PS_W } }); });
+  }
+  if (mode === 'two'){
+    sheets.push({ floor: PS_BIG, lists: null });
+    if (blocks.length) listSheets();
+  } else if (!blocks.length){
+    sheets.push({ floor: PS_BIG, lists: null });                 // nobody named yet: just the floor
+  } else {
+    // Prefer readable names (9 px or more) over a bigger floor; only then accept smaller text.
+    var minFonts = [9, 0];
+    outer:
+    for (var m = 0; m < minFonts.length; m++){
+      for (var f = 0; f < PS_FLOOR_WIDTHS.length; f++){
+        var fw = PS_FLOOR_WIDTHS[f], W = PS_W - fw - PS_GAP;
+        var fit = psGridFit(blocks, W, minFonts[m]);
+        if (fit){ sheets.push({ floor: psMini(fw), lists: { blocks: blocks, fit: fit, W: W } }); break outer; }
+      }
+    }
+    if (!sheets.length){ sheets.push({ floor: PS_BIG, lists: null }); listSheets(); }
   }
 
-  // "Two sheets": the floor on a sheet of its own, then the lists at full width.
-  if (!oneSheet){
-    var floorPage = mk('section', 'ps-page');
-    floorPage.appendChild(head(stats));
-    var fb = mk('div', 'ps-body');
-    fb.style.height = PS_BODY_H + 'px';
-    fb.appendChild(psFloor(PS_BIG));
-    floorPage.appendChild(fb);
-    root.appendChild(floorPage);
+  // Header: "SEAT PLAN" + the event name exactly as it was saved; credit top-right (can't be cut off).
+  function head(idx){
+    var no = sheets.length > 1 ? '<span class="ps-sheetno">Sheet ' + (idx + 1) + ' of ' + sheets.length + '</span>' : '';
+    return mk('div', 'ps-head',
+      '<div class="ps-title"><div class="ps-kicker">Seat Plan</div><div class="ps-event">' + esc(planName || 'Event') + '</div></div>' +
+      '<div class="pf-meta"><span class="pf-credit">' + PS_CREDIT + '</span>' + no + '</div>');
   }
-
-  var pages = blocks.length
-    ? psPaginate(blocks, oneSheet ? PS_LISTS_W : PS_W)
-    : (oneSheet ? [{ blocks: [], d: PS_DENSITY[1], W: PS_LISTS_W, first: true }] : []);
-
-  pages.forEach(function(pg, idx){
+  sheets.forEach(function(sh, idx){
     var page = mk('section', 'ps-page');
-    page.appendChild(head(oneSheet && idx === 0 ? stats : (idx === 0 ? 'Guest lists' : 'Guest lists (continued)')));
+    page.appendChild(head(idx));
     var body = mk('div', 'ps-body');
     body.style.height = PS_BODY_H + 'px';
-    if (oneSheet && idx === 0) body.appendChild(psFloor(PS_MINI));
-    var lists = mk('div', 'ps-lists', pg.blocks.join(''));
-    // Full-width list sheets spread the tables across all the columns instead of piling them to the left.
-    // (It only ever shortens the columns, so whatever fitted before still fits.)
-    lists.setAttribute('style', psListStyle(pg.W, pg.d) + (pg.W === PS_W ? ';column-fill:balance' : ''));
-    body.appendChild(lists);
+    if (sh.floor) body.appendChild(psFloor(sh.floor));
+    if (sh.lists){
+      var lists = mk('div', 'ps-lists', sh.lists.blocks.join(''));
+      lists.setAttribute('style', psGridStyle(sh.lists.W, sh.lists.fit.cols, sh.lists.fit.d));
+      body.appendChild(lists);
+    }
     page.appendChild(body);
     root.appendChild(page);
   });
