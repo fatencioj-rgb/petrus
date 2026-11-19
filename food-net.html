@@ -213,6 +213,84 @@ tr:last-child td { border-bottom:none; }
 .ds-empty{font-size:13px;color:#999;padding:20px 0}
 </style>
 <link rel="stylesheet" href="modern.css">
+<style id="fn-gallery">
+/* Gallery look for Food training (screen only; the printed sheets are untouched). */
+@media screen {
+.container{max-width:1240px}
+/* menu switcher: one segmented control */
+.tabs{display:flex;flex-wrap:nowrap;gap:4px;background:var(--bg-soft);padding:4px;border-radius:40px;width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none;margin-bottom:16px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:none;background:transparent;border-radius:40px;padding:8px 16px;font-size:12px;font-weight:500;color:var(--wine);white-space:nowrap}
+.tab:hover{background:rgba(255,255,255,.65);color:var(--wine)}
+.tab.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(60,55,20,.12);font-weight:600}
+/* photo-first cards */
+.dish-grid-inner{grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:34px 28px}
+.dish-card{background:transparent;border:none;box-shadow:none;border-radius:0;overflow:visible;transition:none}
+.dish-card:hover{transform:none;box-shadow:none}
+.dish-card .dish-media{height:auto;aspect-ratio:4/3;border-radius:18px;transition:transform .25s ease,box-shadow .25s ease}
+.dish-card:hover .dish-media{transform:translateY(-3px);box-shadow:0 14px 34px rgba(60,55,20,.16)}
+.dish-card .dish-media.empty{aspect-ratio:4/3}
+.dish-card .dish-course{background:#fff;border:none;color:var(--wine);font-weight:600;box-shadow:0 2px 8px rgba(60,55,20,.12);border-radius:30px}
+.dish-card .dish-body{padding:12px 0 0;gap:6px}
+.dish-card .dish-name{font-size:28px;line-height:1.05;letter-spacing:-.3px;color:var(--ink)}
+.dish-speech{font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.35;color:#5f5b2c;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dish-meta{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px}
+.dish-meta .chips{gap:4px;flex:1 1 auto}
+.dish-card .chip,.dm-body .chip{font-size:10px;font-weight:600;letter-spacing:0;padding:2px 8px;border-radius:30px;background:#fbeeec;border:1px solid #f0cfc9;color:#a8362b;text-transform:capitalize}
+.dish-card .chip.diet,.dm-body .chip.diet{background:#eef0dc;border-color:#d6dab0;color:#5e6a2a}
+.dish-card .chip.more{background:#fff;border-color:var(--border);color:var(--wine);font-weight:500}
+.chip.mo2{display:none}
+@media (max-width:520px){.chip.c3,.chip.mo3{display:none}.chip.mo2{display:inline-block}}
+/* cutlery icons */
+.cut{display:flex;align-items:flex-end;gap:7px;margin-left:auto;color:#6e6830}
+.cut svg,.dm-set svg{display:block;fill:currentColor}
+.cut svg.pl,.dm-set svg.pl{fill:none;stroke:currentColor;stroke-width:1.6}
+.cut-other{font-size:10px;font-weight:500;color:var(--wine);border:1px solid var(--border);border-radius:30px;padding:2px 8px;background:#fff}
+/* detail sheet */
+.dish-modal-overlay{background:rgba(35,33,15,.5);backdrop-filter:blur(3px);align-items:center;padding:24px 16px}
+.dish-modal{max-width:700px;max-height:min(92vh,920px);display:flex;flex-direction:column;border:none;border-radius:24px;box-shadow:0 24px 70px rgba(35,33,15,.35);background:#fff;overflow:hidden}
+#dish-modal-content{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.dish-modal .dish-media{height:clamp(190px,34vh,320px);aspect-ratio:auto;border-radius:0}
+.dish-modal .dish-media.empty{height:clamp(120px,22vh,200px)}
+.dish-modal .dish-body{padding:20px 24px 24px}
+.dish-modal .dish-name{color:var(--ink)}
+.dm-body{padding:18px 24px 24px}
+.dm-name{font-family:var(--serif);font-weight:500;font-size:36px;line-height:1.05;letter-spacing:-.5px;color:var(--ink);margin:0 0 12px}
+.dm-quote{border-left:3px solid var(--gold,#b1aa6c);padding:2px 0 2px 16px;font-family:var(--serif);font-style:italic;font-size:21px;line-height:1.38;color:#3d3a17}
+.dm-quote p{margin:0}
+.dm-desc{margin-top:12px;font-size:14px;line-height:1.55;color:var(--text)}
+.dm-lbl{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--wine);margin:22px 0 8px}
+.dm-kp{display:flex;gap:14px;padding:9px 0;border-top:1px solid var(--border);font-size:13.5px;line-height:1.45}
+.dm-kp:first-of-type{border-top:none}
+.dm-kp b{flex:0 0 130px;font-weight:600;color:var(--wine)}
+.dm-kp span{flex:1;min-width:0;color:var(--text)}
+.dm-kp img{display:block;margin-top:6px;max-width:100%;border-radius:10px}
+.dm-set{display:flex;gap:10px;flex-wrap:wrap}
+.dm-set div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-width:72px;padding:10px 8px;border:1px solid var(--border);border-radius:14px;background:var(--bg-soft);color:#6e6830}
+.dm-set small{font-size:10.5px;font-weight:500;color:var(--wine);text-align:center;line-height:1.2}
+.dm-prod{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:12px 16px;border:1px solid var(--border);border-radius:14px;background:var(--bg-soft);cursor:pointer;transition:border-color .2s}
+.dm-prod:hover{border-color:var(--gold,#b1aa6c)}
+.dm-prod small{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--wine)}
+.dm-prod b{font-family:var(--serif);font-size:21px;font-weight:500;color:var(--ink)}
+.dm-prod em{display:block;font-style:normal;font-size:11px;color:var(--wine-soft)}
+.dm-prod i{font-style:normal;color:var(--gold,#b1aa6c);font-size:22px}
+.dm-foot{display:none;align-items:center;justify-content:space-between;gap:10px;padding:12px 20px 16px;border-top:1px solid var(--border);background:#fff}
+.dm-btn{border:1px solid var(--gold-light,#dcd8b0);border-radius:40px;padding:9px 20px;font:500 12px var(--sans);color:var(--wine);background:#fff;cursor:pointer}
+.dm-btn.pri{background:#8f8846;border-color:#8f8846;color:#fff}
+.dm-btn:disabled{opacity:.35;cursor:default}
+.dm-count{font-size:11px;letter-spacing:2px;font-weight:500;color:var(--wine)}
+@media (max-width:700px){
+  .dish-modal-overlay{align-items:flex-end;padding:0}
+  .dish-modal{max-width:none;max-height:94vh;border-radius:24px 24px 0 0}
+  .dm-body{padding:16px 18px 22px}
+  .dm-name{font-size:30px}
+  .dm-quote{font-size:19px}
+  .dm-kp b{flex-basis:96px}
+  .dish-card .dish-name{font-size:26px}
+}
+}
+</style>
+
 </head>
 <body>
 
@@ -230,7 +308,7 @@ tr:last-child td { border-bottom:none; }
   <!-- MENUS -->
   <section class="section">
     <h2 class="section-title" id="fn-section-title">The Menu</h2>
-    <p class="section-sub" id="fn-section-sub">Every dish, with descriptions and knowledge points. Filter by menu below.</p>
+    <p class="section-sub" id="fn-section-sub">Tap a dish to learn it.</p>
     <div class="tabs" id="fn-menu-tabs"></div>
     <input type="search" id="fn-search" class="fn-search" placeholder="Search a dish…" oninput="renderDishes()" aria-label="Search a dish">
 
@@ -258,6 +336,7 @@ tr:last-child td { border-bottom:none; }
   <div class="dish-modal" id="dish-modal" role="dialog" aria-modal="true">
     <button class="dish-modal-close" onclick="closeDishModal()" aria-label="Close">&times;</button>
     <div id="dish-modal-content"></div>
+    <div class="dm-foot" id="dish-modal-foot"></div>
   </div>
 </div>
 
@@ -476,8 +555,8 @@ function renderDishes(){
   allergyWrap.style.display = 'none';
   supplierGrid.style.display = 'none';
   if(searchBox) searchBox.style.display = 'block';
-  if(title) title.textContent = 'The Menu';
-  if(sub) sub.textContent = 'Every dish, with descriptions and knowledge points. Filter by menu below.';
+  if(title){ const mm = availableMenus().find(m => m.id === selectedFN); title.textContent = mm ? mm.label : 'The Menu'; }
+  if(sub) sub.textContent = 'Tap a dish to learn it.';
 
   const q = (searchBox ? searchBox.value : '').trim().toLowerCase();
   let list;
@@ -489,6 +568,7 @@ function renderDishes(){
   } else {
     list = dishesForMenu(selectedFN);
   }
+  if(sub) sub.textContent = list.length + (list.length === 1 ? ' dish' : ' dishes') + ' \u00b7 tap a dish to learn it.';
   if(!list.length){
     currentList = [];
     grid.innerHTML = q
@@ -509,7 +589,7 @@ function renderDishes(){
       : '';
     return `<article class="dish-card" onclick="openDishModal(${i})">
        <div class="dish-media-wrap">${dishMediaHtml(d)}${pencil}</div>
-       <div class="dish-body">${dishBodyHtml(d, i)}</div>
+       <div class="dish-body">${dishCardInner(d)}</div>
      </article>`;
   };
   const gridBlock = (dishes) => `<div class="dish-grid-inner">${dishes.map(pushCard).join('')}</div>`;
@@ -603,19 +683,149 @@ function dishBodyHtml(d, prefix){
     ${knowBlock}`;
 }
 
-// Open the pop-up for the dish at the given index of the current list.
-function openDishModal(i){
-  const d = currentList[i];
+/* ── Gallery card + detail sheet ─────────────────────────────── */
+// Cutlery icons (silhouettes) for each "Set up" piece the Menu Editor offers.
+const CUTLERY_ICONS = {
+  'Starter Fork':  { h:30, svg:'<rect x="3" y="2" width="2" height="15" rx="1"/><rect x="9" y="2" width="2" height="15" rx="1"/><rect x="15" y="2" width="2" height="15" rx="1"/><path d="M3 15h14v3c0 3-3 4-6 4H9c-3 0-6-1-6-4z"/><rect x="9" y="21" width="2" height="33" rx="1"/>' },
+  'Main Fork':     { h:38, svg:'<rect x="2" y="2" width="2" height="16" rx="1"/><rect x="7" y="2" width="2" height="16" rx="1"/><rect x="12" y="2" width="2" height="16" rx="1"/><rect x="17" y="2" width="2" height="16" rx="1"/><path d="M2 16h17v3c0 3-3 4-6 4H8c-3 0-6-1-6-4z"/><rect x="9" y="22" width="3" height="32" rx="1.5"/>' },
+  'Starter Knife': { h:30, svg:'<path d="M8 2c7 3 7 20 4 30H8z"/><rect x="8" y="32" width="4" height="22" rx="2"/>' },
+  'Steak Knife':   { h:38, svg:'<path d="M7 2c9 3 9 25 6 36H7z"/><path d="M7 14l-1.4 2 1.4 2-1.4 2 1.4 2z" fill="#fff"/><rect x="7" y="38" width="6" height="16" rx="3"/>' },
+  'Fish Knife':    { h:34, svg:'<path d="M5 2c10-1 12 8 9 28H5c3-8 2-18 0-28z"/><path d="M5 30h9v3H5z"/><rect x="7" y="32" width="5" height="22" rx="2.5"/>' },
+  'Butter Knife':  { h:30, svg:'<path d="M6 2c7 0 8 7 7 22H6z"/><rect x="6" y="24" width="7" height="3" rx="1.5"/><rect x="7" y="26" width="5" height="28" rx="2.5"/>' },
+  'Soup Spoon':    { h:36, svg:'<ellipse cx="10" cy="10" rx="8" ry="8.5"/><rect x="9" y="18" width="2" height="36" rx="1"/>' },
+  'Dessert Spoon': { h:34, svg:'<ellipse cx="10" cy="10" rx="6" ry="9"/><rect x="9" y="18" width="2" height="36" rx="1"/>' },
+  'Teaspoon':      { h:28, svg:'<ellipse cx="10" cy="8" rx="4.5" ry="7"/><rect x="9" y="14" width="2" height="40" rx="1"/>' },
+  'Sauce Spoon':   { h:34, svg:'<path d="M2 11c0-5 3-9 8-9s8 4 8 9c0 3-3 6-8 6s-8-3-8-6z"/><path d="M10 15v-5" stroke="#fff" stroke-width="1.4" fill="none"/><rect x="9" y="16" width="2" height="38" rx="1"/>' },
+  'Fish Spoon':    { h:34, svg:'<path d="M10 1c8 6 8 15 0 20C2 16 2 7 10 1z"/><rect x="9" y="19" width="2" height="35" rx="1"/>' },
+  'Side plate':    { h:30, plate:true, svg:'<circle cx="15" cy="15" r="13.5"/><circle cx="15" cy="15" r="8.5"/>' }
+};
+function cutleryIcon(name, scale){
+  const key = Object.keys(CUTLERY_ICONS).find(k => k.toLowerCase() === String(name||'').trim().toLowerCase());
+  if(!key) return `<span class="cut-other">${esc(name)}</span>`;
+  const o = CUTLERY_ICONS[key], h = Math.round(o.h * (scale||1));
+  if(o.plate) return `<svg class="pl" width="${h}" height="${h}" viewBox="0 0 30 30" role="img" aria-label="${esc(key)}"><title>${esc(key)}</title>${o.svg}</svg>`;
+  return `<svg width="${Math.round(h*20/56)}" height="${h}" viewBox="0 0 20 56" preserveAspectRatio="xMidYMax meet" role="img" aria-label="${esc(key)}"><title>${esc(key)}</title>${o.svg}</svg>`;
+}
+function cutleryList(d){ return (Array.isArray(d.setup) ? d.setup : []).filter(s => s && s !== 'No Set Up'); }
+function cutleryRowHtml(d){
+  const a = cutleryList(d);
+  return a.length ? `<div class="cut">${a.map(n => cutleryIcon(n, 1)).join('')}</div>` : '';
+}
+// Plain text of a (possibly rich) description, for the card preview.
+function plainText(html){
+  const t = document.createElement('div');
+  t.innerHTML = safeDesc(html || '');
+  return (t.textContent || '').replace(/\s+/g, ' ').trim();
+}
+// What the team says to the guest: the announcement, or the description if there isn't one.
+function speechOf(d){ return (d.announcement || '').trim() || plainText(d.desc); }
+// Allergen chips for the card: three, or two on a narrow phone (the rest as +N).
+function cardChipsHtml(d){
+  const a = d.allergies || [];
+  if(!a.length) return '';
+  let h = '';
+  a.slice(0, 3).forEach((x, i) => {
+    h += `<span class="chip${nonAllergen(x)?' diet':''}${i===2?' c3':''}">${esc(x)}</span>`;
+  });
+  if(a.length > 3) h += `<span class="chip more mo3">+${a.length-3}</span>`;
+  if(a.length > 2) h += `<span class="chip more mo2">+${a.length-2}</span>`;
+  return `<div class="chips">${h}</div>`;
+}
+function dishCardInner(d){
+  return `<div class="dish-name">${esc(d.name)}</div>
+    <div class="dish-speech">${esc(speechOf(d))}</div>
+    <div class="dish-meta">${cardChipsHtml(d)}${cutleryRowHtml(d)}</div>`;
+}
+// Producers that list this dish in "Used for".
+function producersForDish(d){
+  const id = d.id || d.docId;
+  if(!id) return [];
+  return FN_PRODUCERS.map((p, i) => ({ p, i })).filter(x => Array.isArray(x.p.linkedDishIds) && x.p.linkedDishIds.indexOf(id) >= 0);
+}
+// Full detail of a dish: speech first, then key points, set up, allergens, pairing, producer.
+function dishDetailHtml(d){
+  const speech = (d.announcement || '').trim();
+  const quote = speech
+    ? `<div class="dm-quote">${esc(speech).replace(/\n/g,'<br>')}</div><div class="dm-desc">${safeDesc(d.desc)}</div>`
+    : `<div class="dm-quote">${safeDesc(d.desc)}</div>`;
+  const kp = (d.knowledge || []).map(k => {
+    const imgs = (k.images || []).map(im => `<img src="${encodeURI(fixImg('images/'+im))}" alt="${esc(k.title)}" loading="lazy" onerror="this.style.display='none'">`).join('');
+    return `<div class="dm-kp"><b>${esc(k.title)}</b><span>${esc(k.text)}${imgs}</span></div>`;
+  }).join('');
+  const set = cutleryList(d);
+  const chips = (d.allergies || []).map(a => `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
+  const prods = producersForDish(d).map(x =>
+    `<div class="dm-prod" onclick="openProducerModal(${x.i})"><div><small>Producer</small><b>${esc(x.p.name||'')}</b>${x.p.loc ? `<em>${esc(x.p.loc)}</em>` : ''}</div><i>&rarr;</i></div>`).join('');
+  return dishMediaHtml(d) + `<div class="dm-body">
+    <h2 class="dm-name">${esc(d.name)}</h2>
+    ${quote}
+    ${kp ? `<div class="dm-lbl">Key points</div>${kp}` : ''}
+    ${set.length ? `<div class="dm-lbl">Set up</div><div class="dm-set">${set.map(n => `<div>${cutleryIcon(n, 1.15)}<small>${esc(n)}</small></div>`).join('')}</div>` : ''}
+    ${chips ? `<div class="dm-lbl">Contains</div><div class="chips">${chips}</div>` : ''}
+    ${winePairingBlock(d.winePairing, 'm')}
+    ${prods ? `<div class="dm-lbl">Producer</div>${prods}` : ''}
+  </div>`;
+}
+
+// ── Detail sheet with Prev / Next ──
+let modalList = [], modalIdx = -1;
+function updateModalFoot(){
+  const f = document.getElementById('dish-modal-foot');
+  if(!f) return;
+  if(modalList.length > 1 && modalIdx >= 0){
+    f.style.display = 'flex';
+    f.innerHTML = `<button type="button" class="dm-btn" onclick="dishModalGo(-1)" ${modalIdx===0?'disabled':''}>&lsaquo; Prev</button>`
+      + `<span class="dm-count">${modalIdx+1} / ${modalList.length}</span>`
+      + `<button type="button" class="dm-btn pri" onclick="dishModalGo(1)" ${modalIdx===modalList.length-1?'disabled':''}>Next &rsaquo;</button>`;
+  } else { f.style.display = 'none'; f.innerHTML = ''; }
+}
+function showDishModal(){
+  const d = modalList[modalIdx];
   if(!d) return;
   const content = document.getElementById('dish-modal-content');
-  content.innerHTML = dishMediaHtml(d) + `<div class="dish-body">${dishBodyHtml(d, 'm')}</div>`;
+  content.innerHTML = dishDetailHtml(d);
+  content.scrollTop = 0;
+  updateModalFoot();
   document.getElementById('dish-modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+function dishModalGo(n){
+  const k = modalIdx + n;
+  if(k < 0 || k >= modalList.length) return;
+  modalIdx = k;
+  showDishModal();
+}
+// Open the pop-up for the dish at the given index of the current list.
+function openDishModal(i){
+  if(!currentList[i]) return;
+  modalList = currentList; modalIdx = i;
+  showDishModal();
 }
 function closeDishModal(){
   document.getElementById('dish-modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
+  modalList = []; modalIdx = -1;
+  updateModalFoot();
 }
+// Arrow keys and swipe move between dishes while the sheet is open.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const ov = document.getElementById('dish-modal-overlay');
+  if(!ov || !ov.classList.contains('open') || modalList.length < 2) return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+  dishModalGo(e.key === 'ArrowRight' ? 1 : -1);
+});
+(function(){
+  let sx = 0, sy = 0;
+  const box = document.getElementById('dish-modal');
+  if(!box) return;
+  box.addEventListener('touchstart', (e) => { const t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; }, { passive:true });
+  box.addEventListener('touchend', (e) => {
+    if(modalList.length < 2) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) > 70 && Math.abs(dy) < 45) dishModalGo(dx < 0 ? 1 : -1);
+  }, { passive:true });
+})();
 // Close on Escape (the print dialog first, if it's open).
 document.addEventListener('keydown', (e) => {
   if(e.key !== 'Escape') return;
@@ -755,8 +965,10 @@ function renderSuppliers(){
 function openProducerModal(i){
   const p = FN_PRODUCERS[i];
   if(!p) return;
+  modalList = []; modalIdx = -1; updateModalFoot();
   const content = document.getElementById('dish-modal-content');
   content.innerHTML = producerMediaHtml(p) + `<div class="dish-body">${producerBodyHtml(p, 'm', true)}</div>`;
+  content.scrollTop = 0;
   document.getElementById('dish-modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -765,12 +977,9 @@ function openProducerModal(i){
 function openDishById(id){
   const idx = FN_DISHES.findIndex(d => (d.id||d.docId) === id);
   if(idx < 0) return;
-  // Reuse the dish modal directly from the full dish list.
-  const d = FN_DISHES[idx];
-  const content = document.getElementById('dish-modal-content');
-  content.innerHTML = dishMediaHtml(d) + `<div class="dish-body">${dishBodyHtml(d, 'm')}</div>`;
-  document.getElementById('dish-modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  // Single dish (no Prev / Next), opened from a producer's "Used for" chips.
+  modalList = [FN_DISHES[idx]]; modalIdx = 0;
+  showDishModal();
 }
 
 // Load producers from Firestore; keep the seed if the collection is empty.
