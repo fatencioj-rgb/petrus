@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order list — Petrus</title>
+<meta name="theme-color" content="#ffffff">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="hub.css">
+<style>
+.ord-wrap{margin-top:clamp(14px,3vh,26px);max-width:760px;text-align:left}
+.ord-search-wrap{position:relative;margin-bottom:14px}
+.ord-search{width:100%;padding:12px 18px;border:1px solid var(--line);border-radius:40px;font:14px var(--sans);outline:none}
+.ord-results{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;background:#fff;border:1px solid var(--line);border-radius:16px;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-shadow:0 14px 40px rgba(60,55,20,.16);display:none}
+.ord-results.show{display:block}
+.ord-result{padding:10px 16px;font-size:13px;cursor:pointer;border-bottom:1px solid #f1efdf}
+.ord-result:last-child{border-bottom:none}.ord-result:hover{background:var(--soft)}
+.ord-result .cat{font-size:10px;color:#a29b5d;margin-left:8px}
+.ord-form{display:none;gap:10px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:18px;padding:12px 16px;margin-bottom:14px}
+.ord-form.show{display:flex}
+.ord-form .picked{font-size:14px;font-weight:600;color:var(--gold-dark);flex:1 1 100%;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ord-form .picked .picked-x{color:#b03a2e;cursor:pointer;font-size:18px;font-weight:400;opacity:.6}.ord-form .picked .picked-x:hover{opacity:1}
+.ord-form input[type=number]{width:76px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px}
+.ord-form .kitchen-chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gold-dark);font-weight:500;cursor:pointer}
+.cbtn{border:none;border-radius:99px;padding:10px 20px;font:500 12px var(--sans);cursor:pointer;background:#8f8846;color:#fff}
+.cbtn.alt{background:#c8c28d;color:#2f2c14}
+.ord-group-title{font-family:var(--serif);font-size:24px;color:var(--ink);margin:22px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.ord-group-title.urgent{color:#b03a2e}
+.ord-row{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid #f1efdf;font-size:14px}
+.ord-row .nm{flex:1}.ord-row .kitchen-tag{font-size:11px;color:#a29b5d;font-style:italic;margin-left:6px}
+.ord-row input{accent-color:#8f8846;width:16px;height:16px}
+.ord-del{color:#c9c6a8;cursor:pointer;font-size:18px}.ord-del:hover{color:#b03a2e}
+.ord-assign-bar{display:none;align-items:center;gap:10px;background:var(--soft);border-radius:40px;padding:8px 16px;margin:10px 0;font-size:12px;color:var(--gold-dark)}
+.ord-assign-bar.show{display:flex}
+.ord-assign-bar select{padding:7px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;background:#fff}
+.ord-actions{display:flex;align-items:center;margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.ord-msg{font-size:12px;color:var(--gold-dark);margin-left:12px}
+.feed-empty{color:#b9b69a;font-size:13px;padding:14px 0}
+input:focus,select:focus{border-color:#b1aa6c!important;box-shadow:0 0 0 3px rgba(177,170,108,.22)}
+</style>
+<script src="platform.js"></script><script src="brand.js"></script>
+</head>
+<body>
+<div class="container">
+<main class="stage">
+  <header class="site-header">
+    <a class="logo" href="index.html"><img src="petrus-logo.png" alt="Petrus"></a>
+    <a class="back" href="somm-inventory.html">&larr; Inventory</a>
+  </header>
+  <section class="hero">
+    <p class="eyebrow">Inventory</p>
+    <h1>Order list<em>.</em></h1>
+  </section>
+  <div class="ord-wrap">
+    <div class="ord-search-wrap">
+      <input class="ord-search" id="ordSearch" placeholder="Search a product&hellip;" autocomplete="off" oninput="ordSearchInput()" onfocus="ordSearchInput()">
+      <div class="ord-results" id="ordResults"></div>
+    </div>
+    <div class="ord-form" id="ordForm">
+      <div class="picked"><span id="ordPicked"></span><span class="picked-x" onclick="ordClearPick()" title="Change product">&times;</span></div>
+      <input type="number" id="ordQty" min="1" value="1" placeholder="Qty">
+      <label class="kitchen-chk"><input type="checkbox" id="ordKitchen"> Kitchen</label>
+      <button class="cbtn" onclick="ordAddItem()">Add</button>
+    </div>
+    <div class="ord-assign-bar" id="ordAssignBar">
+      <span id="ordSelCount">0 selected</span>
+      <select id="ordAssignWhen"></select>
+      <button class="cbtn" onclick="ordAssignSelected()">Set date</button>
+    </div>
+    <div class="ord-list" id="ordList"></div>
+    <div class="ord-actions">
+      <button class="cbtn alt" onclick="ordSendToMilena()">Notify list</button>
+      <span class="ord-msg" id="ordMsg"></span>
+    </div>
+  </div>
+</main>
+<div class="footer">
+  <div>&copy; 2026 &mdash; Internal Use Only</div>
+  <div><em>Website developed by Fiorella Atencio</em></div>
+</div>
+</div>
+<!-- Firebase + Auth -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>
+/* ══ Order list — suppliers ═══════════════════════════════════════════ */
+var ORD_CATALOG = [];      // [{name, category}]
+var ORD_PICKED = null;     // producto seleccionado
+var ORD_ITEMS = [];        // lista actual [{id,name,qty,buy,urgency,urgencyLabel}]
+
+// Carga el catálogo (wines + beverages) que se sube en Admin.
+function ordLoadCatalog(){
+  Promise.all([
+    db.collection('product_catalog').doc('wines').get(),
+    db.collection('product_catalog').doc('beverages').get()
+  ]).then(function(res){
+    var all=[];
+    res.forEach(function(doc){
+      if(doc.exists){ (doc.data().products||[]).forEach(function(p){ all.push(p); }); }
+    });
+    // Ordenar y quitar duplicados por nombre.
+    var seen={};
+    ORD_CATALOG=all.filter(function(p){
+      var k=(p.name||'').toLowerCase();
+      if(!k||seen[k])return false; seen[k]=true; return true;
+    }).sort(function(a,b){return (a.name||'')>(b.name||'')?1:-1;});
+  }).catch(function(e){console.error('catalog',e);});
+}
+
+// Martes de la SEMANA SIGUIENTE (semana que empieza el próximo lunes).
+// Ej.: si hoy es sáb 11-oct, next week = martes 21-oct.
+function ordNextWeekLabel(){
+  var d=new Date();
+  var day=d.getDay();                     // 0=Dom,1=Lun,...,6=Sáb
+  var daysToNextMon=((8-day)%7)||7;        // lunes de la próxima semana
+  d.setDate(d.getDate()+daysToNextMon+1);  // +1 día = martes
+  var txt=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  return 'Next week · '+txt;
+}
+
+// Rellena el desplegable de la BARRA de asignar fecha (next week dinámico).
+function ordFillUrgency(){
+  var sel=document.getElementById('ordAssignWhen');
+  if(!sel)return;
+  var nextLabel=ordNextWeekLabel();
+  sel.innerHTML=
+    '<option value="urgent">Urgent</option>'+
+    '<option value="this">This week</option>'+
+    '<option value="next">'+nextLabel+'</option>';
+}
+
+// Etiqueta legible para cada urgencia.
+function ordUrgencyLabel(urg){
+  if(urg==='urgent')return 'Urgent';
+  if(urg==='this')return 'This week';
+  if(urg==='next')return ordNextWeekLabel();
+  return 'Unassigned';
+}
+
+function toggleOrders(){
+  document.getElementById('ordersBox').classList.toggle('open');
+}
+
+function ordSearchInput(){
+  var q=(document.getElementById('ordSearch').value||'').trim().toLowerCase();
+  var box=document.getElementById('ordResults');
+  if(!q){ box.className='ord-results'; box.innerHTML=''; return; }
+  var matches=ORD_CATALOG.filter(function(p){
+    return (p.name||'').toLowerCase().indexOf(q)>-1;
+  }).slice(0,30);
+  if(matches.length===0){
+    box.innerHTML='<div class="ord-result" style="color:#aaa;cursor:default">No matches — you can still type it manually</div>';
+    box.className='ord-results show';
+    return;
+  }
+  var h='';
+  matches.forEach(function(p,i){
+    // onmousedown/ontouchstart (no onclick): se dispara ANTES de que el
+    // "clic fuera" cierre la lista, y permite hacer scroll sin que se cierre.
+    h+='<div class="ord-result" onmousedown="ordPick(event,'+i+')" ontouchend="ordPick(event,'+i+')" data-i="'+i+'">'+
+       escHtml(p.name)+(p.category?'<span class="cat">'+escHtml(p.category)+'</span>':'')+'</div>';
+  });
+  box._matches=matches;
+  box.innerHTML=h;
+  box.className='ord-results show';
+}
+
+function ordPick(ev,i){
+  if(ev){ try{ ev.preventDefault(); }catch(e){} }
+  var box=document.getElementById('ordResults');
+  var p=(box._matches||[])[i];
+  if(!p)return;
+  ORD_PICKED={name:p.name,category:p.category||''};
+  document.getElementById('ordPicked').textContent=p.name;
+  document.getElementById('ordForm').className='ord-form show';
+  box.className='ord-results'; box.innerHTML='';
+  // Limpiamos el buscador para no mostrar el nombre dos veces.
+  document.getElementById('ordSearch').value='';
+  document.getElementById('ordQty').focus();
+}
+
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Cancela el producto elegido y vuelve a dejar listo el buscador.
+function ordClearPick(){
+  ORD_PICKED=null;
+  document.getElementById('ordForm').className='ord-form';
+  document.getElementById('ordSearch').value='';
+  document.getElementById('ordSearch').focus();
+}
+
+// Agregar: solo cantidad + nombre (+ Kitchen). Sin fecha todavía → 'unassigned'.
+function ordAddItem(){
+  if(!ORD_PICKED){ return; }
+  var qty=parseInt((document.getElementById('ordQty')||{}).value,10)||1;
+  var kitchen=!!(document.getElementById('ordKitchen')||{}).checked;
+  var who=firebase.auth().currentUser;
+  var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+  db.collection('somm_orders').add({
+    name:ORD_PICKED.name, category:ORD_PICKED.category||'',
+    qty:qty, urgency:'unassigned', kitchen:kitchen,
+    author:author, done:false,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    ORD_PICKED=null;
+    document.getElementById('ordForm').className='ord-form';
+    document.getElementById('ordSearch').value='';
+    document.getElementById('ordQty').value='1';
+    document.getElementById('ordKitchen').checked=false;
+    ordLoadList();
+  }).catch(function(e){ ordMsg('Error: '+e.message); });
+}
+
+var ORD_SELECTED = {};  // {id:true} seleccionados
+
+function ordLoadList(){
+  db.collection('somm_orders').where('done','==',false).get().then(function(snap){
+    ORD_ITEMS=[];
+    snap.forEach(function(doc){ ORD_ITEMS.push({id:doc.id,data:doc.data()}); });
+    // Limpiar seleccionados que ya no existen
+    var ids={}; ORD_ITEMS.forEach(function(it){ids[it.id]=true;});
+    Object.keys(ORD_SELECTED).forEach(function(k){ if(!ids[k]) delete ORD_SELECTED[k]; });
+    ordRenderList();
+  });
+}
+
+// Agrupa por urgencia y renderiza con casillas de selección.
+function ordRenderList(){
+  var wrap=document.getElementById('ordList');
+  if(ORD_ITEMS.length===0){ wrap.innerHTML='<div class="feed-empty">No items yet</div>'; ordUpdateBar(); return; }
+
+  var groups=[
+    {key:'unassigned', title:'Unassigned', cls:'unassigned'},
+    {key:'urgent',     title:'Urgent',     cls:'urgent'},
+    {key:'this',       title:'This week',  cls:'this'},
+    {key:'next',       title:ordNextWeekLabel(), cls:'next'}
+  ];
+  var byKey={unassigned:[],urgent:[],this:[],next:[]};
+  ORD_ITEMS.forEach(function(it){
+    var u=it.data.urgency||'unassigned';
+    if(!byKey[u])u='unassigned';
+    byKey[u].push(it);
+  });
+
+  var h='';
+  groups.forEach(function(g){
+    var items=byKey[g.key];
+    if(items.length===0)return;
+    h+='<div class="ord-group-title '+g.cls+'">'+escHtml(g.title)+'</div>';
+    items.forEach(function(it){
+      var d=it.data;
+      var checked=ORD_SELECTED[it.id]?'checked':'';
+      h+='<div class="ord-row">';
+      h+='<input type="checkbox" class="ord-chk" '+checked+' onchange="ordToggleSel(\''+it.id+'\',this.checked)">';
+      h+='<span class="nm">'+(d.qty||1)+' '+escHtml(d.name)+(d.kitchen?'<span class="kitchen-tag">(Kitchen)</span>':'')+'</span>';
+      h+='<span class="ord-del" title="Remove" onclick="ordRemove(\''+it.id+'\')">&times;</span>';
+      h+='</div>';
+    });
+  });
+  wrap.innerHTML=h;
+  ordUpdateBar();
+}
+
+function ordToggleSel(id,on){
+  if(on)ORD_SELECTED[id]=true; else delete ORD_SELECTED[id];
+  ordUpdateBar();
+}
+
+// Muestra/oculta la barra de asignar fecha según cuántos haya seleccionados.
+function ordUpdateBar(){
+  var n=Object.keys(ORD_SELECTED).length;
+  var bar=document.getElementById('ordAssignBar');
+  document.getElementById('ordSelCount').textContent=n+' selected';
+  bar.className='ord-assign-bar'+(n>0?' show':'');
+}
+
+// Asigna la fecha elegida a todos los seleccionados → se agrupan.
+function ordAssignSelected(){
+  var ids=Object.keys(ORD_SELECTED);
+  if(ids.length===0)return;
+  var urgency=document.getElementById('ordAssignWhen').value;
+  var batch=db.batch();
+  ids.forEach(function(id){
+    batch.update(db.collection('somm_orders').doc(id),{urgency:urgency});
+  });
+  batch.commit().then(function(){
+    ORD_SELECTED={};
+    ordLoadList();
+  }).catch(function(e){ ordMsg('Error: '+e.message); });
+}
+
+function ordRemove(id){
+  delete ORD_SELECTED[id];
+  db.collection('somm_orders').doc(id).delete().then(ordLoadList);
+}
+
+function ordMsg(t){
+  var el=document.getElementById('ordMsg');
+  el.textContent=t; setTimeout(function(){el.textContent='';},4000);
+}
+
+// Envía la lista actual SOLO a Milena (crea un mensaje dirigido a ella).
+function ordSendToMilena(){
+  if(ORD_ITEMS.length===0){ ordMsg('List is empty'); return; }
+  // Agrupado por fecha para que Milena lo vea ordenado.
+  var order=['urgent','this','next','unassigned'];
+  var byKey={urgent:[],this:[],next:[],unassigned:[]};
+  ORD_ITEMS.forEach(function(it){
+    var u=it.data.urgency||'unassigned'; if(!byKey[u])u='unassigned';
+    byKey[u].push((it.data.qty||1)+' '+it.data.name+(it.data.kitchen?' (Kitchen)':''));
+  });
+  var parts=[];
+  order.forEach(function(k){
+    if(byKey[k].length===0)return;
+    parts.push(ordUrgencyLabel(k)+': '+byKey[k].join(', '));
+  });
+  var who=firebase.auth().currentUser;
+  var author=who.displayName||who.email.split('@')[0].replace(/\./g,' ');
+  author=author.charAt(0).toUpperCase()+author.slice(1);
+  var text='Order list — '+parts.join(' | ');
+  // Nota dirigida solo a Milena → el servidor la notifica solo a ella.
+  db.collection('notes').add({
+    text:text,
+    authorEmail:who.email,
+    recipients:['milena@petrus.local'],
+    source:'order-list',
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    ordMsg('Sent to Milena \u2713');
+  }).catch(function(e){ ordMsg('Error: '+e.message); });
+}
+
+// Cerrar el desplegable de resultados solo al tocar/clic FUERA del buscador.
+// Usamos mousedown/touchstart (no click) para no cerrarlo durante el scroll.
+function ordMaybeClose(e){
+  var wrap=document.querySelector('.ord-search-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    var box=document.getElementById('ordResults');
+    if(box) box.className='ord-results';
+  }
+}
+document.addEventListener('mousedown',ordMaybeClose);
+document.addEventListener('touchstart',ordMaybeClose,{passive:true});
+
+
+auth.onAuthStateChanged(function(u){
+  if(!u){window.location.href='index.html';return;}
+  logAccess(u,'page_view','somm-order-list.html');
+  ordLoadCatalog();ordFillUrgency();ordLoadList();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #9d9650;        /* olive from the logo */
+  --gold-light: #d3cfa6;
+  --gold-dark: #5e5829;
+  --soft: #f5f3e3;
+  --line: #e7e4cf;
+  --ink: #23210f;
+  --serif: 'Cormorant Garamond', 'Georgia', serif;
+  --sans: 'Inter', 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: #ffffff;
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 48px 28px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Content block sits in the middle of the screen */
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+/* Header: logo left, back link right */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 0 0;
+}
+.logo img { display: block; height: 60px; width: auto; }
+.back {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gold-light);
+  transition: color .2s, border-color .2s;
+}
+.back:hover { color: var(--gold); border-color: var(--gold); }
+
+/* Hero */
+.hero { padding-top: clamp(28px, 8vh, 72px); }
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.hero h1,.hero .h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(42px, min(6.4vw, 9.5vh), 82px);
+  line-height: 1.02;
+  letter-spacing: -1px;
+  color: var(--ink);
+  margin: 12px 0 22px;
+}
+.hero h1 em { color: var(--gold); font-style: italic; }
+
+/* Rows */
+.rows {
+  counter-reset: sec;
+  border-top: 1px solid var(--line);
+  margin-top: clamp(20px, 4vh, 34px);
+}
+.row {
+  counter-increment: sec;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: clamp(9px, 1.7vh, 15px) 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background .25s ease, padding .25s ease, color .25s ease;
+}
+.row::before {
+  content: counter(sec, decimal-leading-zero);
+  width: 70px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+.row .name {
+  font-family: var(--serif);
+  font-size: clamp(32px, 4.4vw, 44px);
+  font-weight: 500;
+  letter-spacing: -.5px;
+  flex: 1 1 auto;
+}
+.row::after {
+  content: "\2192";
+  margin-left: auto;
+  font-size: 26px;
+  color: var(--gold-light);
+  transition: color .25s ease, transform .25s ease;
+}
+.row:hover {
+  background: linear-gradient(90deg, var(--soft), #ffffff);
+  padding-left: 22px;
+  color: var(--gold-dark);
+}
+.row:hover::after { color: var(--gold); transform: translateX(-8px); }
+
+.footer {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(94, 88, 41, 0.6);
+}
+.footer div + div { margin-top: 6px; }
+
+@media (max-width: 700px) {
+  .container { padding: 0 22px 24px; }
+  .site-header { flex-direction: column; gap: 12px; padding: 24px 0 0; }
+  .logo img { height: 56px; margin: 0 auto; }
+  .hero { padding-top: 44px; }
+  .hero h1,.hero .h1 { margin: 12px 0 20px; letter-spacing: -.5px; }
+  .rows { margin-top: 26px; }
+  .row { padding: 16px 2px; }
+  .row::before { width: 44px; }
+  .row .name { font-size: 32px; }
+  .row::after { font-size: 22px; }
+  .row:hover { padding-left: 14px; }
+}
+
+/* ---- Wine Department hubs ---- */
+.hub-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:clamp(28px,5vw,64px);align-items:start;margin-top:clamp(14px,3vh,26px)}
+.hub-two .rows{margin-top:0}
+.pill{display:inline-block;font:500 11px var(--sans);letter-spacing:1px;text-transform:uppercase;color:var(--gold-dark);background:var(--soft);padding:7px 16px;border-radius:40px;text-decoration:none;margin-top:18px;transition:background .2s}
+.pill:hover{background:#e9e5c4}
+.s86{margin:0 0 4px;font-size:13px;color:var(--gold-dark);display:none;align-items:center;gap:8px;flex-wrap:wrap}
+.s86.show{display:flex}
+.s86 b{background:#fbeeea;color:#b03a2e;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:500}
+.s86 .more{color:var(--gold)}
+/* Today list (no box) */
+.today{text-align:left}
+.today .feed-title{font-family:var(--serif);font-size:24px;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.today .feed-title .dot{width:8px;height:8px;border-radius:50%;background:#3aa655}
+.feed-arrows{margin-left:auto;display:flex;gap:8px}
+.feed-arrows span{cursor:pointer;font-size:16px;color:var(--gold);user-select:none}
+.feed-item{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.55}
+.feed-item .f-text{flex:1}
+.feed-item .f-author{font-weight:600;color:var(--gold-dark)}
+.feed-item .f-highlight{font-weight:600}
+.f-tag{font-size:9px;padding:2px 7px;border-radius:99px;font-weight:600;white-space:nowrap}
+.f-tag.low{background:#fff3cd;color:#856404}.f-tag.t86{background:#f8d7da;color:#721c24}.f-tag.deliv{background:#d4edda;color:#155724}.f-tag.wast{background:#e2d6f3;color:#4a235a}.f-tag.duty{background:#e9e5c4;color:#5e5829}
+.feed-empty{text-align:center;color:#b9b69a;font-size:12px;padding:12px 0;border-top:1px solid var(--line)}
+.composer{display:flex;gap:8px;align-items:center;margin-top:6px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap}
+.composer textarea{flex:1 1 120px;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:22px;font:13px var(--sans);outline:none;resize:none;min-height:38px;max-height:90px;line-height:1.4}
+.composer select{width:104px;padding:9px 10px;border:1px solid var(--line);border-radius:22px;font:12px var(--sans);background:#fff;color:var(--ink)}
+.cbtn{border:none;border-radius:99px;padding:10px 16px;font:500 12px var(--sans);cursor:pointer;background:#8f8846;color:#fff}
+.cbtn.alt{background:#c8c28d;color:#2f2c14}
+.cbtn:hover{filter:brightness(.95)}
+input:focus,select:focus,textarea:focus{border-color:#b1aa6c!important;box-shadow:0 0 0 3px rgba(177,170,108,.22)}
+@media (max-width:900px){.hub-two{grid-template-columns:1fr}}

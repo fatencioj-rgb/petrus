@@ -31,10 +31,10 @@ var PETRUS_ACCESS = {
   'cain@petrus.local':     ['training'],
   'johnny@petrus.local':   ['training'],
   'irena@petrus.local':    ['training'],
-  'christian@petrus.local':['training','sommeliers'],
+  'christian@petrus.local':['training'],
   'liza@petrus.local':     ['training','operations'],
   'milena@petrus.local':   ['training','sommeliers','operations'],
-  'orson@petrus.local':    ['training','sommeliers','operations'],
+  'orson@petrus.local':    ['training','operations'],
   'fiorella@petrus.local': ['training','sommeliers','operations','admin'],
 };
 
@@ -59,8 +59,8 @@ var PETRUS_TEAM = [
 // Pages that belong to each section (for the URL guard).
 var SECTION_PAGES = {
   training:   ['training.html','winelist.html','wine-pairings.html','wine-btg.html','wine-editor.html','food-net.html','food-editor.html'],
-  sommeliers: ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-recipes.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-holiday.html','somm-pairings.html','somm-sales.html','somm-viniv.html','somm-admin.html'],
-  operations: ['operations.html','seating.html'],
+  sommeliers: ['sommeliers.html','somm-stock.html','somm-deliveries.html','somm-duties.html','somm-orders.html','somm-reports.html','somm-shift.html','somm-stocktake.html','somm-transfers.html','somm-wastages.html','somm-weekly.html','somm-pairings.html','somm-sales.html','somm-viniv.html','somm-admin.html','somm-inventory.html','somm-menus.html','somm-order-list.html'],
+  operations: ['operations.html','seating.html','somm-recipes.html'],
   admin:      ['admin.html'],
 };
 // Pages everyone (any signed-in user) may open.

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wine &amp; Bar Menus — Petrus</title>
+<meta name="theme-color" content="#ffffff">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="hub.css">
+<script src="platform.js"></script><script src="brand.js"></script>
+</head>
+<body>
+<div class="container">
+<main class="stage">
+  <header class="site-header">
+    <a class="logo" href="index.html"><img src="petrus-logo.png" alt="Petrus"></a>
+    <a class="back" href="sommeliers.html">&larr; Wine Department</a>
+  </header>
+  <section class="hero">
+    <p class="eyebrow">Wine Department</p>
+    <h1>Wine &amp; Bar Menus<em>.</em></h1>
+  </section>
+  <nav class="rows">
+    <a href="somm-pairings.html" class="row"><span class="name">Wine Pairings</span></a>
+  </nav>
+</main>
+<div class="footer">
+  <div>&copy; 2026 &mdash; Internal Use Only</div>
+  <div><em>Website developed by Fiorella Atencio</em></div>
+</div>
+</div>
+<!-- Firebase + Auth -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script>auth.onAuthStateChanged(function(u){if(!u)window.location.href="index.html";else logAccess(u,"page_view","somm-menus.html");});</script>
+</body>
+</html>
