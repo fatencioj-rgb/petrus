@@ -138,11 +138,11 @@ service cloud.firestore {
     // main = full team table (incl. min/max hours) -> Operations only.
     // public = names / teams / order only -> whole team (staff view of the rota).
     match /rota2_config/{docId} {
-      allow read: if canOperations() || (docId == 'public' && isTeam());
+      allow read: if canOperations();   // only Fiorella, Milena, Orson, Liza open the rota (the 'public' staff copy is no longer served)
       allow write: if canEditRota();
     }
     match /rota2_weeks/{weekId} {
-      allow read: if isTeam();
+      allow read: if canOperations();   // same four people; the rest of the team has no access
       allow write: if canEditRotaWeeks();
     }
 

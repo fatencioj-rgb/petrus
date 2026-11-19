@@ -4,5 +4,6 @@ window.PLATFORM = {
   name: 'Restaurant',
   accent: 'Ops',
   by: 'Fiorella Atencio',
-  restaurant: { name: 'Petrus', logo: 'petrus-logo.png' }
+  restaurant: { name: 'Petrus', logo: 'petrus-logo.png' },
+  departments: { foh: 'Front of House', mgmt: 'Management', boh: 'Kitchen' }
 };

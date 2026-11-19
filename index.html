@@ -379,6 +379,22 @@ body {
   .platform .wm em { font-style: italic; color: var(--gold); }
   .platform .by { font-size: 9px; letter-spacing: 2.4px; text-transform: uppercase; color: var(--gold-dark); margin-top: 6px; }
   .brandbar .dv { width: 1px; align-self: stretch; background: var(--gold-light); margin: 6px 22px; }
+  .depts { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+  .dept { counter-reset: sec; padding: 22px 26px 6px 0; min-width: 0; }
+  .dept + .dept { border-left: 1px solid var(--line); padding-left: 26px; }
+  .dept-name { font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin: 0 0 8px; }
+  .dept .nav-btn { font-size: clamp(26px, 2.5vw, 34px); padding: clamp(9px, 1.5vh, 13px) 2px; }
+  .dept .nav-btn::before { width: 44px; }
+  .dept .nav-btn::after { font-size: 22px; }
+  .dept .nav-btn:hover { padding-left: 14px; }
+  .dept-empty .dept-name { opacity: .55; }
+  .dept-empty .soon { font-family: var(--serif); font-style: italic; font-size: 24px; color: var(--gold-light); padding: 13px 2px; border-bottom: 1px solid var(--line); }
+  @media (max-width: 900px) {
+    .depts { grid-template-columns: 1fr; }
+    .dept, .dept + .dept { padding: 20px 0 4px; border-left: none; }
+    .dept + .dept { border-top: none; }
+    .dept .nav-btn { font-size: 32px; padding: 14px 2px; }
+  }
 @media (max-width: 600px) {
   .brandbar { flex-direction: column; gap: 10px; }
   .brandbar .dv { display: none; }  .container { padding: 0 22px 24px; }
@@ -427,10 +443,21 @@ body {
 
   <!-- Navigation (hidden until logged in) -->
   <nav class="nav-buttons" id="navButtons" style="display:none;">
-    <a href="training.html" class="nav-btn" data-section="training">Training</a>
-    <a href="sommeliers.html" class="nav-btn" data-section="sommeliers">Sommeliers</a>
-    <a href="operations.html" class="nav-btn" data-section="operations">Operations</a>
-    <a href="operations/rota.html" class="nav-btn" data-section="rota">Rota</a>
+    <div class="depts">
+      <section class="dept">
+        <h2 class="dept-name" id="deptFoh">Front of House</h2>
+        <a href="training.html" class="nav-btn" data-section="training">Training</a>
+        <a href="sommeliers.html" class="nav-btn" data-section="sommeliers">Wine Department</a>
+      </section>
+      <section class="dept">
+        <h2 class="dept-name" id="deptMgmt">Management</h2>
+        <a href="operations.html" class="nav-btn" data-section="operations">Operations</a>
+      </section>
+      <section class="dept dept-empty">
+        <h2 class="dept-name" id="deptBoh">Kitchen</h2>
+        <div class="soon">Coming soon</div>
+      </section>
+    </div>
   </nav>
 
   <!-- Login prompt (shown when NOT logged in) -->
@@ -494,6 +521,10 @@ body {
   set('platBy',function(e){ e.textContent='by '+P.by; });
   set('restLogo',function(e){ e.src=R.logo; e.alt=R.name; });
   set('restName',function(e){ e.textContent=R.name; });
+  var D=P.departments||{};
+  set('deptFoh',function(e){ if(D.foh) e.textContent=D.foh; });
+  set('deptMgmt',function(e){ if(D.mgmt) e.textContent=D.mgmt; });
+  set('deptBoh',function(e){ if(D.boh) e.textContent=D.boh; });
   set('platFoot',function(e){ e.textContent=P.name+' '+P.accent+' \u00b7 by '+P.by; });
   document.title=P.name+' '+P.accent+' \u2014 '+R.name;
 })();
@@ -533,9 +564,13 @@ auth.onAuthStateChanged((user) => {
     nav.style.display = 'block';
     nav.querySelectorAll('.nav-btn').forEach(btn => {
       const section = btn.getAttribute('data-section');
-      // Milena opens the Rota from Operations, not from the home button.
-      if (section === 'rota' && String(user.email||'').toLowerCase() === 'milena@petrus.local') { btn.style.display = 'none'; return; }
       btn.style.display = (guest && section !== 'training') ? 'none' : '';
+    });
+    // A department with nothing visible for this user is hidden (guest sees Training only).
+    nav.querySelectorAll('.dept').forEach(function(d){
+      var btns = d.querySelectorAll('.nav-btn'), any = false;
+      btns.forEach(function(b){ if (b.style.display !== 'none') any = true; });
+      d.style.display = (btns.length ? any : !guest) ? '' : 'none';
     });
 
     // Bottom bar: Admin link (Fiorella only).

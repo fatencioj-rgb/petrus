@@ -257,6 +257,9 @@ table.rota tr.tkrow td.tkhit:hover .tkb{outline:1px solid #BF9000}
 var EDITORS = ['fiorella@petrus.local'];               // full access (Index, team table, WhatsApp)
 var WEEK_EDITORS = ['milena@petrus.local'];            // weeks only: no Index, no team table, no WhatsApp; opens from Operations
 var VIEWERS = EDITORS.concat(WEEK_EDITORS, ['orson@petrus.local','liza@petrus.local']);
+// Rota access: only the people in VIEWERS open it. Set STAFF_VIEW to true to give the rest of the team
+// their read-only timetable again (and restore the rota2 read rules in firestore.rules).
+var STAFF_VIEW = false;
 var DEFAULT_START = '2026-11-09';
 var CREDIT = 'AUTOMATION \u00B7 FIORELLA ATENCIO';
 var HOME_URL = 'https://gordonramsayhome.workvivo.com/';
@@ -1191,6 +1194,7 @@ auth.onAuthStateChanged(function(user){
   if(!user || started) return;
   var email=String(user.email||'').toLowerCase();
   if(email.indexOf('guest')===0) return closedPage('The rota is only available for the Petrus team.');
+  if(!STAFF_VIEW && VIEWERS.indexOf(email)<0) return closedPage('Apologies, you don\u2019t have access to the rota.');
   started=true;
   S.user=user; S.isOwner=(email==='fiorella@petrus.local');
   S.canEditTeam=EDITORS.indexOf(email)>=0;                                   // team table / team order

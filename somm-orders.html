@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Log — Petrus Sommeliers</title>
+<title>Daily Log — Petrus Wine Department</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -206,7 +206,7 @@ function saveNotes(){
 function share(){
   var date=dp.value;var dd=new Date(date+'T12:00:00');
   var ds=dd.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  var txt='*Petrus Sommeliers — '+ds+'*\n';
+  var txt='*Petrus Wine Department — '+ds+'*\n';
   if(stockItems.length){txt+='\n_Stock Alerts ('+stockItems.length+')_\n';stockItems.forEach(function(s){txt+='• '+s.name+' ['+s.tag+'] — '+s.author+'\n';});}
   if(delivItems.length){txt+='\n_Deliveries ('+delivItems.length+')_\n';delivItems.forEach(function(d){var l='• '+d.name+' x'+d.qty+' ['+d.supplier+']';if(d.changed)l+=' ⚠ '+d.changeType+': '+d.changeDetail;txt+=l+' — '+d.author+'\n';});}
   if(wastItems.length){txt+='\n_Wastages ('+wastItems.length+')_\n';wastItems.forEach(function(w){txt+='• '+w.name+' ('+w.qty+' '+w.unit+') — '+w.author+'\n';});}

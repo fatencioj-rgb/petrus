@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shift Log — Petrus Sommeliers</title>
+<title>Shift Log — Petrus Wine Department</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -517,7 +517,7 @@ function saveDay(){
 function shareWhatsApp(){
   var dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   var shiftLabel = SHIFT==='lunch' ? 'AM' : 'PM';
-  var msg = '*Petrus Sommeliers — ' + dateStr + ' ' + shiftLabel + '*\n';
+  var msg = '*Petrus Wine Department — ' + dateStr + ' ' + shiftLabel + '*\n';
   COLS.forEach(function(col){
     var items = dayData[SHIFT+'_'+col] || [];
     if(items.length === 0) return;
