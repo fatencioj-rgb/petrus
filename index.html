@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Petrus — Front of House</title>
+<title>Restaurant Ops &mdash; Petrus</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -418,7 +418,7 @@ body {
   </header>
 
   <section class="hero">
-    <p class="subtitle" id="restArea">Petrus &middot; Front of House</p>
+    
     <h1 class="greeting" id="greeting">Welcome.</h1>
   </section>
 
@@ -493,7 +493,6 @@ body {
   set('platName',function(e){ e.textContent=P.name+' '; var m=document.createElement('em'); m.textContent=P.accent; e.appendChild(m); });
   set('platBy',function(e){ e.textContent='by '+P.by; });
   set('restLogo',function(e){ e.src=R.logo; e.alt=R.name; });
-  set('restArea',function(e){ e.textContent=R.name+' \u00b7 '+R.area; });
   set('restName',function(e){ e.textContent=R.name; });
   set('platFoot',function(e){ e.textContent=P.name+' '+P.accent+' \u00b7 by '+P.by; });
   document.title=P.name+' '+P.accent+' \u2014 '+R.name;
