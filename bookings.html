@@ -342,6 +342,12 @@ tr.dragging{background:var(--soft)}
 .page-header .eyebrow{color:#a29b5d}
 .page-header h1 em{color:#b1aa6c}
 .cmd-bar.drag-over{outline:2px dashed #b1aa6c;outline-offset:-5px}
+.sync-banner{align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;padding:10px 16px;background:#fbf6e0;border:1px solid #e6d9a0;border-radius:14px;font-size:12px;color:var(--green-dark)}
+.sync-banner .sb-text{flex:1 1 260px}
+.sync-banner .sb-text b{color:var(--ink)}
+.sb-btn{padding:6px 16px;border-radius:30px;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark);font:500 12px var(--sans);cursor:pointer}
+.sb-btn:hover{border-color:var(--gold)}
+.sb-btn.pr{background:#8f8846;border-color:#8f8846;color:#fff}
 
 /* --- Allergy and voucher tags (details open in small pop-ups) --- */
 .a-hidden,.v-hidden{display:none !important}
@@ -428,6 +434,11 @@ tr.dragging{background:var(--soft)}
             <button class="btn btn-save" id="saveBtn" onclick="saveBooking()">Save</button>
         </div>
         <div class="cmd-status"><span class="upload-status" id="uploadStatus"></span><span id="saveStatus" style="font-size:0.72rem;color:#2d7d46;font-weight:500"></span></div>
+        <div class="sync-banner" id="syncBanner" style="display:none" role="status">
+            <span class="sb-text" id="sbText"></span>
+            <button type="button" class="sb-btn pr" id="sbLoad">Load changes</button>
+            <button type="button" class="sb-btn" id="sbDismiss">Dismiss</button>
+        </div>
         <div class="saved-drawer" id="savedDrawer"><div id="savedList"></div></div>
     </div>
     <div class="form-area" id="formArea">
@@ -1981,6 +1992,20 @@ function getBookingKey() {
 
 function saveBooking() {
     var key = getBookingKey();
+    // Before overwriting, make sure nobody saved a newer version in the meantime.
+    db.collection('bookings').doc(key).get().then(function(cur) {
+        if (cur.exists && window.syncGuard && !syncGuard.okToOverwrite(key, cur.data())) {
+            document.getElementById('saveStatus').textContent = 'Not saved';
+            setTimeout(function(){ document.getElementById('saveStatus').textContent = ''; }, 3000);
+            return;
+        }
+        doSaveBooking(key);
+    }).catch(function(err) {
+        document.getElementById('saveStatus').textContent = 'Error: ' + err.message;
+        console.error('Save check error:', err);
+    });
+}
+function doSaveBooking(key) {
     var data = {
         service: document.getElementById('service').value,
         date: document.getElementById('serviceDate').value,
@@ -1988,10 +2013,11 @@ function saveBooking() {
         tables: document.getElementById('tables').value,
         rows: gatherRows(),
         savedAt: new Date().toISOString(),
-        savedBy: (auth.currentUser && auth.currentUser.displayName) || 'unknown'
+        savedBy: (auth.currentUser && (auth.currentUser.displayName || String(auth.currentUser.email || '').split('@')[0])) || 'unknown'
     };
     document.getElementById('saveStatus').textContent = 'Saving...';
     db.collection('bookings').doc(key).set(data).then(function() {
+        if (window.syncGuard) syncGuard.afterSave(key, data);
         document.getElementById('saveStatus').textContent = 'Saved \u2713';
         setTimeout(function(){ document.getElementById('saveStatus').textContent = ''; }, 3000);
         updateSavedList();
@@ -2030,6 +2056,7 @@ function loadBooking(key) {
             addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"", r.voucherPin||"");
         });
         document.getElementById('formArea').classList.add('visible');
+        if (window.syncGuard) syncGuard.afterLoad(key, data);
         updateSaveButton();
     });
 }
@@ -2109,6 +2136,9 @@ function autoLoadBooking() {
                 addRow(r.time, r.pax, r.name, r.table, r.menu, r.occasion, r.allergy, r.notes, r.voucher||r.voucherCode||"", r.visits, r.allergyPos||"", r.voucherCode||r.voucher||"", r.voucherValue||"", r.occasionPos||"", r.star||"", r.voucherProvider||"", r.voucherPin||"");
             });
             document.getElementById('formArea').classList.add('visible');
+            if (window.syncGuard) syncGuard.afterLoad(key, data);
+        } else if (window.syncGuard) {
+            syncGuard.afterLoad(key, null);
         }
         updateSaveButton();
         updateSavedList();
@@ -2456,6 +2486,130 @@ addRow = function() {
   }).observe(body, { childList: true });
   window.refreshRowTags = refreshRowTags;
   body.querySelectorAll('tr').forEach(refreshRowTags);
+})();
+</script>
+<script>
+// Keeping everybody in step. Bookings live in Firestore (one document per day + service).
+//  - a live listener tells you when someone else saved the booking you have open;
+//  - saving asks first if the saved version is newer than the one you opened;
+//  - changing date / service opens that booking (asks first if you have unsaved changes);
+//  - the Saved bookings list refreshes by itself.
+// Nothing is saved automatically.
+(function(){
+  var st = { linked: false, key: null, token: '', sig: '', date: '', service: '' };
+  var unsub = null, dismissedToken = null, lastDoc = null;
+  var banner = document.getElementById('syncBanner'), text = document.getElementById('sbText');
+
+  function dateEl(){ return document.getElementById('serviceDate'); }
+  function svcEl(){ return document.getElementById('service'); }
+  function sigNow(){ try { return JSON.stringify(gatherRows()); } catch (e) { return ''; } }
+  function rowCount(){ return document.querySelectorAll('#resBody tr').length; }
+  function isDirty(){ return st.linked ? sigNow() !== st.sig : rowCount() > 0; }
+  function tokenOf(d){ return (d && d.savedAt) || ''; }
+  function when(iso){ try { return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
+  function label(key){
+    var p = String(key).split('_'), d = new Date(p[0] + 'T00:00:00');
+    if (isNaN(d.getTime())) return key;
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) + ' \u2014 ' + (p[1] || '');
+  }
+  function remember(){ st.date = dateEl().value; st.service = svcEl().value; }
+  function hideBanner(){ banner.style.display = 'none'; }
+
+  function showBanner(key, d, newerThanMine){
+    lastDoc = d;
+    var who = d.savedBy || 'Someone', at = when(d.savedAt);
+    text.textContent = '';
+    var b = document.createElement('b'); b.textContent = who;
+    text.appendChild(b);
+    text.appendChild(document.createTextNode(newerThanMine
+      ? ' updated this booking' + (at ? ' at ' + at : '') + '.'
+      : ' already saved a booking for this day' + (at ? ' at ' + at : '') + '.'));
+    document.getElementById('sbLoad').textContent = newerThanMine ? 'Load changes' : 'Load it';
+    banner.style.display = 'flex';
+  }
+
+  function watch(key){
+    if (unsub){ unsub(); unsub = null; }
+    hideBanner();
+    if (!key) return;
+    unsub = db.collection('bookings').doc(key).onSnapshot(function(doc){
+      if (key !== getBookingKey()) return;                         // the day was changed meanwhile
+      if (!doc.exists){ hideBanner(); return; }
+      if (doc.metadata && doc.metadata.hasPendingWrites) return;   // our own save, still on its way
+      var d = doc.data(), tok = tokenOf(d);
+      var mine = st.linked && st.key === key;
+      if (mine && tok === st.token){ hideBanner(); return; }
+      if (dismissedToken === tok){ return; }
+      showBanner(key, d, mine);
+    }, function(err){ console.error('Live updates are off:', err); });
+  }
+
+  // called from saveBooking()
+  function okToOverwrite(key, cloud){
+    var mine = st.linked && st.key === key;
+    if (mine && tokenOf(cloud) === st.token) return true;           // nobody touched it since I opened it
+    var who = cloud.savedBy || 'someone', at = when(cloud.savedAt);
+    var msg = mine
+      ? who + ' updated this booking' + (at ? ' at ' + at : '') + ' after you opened it.\nSaving now will REPLACE their changes.\n\nSave anyway?'
+      : 'A saved booking for ' + label(key) + ' already exists (saved by ' + who + (at ? ' at ' + at : '') + ').\nSaving will REPLACE it.\n\nSave anyway?';
+    return confirm(msg);
+  }
+  function afterSave(key, data){
+    st.linked = true; st.key = key; st.token = data.savedAt || ''; st.sig = sigNow(); remember();
+    dismissedToken = null; hideBanner();
+  }
+  function afterLoad(key, data){
+    if (data){ st.linked = true; st.key = key; st.token = tokenOf(data); st.sig = sigNow(); }
+    else { st.linked = false; st.key = null; st.token = ''; st.sig = ''; }
+    remember(); dismissedToken = null;
+    watch(key);
+  }
+
+  // date / service changed: open that booking, or just retarget the rows that are on screen
+  function onKeyChange(){
+    var key = getBookingKey();
+    if (!dateEl().value) return;
+    if (st.linked && st.key !== key){
+      if (isDirty() && !confirm('You have unsaved changes to ' + label(st.key) + '.\nDiscard them and open ' + label(key) + '?')){
+        dateEl().value = st.date; svcEl().value = st.service;      // stay where we were
+        updateSaveButton();
+        return;
+      }
+      db.collection('bookings').doc(key).get().then(function(doc){
+        if (key !== getBookingKey()) return;
+        if (doc.exists){ loadBooking(key); return; }
+        document.getElementById('resBody').innerHTML = '';
+        document.getElementById('covers').value = ''; document.getElementById('tables').value = '';
+        afterLoad(key, null);
+        updateSaveButton();
+      });
+    } else {
+      remember();
+      watch(key);                                                   // rows on screen are not tied to a saved day: keep them
+    }
+  }
+  dateEl().addEventListener('change', onKeyChange);
+  svcEl().addEventListener('change', onKeyChange);
+
+  document.getElementById('sbLoad').addEventListener('click', function(){
+    var key = getBookingKey();
+    if (isDirty() && !confirm('Replace what is on screen with the saved version?\nYour unsaved changes will be lost.')) return;
+    loadBooking(key);
+  });
+  document.getElementById('sbDismiss').addEventListener('click', function(){
+    dismissedToken = tokenOf(lastDoc); hideBanner();
+  });
+
+  // Saved bookings list: refresh whenever anyone saves or deletes
+  var listTimer = null;
+  try {
+    db.collection('bookings').orderBy('date', 'desc').limit(20).onSnapshot(function(){
+      clearTimeout(listTimer);
+      listTimer = setTimeout(function(){ if (typeof updateSavedList === 'function') updateSavedList(); }, 300);
+    }, function(err){ console.error('Live list is off:', err); });
+  } catch (e) { console.error(e); }
+
+  window.syncGuard = { okToOverwrite: okToOverwrite, afterSave: afterSave, afterLoad: afterLoad, watch: watch, state: st, isDirty: isDirty };
 })();
 </script>
 </body>
