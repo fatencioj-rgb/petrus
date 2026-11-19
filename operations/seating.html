@@ -226,6 +226,10 @@ body{font-family:var(--sans);background:var(--cream);color:#2c2c2c;line-height:1
 .ps-event{font-family:var(--serif);font-weight:500;font-size:38px;line-height:1.1;letter-spacing:-.3px;color:#23210f;margin-top:4px;max-width:860px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
 .pf-meta{font-size:8px;line-height:1.5}
 .pf-credit{margin-top:0;font-style:italic;color:#8f8b5e}
+.ps-brand{display:inline-flex;flex-direction:column;align-items:flex-end}
+.ps-brand-name{font-family:var(--serif);font-weight:500;font-size:15px;line-height:1;letter-spacing:-.2px;color:#23210f}
+.ps-brand-name em{font-style:italic;color:#9d9650}
+.ps-brand-by{margin-top:3px;font-family:var(--sans);font-size:6.5px;letter-spacing:.24em;text-transform:uppercase;color:#5e5829}
 .ps-sheetno{display:block;margin-top:4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#5e5829}
 .ps-body{gap:24px}
 .ps-floor.big{flex:0 0 100%!important}
@@ -1718,6 +1722,12 @@ function deleteSaved(id){
 var PS_W = 1040, PS_H = 710, PS_HEAD = 80;        // sheet size and header height (incl. credit), in CSS px
 var PS_BODY_H = PS_H - PS_HEAD;
 var PS_CREDIT = 'Automatization made by Fiorella A.';
+// Platform mark for the sheet's top-right corner ("Restaurant Ops / BY FIORELLA ATENCIO"), from platform.js.
+function psBrand(){
+  var P = window.PLATFORM || { name: 'Restaurant', accent: 'Ops', by: 'Fiorella Atencio' };
+  return '<span class="ps-brand"><span class="ps-brand-name">' + esc(P.name || 'Restaurant') + ' <em>' + esc(P.accent || 'Ops') + '</em></span>' +
+         '<span class="ps-brand-by">by ' + esc(P.by || 'Fiorella Atencio') + '</span></span>';
+}
 var PS_GAP = 24;                                  // between the floor and the lists
 var PS_CELL_GAP_X = 18, PS_CELL_GAP_Y = 14;       // between table boxes
 var PS_MIN_CELL_W = 125;                          // narrowest table box
@@ -1897,7 +1907,7 @@ function buildPrintSheets(mode){
     var no = sheets.length > 1 ? '<span class="ps-sheetno">Sheet ' + (idx + 1) + ' of ' + sheets.length + '</span>' : '';
     return mk('div', 'ps-head',
       '<div class="ps-title"><div class="ps-kicker">Events</div><div class="ps-event">' + esc(planName || 'Event') + '</div></div>' +
-      '<div class="pf-meta"><span class="pf-credit">' + PS_CREDIT + '</span>' + no + '</div>');
+      '<div class="pf-meta">' + psBrand() + no + '</div>');
   }
   sheets.forEach(function(sh, idx){
     var page = mk('section', 'ps-page');
