@@ -38,6 +38,16 @@
   st.textContent = css;
   document.head.appendChild(st);
 
+  // Browser-tab icon: "R" + italic "O" (Restaurant Ops) on a white disc. Same icon on every page.
+  // (?v= makes browsers drop the old cached icon when the artwork changes.)
+  Array.prototype.forEach.call(document.querySelectorAll('link[rel~="icon"]'), function (l) { l.parentNode.removeChild(l); });
+  [['16', 'favicon-16.png'], ['32', 'favicon-32.png'], ['48', 'favicon-48.png']].forEach(function (a) {
+    var l = document.createElement('link');
+    l.rel = 'icon'; l.type = 'image/png'; l.setAttribute('sizes', a[0] + 'x' + a[0]);
+    l.href = url(a[1]) + '?v=ro1';
+    document.head.appendChild(l);
+  });
+
   function lockup(logoSrc, dark) {
     var w = document.createElement('span');
     w.className = 'brandmark' + (dark ? ' dark' : '');
