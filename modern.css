@@ -103,10 +103,10 @@ input,textarea,select{border-radius:10px}
 .tag-opt{border-radius:30px}
 @media (max-width:700px){.tb,.top-bar{padding:20px 20px 0 !important}.pg,.page{padding-left:20px !important;padding-right:20px !important}.tb::before,.top-bar::before{width:130px;height:48px}}
 /* Wine notes page (.topbar without logo) */
-.topbar:not(:has(.logo)){background:#fff !important;max-width:860px;margin:0 auto;padding:26px 24px 0 !important;display:flex;align-items:center;justify-content:space-between}
-.topbar:not(:has(.logo))::before{content:"";order:-1;width:180px;height:60px;background:url(petrus-logo.png) left center/contain no-repeat}
-.topbar:not(:has(.logo)) a{color:var(--green-dark) !important;font-size:12px !important;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--gold-light)}
-.topbar:not(:has(.logo)) .title{display:none}
+body > .topbar:not(:has(.logo)){background:#fff !important;max-width:860px;margin:0 auto;padding:26px 24px 0 !important;display:flex;align-items:center;justify-content:space-between}
+body > .topbar:not(:has(.logo))::before{content:"";order:-1;width:180px;height:60px;background:url(petrus-logo.png) left center/contain no-repeat}
+body > .topbar:not(:has(.logo)) a{color:var(--green-dark) !important;font-size:12px !important;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--gold-light)}
+body > .topbar:not(:has(.logo)) .title{display:none}
 .wine-card{border-radius:16px;border:1px solid var(--border) !important}
 h1.page-title{font-weight:500;color:var(--ink);font-size:clamp(38px,5vw,60px)}
 }
