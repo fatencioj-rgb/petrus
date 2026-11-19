@@ -236,8 +236,8 @@ tr:last-child td { border-bottom:none; }
 .dish-speech{font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.35;color:#5f5b2c;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .dish-meta{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px}
 .dish-meta .chips{gap:4px;flex:1 1 auto}
-.dish-card .chip,.dm-body .chip{font-size:10px;font-weight:600;letter-spacing:0;padding:2px 8px;border-radius:30px;background:#fbeeec;border:1px solid #f0cfc9;color:#a8362b;text-transform:capitalize}
-.dish-card .chip.diet,.dm-body .chip.diet{background:#eef0dc;border-color:#d6dab0;color:#5e6a2a}
+.dish-card .chip,.dm-grid .chip{font-size:10px;font-weight:600;letter-spacing:0;padding:2px 8px;border-radius:30px;background:#fbeeec;border:1px solid #f0cfc9;color:#a8362b;text-transform:capitalize}
+.dish-card .chip.diet,.dm-grid .chip.diet{background:#eef0dc;border-color:#d6dab0;color:#5e6a2a}
 .dish-card .chip.more{background:#fff;border-color:var(--border);color:var(--wine);font-weight:500}
 .chip.mo2{display:none}
 @media (max-width:520px){.chip.c3,.chip.mo3{display:none}.chip.mo2{display:inline-block}}
@@ -254,7 +254,16 @@ tr:last-child td { border-bottom:none; }
 .dish-modal .dish-media.empty{height:clamp(120px,22vh,200px)}
 .dish-modal .dish-body{padding:20px 24px 24px}
 .dish-modal .dish-name{color:var(--ink)}
-.dm-body{padding:18px 24px 24px}
+.dish-modal.two{max-width:1020px;height:min(90vh,740px)}
+.dish-modal.two #dish-modal-content{overflow:hidden}
+.dm-grid{display:grid;grid-template-columns:minmax(300px,41%) 1fr;height:100%}
+.dm-side{overflow-y:auto;background:#faf9f1;border-right:1px solid var(--border);padding-bottom:22px}
+.dm-side .dish-media{height:clamp(190px,30vh,280px)}
+.dm-side .dm-name{padding:18px 24px 0;margin:0 0 6px}
+.dm-side .dm-sec{padding:0 24px}
+.dm-main{overflow-y:auto;padding:26px 30px 26px}
+.dm-main .dm-sec + .dm-sec{margin-top:6px}
+.dm-lbl:first-child{margin-top:16px}
 .dm-name{font-family:var(--serif);font-weight:500;font-size:36px;line-height:1.05;letter-spacing:-.5px;color:var(--ink);margin:0 0 12px}
 .dm-quote{border-left:3px solid var(--gold,#b1aa6c);padding:2px 0 2px 16px;font-family:var(--serif);font-style:italic;font-size:21px;line-height:1.38;color:#3d3a17}
 .dm-quote p{margin:0}
@@ -282,7 +291,16 @@ tr:last-child td { border-bottom:none; }
 @media (max-width:700px){
   .dish-modal-overlay{align-items:flex-end;padding:0}
   .dish-modal{max-width:none;max-height:94vh;border-radius:24px 24px 0 0}
-  .dm-body{padding:16px 18px 22px}
+  .dish-modal.two{max-width:none;height:auto;max-height:94vh}
+  .dish-modal.two #dish-modal-content{overflow-y:auto}
+  .dm-grid{display:flex;flex-direction:column;height:auto}
+  .dm-side,.dm-main{display:contents}
+  .dm-grid .dish-media{order:1;height:clamp(190px,34vh,300px)}
+  .dm-grid .dm-name{order:2;padding:16px 18px 0;margin:0 0 6px}
+  .dm-grid .dm-speech{order:3}.dm-grid .dm-kps{order:4}.dm-grid .dm-setup{order:5}
+  .dm-grid .dm-contains{order:6}.dm-grid .dm-wine{order:7}.dm-grid .dm-prods{order:8}
+  .dm-grid .dm-sec,.dm-side .dm-sec{padding:0 18px}
+  .dm-grid .dm-sec:last-child{padding-bottom:22px}
   .dm-name{font-size:30px}
   .dm-quote{font-size:19px}
   .dm-kp b{flex-basis:96px}
@@ -757,14 +775,22 @@ function dishDetailHtml(d){
   const chips = (d.allergies || []).map(a => `<span class="chip${nonAllergen(a)?' diet':''}">${esc(a)}</span>`).join('');
   const prods = producersForDish(d).map(x =>
     `<div class="dm-prod" onclick="openProducerModal(${x.i})"><div><small>Producer</small><b>${esc(x.p.name||'')}</b>${x.p.loc ? `<em>${esc(x.p.loc)}</em>` : ''}</div><i>&rarr;</i></div>`).join('');
-  return dishMediaHtml(d) + `<div class="dm-body">
-    <h2 class="dm-name">${esc(d.name)}</h2>
-    ${quote}
-    ${kp ? `<div class="dm-lbl">Key points</div>${kp}` : ''}
-    ${set.length ? `<div class="dm-lbl">Set up</div><div class="dm-set">${set.map(n => `<div>${cutleryIcon(n, 1.15)}<small>${esc(n)}</small></div>`).join('')}</div>` : ''}
-    ${chips ? `<div class="dm-lbl">Contains</div><div class="chips">${chips}</div>` : ''}
-    ${winePairingBlock(d.winePairing, 'm')}
-    ${prods ? `<div class="dm-lbl">Producer</div>${prods}` : ''}
+  const wine = winePairingBlock(d.winePairing, 'm');
+  // Left: photo, name, allergens, cutlery. Right: speech, key points, pairing, producer.
+  // On a phone the two columns collapse into one (order set in CSS).
+  return `<div class="dm-grid">
+    <aside class="dm-side">
+      ${dishMediaHtml(d)}
+      <h2 class="dm-name">${esc(d.name)}</h2>
+      ${chips ? `<div class="dm-sec dm-contains"><div class="dm-lbl">Contains</div><div class="chips">${chips}</div></div>` : ''}
+      ${set.length ? `<div class="dm-sec dm-setup"><div class="dm-lbl">Set up</div><div class="dm-set">${set.map(n => `<div>${cutleryIcon(n, 1.15)}<small>${esc(n)}</small></div>`).join('')}</div></div>` : ''}
+    </aside>
+    <div class="dm-main">
+      <div class="dm-sec dm-speech">${quote}</div>
+      ${kp ? `<div class="dm-sec dm-kps"><div class="dm-lbl">Key points</div>${kp}</div>` : ''}
+      ${wine ? `<div class="dm-sec dm-wine">${wine}</div>` : ''}
+      ${prods ? `<div class="dm-sec dm-prods"><div class="dm-lbl">Producer</div>${prods}</div>` : ''}
+    </div>
   </div>`;
 }
 
@@ -786,6 +812,7 @@ function showDishModal(){
   const content = document.getElementById('dish-modal-content');
   content.innerHTML = dishDetailHtml(d);
   content.scrollTop = 0;
+  document.getElementById('dish-modal').classList.add('two');
   updateModalFoot();
   document.getElementById('dish-modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -967,6 +994,7 @@ function openProducerModal(i){
   const p = FN_PRODUCERS[i];
   if(!p) return;
   modalList = []; modalIdx = -1; updateModalFoot();
+  document.getElementById('dish-modal').classList.remove('two');
   const content = document.getElementById('dish-modal-content');
   content.innerHTML = producerMediaHtml(p) + `<div class="dish-body">${producerBodyHtml(p, 'm', true)}</div>`;
   content.scrollTop = 0;

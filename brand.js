@@ -21,6 +21,11 @@
     + '.m-top .brandmark{--bh:46px}'
     + '.site-header .brandmark,.topbar .brandmark{--bh:56px}'
     + '.tb .brandmark,.top-bar .brandmark{--bh:52px}'
+    + '.brandmark.dark{--bh:38px}'
+    + '.brandmark.dark .bm-name{color:#fff}.brandmark.dark .bm-name em{color:#9bb7d9}'
+    + '.brandmark.dark .bm-by{color:#bcd0ea}.brandmark.dark .bm-dv{background:rgba(255,255,255,.35)}'
+    + ".bm-rest-text{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:calc(var(--bh)*.6);letter-spacing:.14em;color:#fff;line-height:1}"
+    + '.top-bar.has-brand>a{margin-left:auto}.top-bar.has-brand>span:empty{display:none}'
     + '.tb.has-brand::before,.top-bar.has-brand::before,.topbar.has-brand::before{display:none!important}'
     + '@media (max-width:640px){'
     + '.brandmark{--bh:38px!important;flex-direction:column;gap:7px;align-items:center}'
@@ -33,9 +38,9 @@
   st.textContent = css;
   document.head.appendChild(st);
 
-  function lockup(logoSrc) {
+  function lockup(logoSrc, dark) {
     var w = document.createElement('span');
-    w.className = 'brandmark';
+    w.className = 'brandmark' + (dark ? ' dark' : '');
     var plat = document.createElement('span'); plat.className = 'bm-plat';
     var name = document.createElement('span'); name.className = 'bm-name';
     name.appendChild(document.createTextNode((P.name || 'Restaurant') + ' '));
@@ -43,7 +48,9 @@
     var by = document.createElement('span'); by.className = 'bm-by'; by.textContent = 'by ' + (P.by || '');
     plat.appendChild(name); plat.appendChild(by);
     var dv = document.createElement('span'); dv.className = 'bm-dv';
-    var img = document.createElement('img'); img.className = 'bm-rest'; img.src = logoSrc || logoUrl; img.alt = R.name || '';
+    var img;
+    if (dark) { img = document.createElement('span'); img.className = 'bm-rest-text'; img.textContent = (R.name || '').toUpperCase(); }
+    else { img = document.createElement('img'); img.className = 'bm-rest'; img.src = logoSrc || logoUrl; img.alt = R.name || ''; }
     w.appendChild(plat); w.appendChild(dv); w.appendChild(img);
     return w;
   }
@@ -59,7 +66,7 @@
     // 2) Header bars whose logo was drawn by CSS.
     document.querySelectorAll('.tb, .top-bar, body > .topbar').forEach(function (bar) {
       if (skip(bar) || bar.querySelector('.brandmark') || bar.querySelector('.logo')) return;
-      var m = lockup(logoUrl);
+      var m = lockup(logoUrl, bar.getAttribute('data-brand') === 'dark');
       m.setAttribute('role', 'link'); m.setAttribute('tabindex', '0');
       m.addEventListener('click', function () { window.location.href = homeUrl; });
       m.addEventListener('keydown', function (e) { if (e.key === 'Enter') window.location.href = homeUrl; });
