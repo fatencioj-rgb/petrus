@@ -253,6 +253,7 @@ body{background:#fff;color:var(--ink)}
 .btn.danger{border-color:#e0b8b2;color:#a8362b}
 .btn.danger:hover{background:#a8362b;border-color:#a8362b;color:#fff}
 .btn:disabled{background:#fff;border-color:var(--border)}
+.btn.primary:disabled{background:var(--soft);border-color:var(--border);color:#8f8b5e;opacity:1}
 .seat-input{border:1px solid var(--gold-light);border-radius:40px;background:#fff}
 .seat-input:focus{border-color:var(--gold)}
 .counter{color:var(--green-dark);font-weight:600}
@@ -394,6 +395,7 @@ body{background:#fff;color:var(--ink)}
       <button type="button" class="btn primary" id="btnSave">Save</button>
       <span class="plan-status" id="planStatus"></span>
       <button type="button" class="plan-link" id="btnCopy" title="Save a copy under a new name" style="display:none;">Save as&hellip;</button>
+      <button type="button" class="plan-link" id="btnRename" title="Change the name of this plan" style="display:none;">Rename</button>
     </div>
   </div>
 
@@ -1416,12 +1418,12 @@ function updatePlanUi(){
   if (input.dataset.mode !== mode){
     input.dataset.mode = mode;
     input.value = saved ? m.name : '';
-  } else if (saved && input.value !== m.name){
+  } else if (saved && !renaming && input.value !== m.name){
     input.value = m.name;
   }
-  input.readOnly = saved;
-  input.classList.toggle('is-saved', saved);
-  input.title = saved ? 'Rename it from Open…' : '';
+  input.readOnly = saved && !renaming;
+  input.classList.toggle('is-saved', saved && !renaming);
+  input.title = saved ? 'Double-click (or press Rename) to change the name' : '';
   if (saved){
     btn.textContent = 'Update';
     btn.disabled = !modified;
@@ -1434,8 +1436,54 @@ function updatePlanUi(){
     st.innerHTML = '<span class="plan-flag mod">not saved</span>';
   }
   if (copy) copy.style.display = saved ? '' : 'none';
+  var rn = document.getElementById('btnRename');
+  if (rn) rn.style.display = saved ? '' : 'none';
 }
 
+// Rename the open plan straight from the name field (Rename link or double-click).
+// Enter / leaving the field saves the new name; Esc puts the old one back.
+var renaming = false, cancelRename = false;
+function startRename(){
+  if (renaming || !(state.meta && state.meta.id)) return;
+  var input = document.getElementById('planNameInput');
+  renaming = true; cancelRename = false;
+  input.readOnly = false;
+  input.classList.remove('is-saved');
+  input.title = '';
+  input.focus();
+  input.select();
+}
+function finishRename(commit){
+  var input = document.getElementById('planNameInput');
+  renaming = false;
+  var m = state.meta;
+  var name = input.value.trim();
+  if (!commit || !m || !m.id || !name || name === m.name){ updatePlanUi(); return; }   // restores the old name
+  fetchSaved().then(function(list){
+    var clash = list.some(function(p){ return p.id !== m.id && p.name.toLowerCase() === name.toLowerCase(); });
+    if (clash){ alert('Another saved plan is already called "' + name + '".'); updatePlanUi(); return; }
+    return savesCol().doc(m.id).update({ name: name }).then(function(){
+      if (state.meta && state.meta.id === m.id){ state.meta.name = name; save(); }
+      updatePlanUi();
+    });
+  }).catch(function(err){ failMsg('Could not rename the plan.', err); updatePlanUi(); });
+}
+(function wireRename(){
+  var input = document.getElementById('planNameInput');
+  document.getElementById('btnRename').addEventListener('click', startRename);
+  input.addEventListener('dblclick', startRename);
+  input.addEventListener('keydown', function(e){
+    if (!renaming) return;
+    if (e.key === 'Enter'){ e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); cancelRename = true; input.blur(); }
+  });
+  input.addEventListener('blur', function(){
+    if (!renaming) return;
+    var commit = !cancelRename;
+    cancelRename = false;
+    finishRename(commit);
+  });
+})();
 function fetchSaved(){
   return savesCol().get().then(function(snap){
     var list = snap.docs.map(function(d){
