@@ -299,6 +299,77 @@ body{background:#fff;color:var(--ink)}
 
 .hint{color:var(--green-dark);opacity:.8}
 .footer{color:rgba(94,88,41,.65)}
+
+/* --- Focus view: zoom into one table, guest list slides in --- */
+.mini.guests{width:auto;padding:0 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px;background:var(--green-dark);color:#fff}
+.mini.guests:hover{background:var(--ink)}
+.tcard .btn.gbtn{margin-bottom:8px}
+.focus-stage{position:fixed;top:0;left:0;right:0;bottom:0;z-index:790;background:radial-gradient(circle,#d9d5ad 1.3px,transparent 1.7px) 20px 20px/40px 40px,#fdfcf7;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s .35s}
+.focus-stage.open{opacity:1;visibility:visible;transition:opacity .35s ease,visibility 0s}
+.fs-back{position:absolute;top:22px;left:28px;z-index:2;padding:9px 18px;border-radius:40px;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark);font:500 12px var(--sans);letter-spacing:.4px;cursor:pointer}
+.fs-back:hover{border-color:var(--gold);box-shadow:0 4px 14px rgba(94,88,41,.14)}
+.fs-center{position:absolute;left:0;top:70px;bottom:56px;width:calc(100% - 410px);display:flex;align-items:center;justify-content:center}
+.fs-hint{position:absolute;bottom:20px;left:0;width:calc(100% - 410px);text-align:center;font-size:12px;color:var(--green-dark);opacity:.7}
+.fs-prev{position:relative;flex:0 0 auto}
+.fs-scale{position:absolute;left:0;top:0;transform-origin:0 0}
+.fs-scale .gp-prev{margin:0}
+@media (max-width:900px){
+  .fs-hint{width:100%}
+  .fs-center{width:100%;top:80px;bottom:auto;height:36vh}
+  .fs-hint{bottom:auto;top:calc(80px + 36vh + 6px)}
+  #guestPanel.side-panel{max-height:56vh}
+}
+
+/* --- Seat Plan layout: tools column + canvas, guest list as a slide-over drawer --- */
+.page{max-width:1500px}
+.topbar{padding-top:16px}
+.topbar .logo img{height:50px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin:10px 0 16px}
+.page-header h1{font-size:clamp(36px,4vw,46px);margin-top:6px}
+.plan-bar{margin-top:0;justify-content:flex-end}
+.plan-input{width:340px}
+.plan-layout{display:flex;gap:18px;align-items:flex-start}
+.plan-layout .canvas-wrap{flex:1;min-width:0}
+.tools{flex:0 0 252px;display:flex;flex-direction:column;gap:12px;position:sticky;top:12px}
+.tcard{background:var(--soft);border-radius:18px;padding:14px}
+.tcard.flat{background:transparent;padding:4px 2px}
+.tlabel{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green-dark);margin-bottom:10px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tcard .btn{justify-content:center;padding:9px 6px;width:100%;text-align:center}
+.tcard .btn.wide{margin-top:8px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;border:1px solid var(--border);border-radius:14px;background:#fff;color:var(--green-dark);font:500 11px var(--sans);letter-spacing:.3px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s}
+.tile svg{width:28px;height:28px}
+.tile:hover,.tile:focus-visible{border-color:var(--gold);box-shadow:0 8px 20px rgba(94,88,41,.16);transform:translateY(-1px);outline:none}
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;font-weight:500;color:var(--green-dark);letter-spacing:.3px}
+.stepper-ctl{display:flex;align-items:center;gap:4px}
+.step-b{width:28px;height:28px;border-radius:50%;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark);cursor:pointer;font-size:16px;line-height:1;padding:0}
+.step-b:hover{border-color:var(--gold);background:var(--soft)}
+.stepper .seat-input{width:44px;border:none;background:transparent;font-size:15px;font-weight:600;padding:4px 0;-moz-appearance:textfield}
+.stepper .seat-input::-webkit-outer-spin-button,.stepper .seat-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.tcard.idle .tlabel,.tcard.idle .btn{opacity:.5}
+.tstat{display:flex;flex-direction:column;gap:3px;margin-top:12px;padding:0 4px}
+.tstat .counter{font-size:13px}
+.tstat .cloud-status{min-width:0}
+
+#guestPanel.side-panel{position:fixed;top:0;right:0;bottom:0;left:auto;width:min(410px,100vw);max-height:none;flex:none;border:none;border-radius:26px 0 0 26px;padding:24px 22px 28px;box-shadow:-24px 0 70px rgba(35,33,15,.2);overflow-y:auto;z-index:800;transform:translateX(108%);visibility:hidden;transition:transform .32s cubic-bezier(.22,.8,.3,1),visibility 0s .32s}
+#guestPanel.side-panel.open{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.22,.8,.3,1),visibility 0s}
+.gp-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--gold-light);background:#fff;color:var(--green-dark);font-size:20px;line-height:1;cursor:pointer;padding:0}
+.gp-close:hover{border-color:var(--gold);background:var(--soft)}
+.gp-prev{position:relative;margin:18px auto 14px;max-width:100%}
+.gp-table{font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;position:absolute;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#b3ac66,#8f8846);color:#fff;font-family:var(--serif);font-weight:600;font-size:26px;box-shadow:0 8px 20px rgba(60,55,20,.22),inset 0 4px 10px rgba(255,255,255,.22)}
+.gp-dot{position:absolute;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gold);background:#fff;color:var(--green-dark);font:600 10px var(--sans);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:transform .15s}
+.gp-dot:hover{transform:scale(1.18)}
+.gp-dot.on{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+@media (max-width:900px){
+  .plan-layout{flex-direction:column}
+  .tools{flex:none;width:100%;position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tcard.flat{grid-column:1/-1}
+  .page-header{align-items:flex-start}
+  .plan-input{width:100%}
+  #guestPanel.side-panel{top:auto;left:0;right:0;bottom:0;width:100%;max-height:56vh;border-radius:26px 26px 0 0;transform:translateY(108%);box-shadow:0 -20px 60px rgba(35,33,15,.25)}
+  #guestPanel.side-panel.open{transform:none}
+}
 }
 </style>
 </head>
@@ -311,8 +382,10 @@ body{background:#fff;color:var(--ink)}
 
 <div class="page">
   <div class="page-header">
-    <p class="sub">Restaurant Floor</p>
-    <h1>Seat Plan<em>.</em></h1>
+    <div class="ph-title">
+      <p class="sub">Restaurant Floor</p>
+      <h1>Seat Plan<em>.</em></h1>
+    </div>
     <!-- Event name + Save. A new plan has an empty, editable name; once saved it shows the
          name and the button becomes Update (enabled when there are changes). -->
     <div class="plan-bar" id="planBar">
@@ -324,44 +397,60 @@ body{background:#fff;color:var(--ink)}
     </div>
   </div>
 
-  <div class="toolbar">
-    <div class="tool-group">
-      <span class="tool-label">Plan</span>
-      <button class="btn" onclick="newPlan()">New</button>
-      <button class="btn" onclick="openPlansDialog()">Open&hellip;</button>
-    </div>
-    <div class="tool-group">
-      <span class="tool-label">Seats</span>
-      <input type="number" id="seatCount" class="seat-input" value="8" min="1" max="30">
-      <button class="btn primary" onclick="addTable('round')">+ Round Table</button>
-      <button class="btn" onclick="addTable('rect')">+ Long Table</button>
-    </div>
-    <div class="tool-group">
-      <span class="tool-label">Fixed</span>
-      <button class="btn" onclick="addFixed('Wine cellar','circle')">+ Wine Cellar</button>
-      <button class="btn" onclick="addFixed('Area for drinks reception','rect')">+ Zone</button>
-    </div>
-    <div class="tool-group">
-      <span class="tool-label">Edit</span>
-      <button class="btn" onclick="duplicateSelected()">Duplicate</button>
-      <button class="btn" onclick="resetSeats()">Reset Seats</button>
-      <button class="btn danger" onclick="deleteSelected()">Delete</button>
-    </div>
-    <div class="tool-group">
-      <span class="counter" id="totals">0 tables · 0 covers</span>
-      <span class="cloud-status" id="cloudStatus"></span>
-    </div>
-    <div class="tool-group">
-      <button class="btn" onclick="openPrintDialog()">Print / PDF</button>
-      <button class="btn danger" onclick="clearAll()">Reset</button>
-    </div>
-  </div>
-
   <div class="plan-layout">
+    <aside class="tools" aria-label="Tools">
+      <section class="tcard">
+        <h3 class="tlabel">Plan</h3>
+        <div class="tgrid">
+          <button class="btn" onclick="newPlan()">New</button>
+          <button class="btn" onclick="openPlansDialog()">Open&hellip;</button>
+        </div>
+      </section>
+      <section class="tcard">
+        <h3 class="tlabel">Add to floor</h3>
+        <div class="tiles">
+          <button type="button" class="tile" onclick="addTable('round')"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><g fill="currentColor"><circle cx="14" cy="3.6" r="1.7"/><circle cx="14" cy="24.4" r="1.7"/><circle cx="3.6" cy="14" r="1.7"/><circle cx="24.4" cy="14" r="1.7"/></g></svg><span>Round</span></button>
+          <button type="button" class="tile" onclick="addTable('rect')"><svg viewBox="0 0 28 28" aria-hidden="true"><rect x="5" y="10" width="18" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><g fill="currentColor"><circle cx="9" cy="5.6" r="1.7"/><circle cx="19" cy="5.6" r="1.7"/><circle cx="9" cy="22.4" r="1.7"/><circle cx="19" cy="22.4" r="1.7"/></g></svg><span>Long</span></button>
+          <button type="button" class="tile" onclick="addFixed('Wine cellar','circle')"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="9" fill="currentColor"/></svg><span>Cellar</span></button>
+          <button type="button" class="tile" onclick="addFixed('Area for drinks reception','rect')"><svg viewBox="0 0 28 28" aria-hidden="true"><rect x="4" y="7" width="20" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 2.4"/></svg><span>Zone</span></button>
+        </div>
+        <div class="stepper">
+          <span>Seats</span>
+          <span class="stepper-ctl">
+            <button type="button" class="step-b" onclick="stepSeats(-1)" aria-label="Fewer seats">&minus;</button>
+            <input type="number" id="seatCount" class="seat-input" value="8" min="1" max="30">
+            <button type="button" class="step-b" onclick="stepSeats(1)" aria-label="More seats">+</button>
+          </span>
+        </div>
+      </section>
+      <section class="tcard idle" id="selCard">
+        <h3 class="tlabel">Selected</h3>
+        <button type="button" class="btn primary gbtn" onclick="openFocus()">Guests</button>
+        <div class="tgrid">
+          <button class="btn" onclick="duplicateSelected()">Duplicate</button>
+          <button class="btn" onclick="resetSeats()">Reset seats</button>
+        </div>
+        <button class="btn danger wide" onclick="deleteSelected()">Delete</button>
+      </section>
+      <section class="tcard flat">
+        <div class="tgrid">
+          <button class="btn" onclick="openPrintDialog()">Print / PDF</button>
+          <button class="btn danger" onclick="clearAll()">Reset</button>
+        </div>
+        <div class="tstat"><span class="counter" id="totals">0 tables · 0 covers</span><span class="cloud-status" id="cloudStatus"></span></div>
+      </section>
+    </aside>
     <div class="canvas-wrap">
       <div id="canvas"></div>
     </div>
-    <aside class="side-panel" id="guestPanel" aria-live="polite"></aside>
+  </div>
+  <!-- Guest list: slides in from the right when a table is selected -->
+  <aside class="side-panel" id="guestPanel" aria-live="polite"></aside>
+  <!-- Focus view: only the selected table (zoomed) and its guest list -->
+  <div id="focusStage" class="focus-stage" aria-hidden="true">
+    <button type="button" class="fs-back" id="fsBack">&larr; Back to floor</button>
+    <div class="fs-center" id="fsCenter"></div>
+    <p class="fs-hint">Click a seat to jump to its name.</p>
   </div>
   <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Change a table&rsquo;s number in the side panel (or double-click the number). Click a table to add guest names by position (P1, P2&hellip;); next to each name, &ldquo;Allergies&hellip;&rdquo; lets you tick allergies / diets or type your own. Everything saves automatically on this device and to the cloud.</p>
 
@@ -664,6 +753,7 @@ function renderUnit(u){
   var ctrl = document.createElement('div');
   ctrl.className = 'unit-ctrl';
   ctrl.innerHTML =
+    '<button class="mini guests" data-act="guests">Guests</button>' +
     '<button class="mini" data-act="minus">&minus;</button>' +
     '<span class="mini-count">'+u.seats+' seats</span>' +
     '<button class="mini" data-act="plus">+</button>' +
@@ -672,6 +762,7 @@ function renderUnit(u){
   ctrl.addEventListener('click', function(e){
     var act = e.target.getAttribute('data-act'); if (!act) return;
     e.stopPropagation();
+    if (act==='guests'){ selectUnit(u.id); openFocus(); return; }
     if (act==='del'){
       el.remove();
       state.units = state.units.filter(function(x){return x.id!==u.id;});
@@ -954,7 +1045,10 @@ function renderGuestPanel(){
   closeDietPop();                        // the panel is being rebuilt, so any open list would be orphaned
   var u = selectedUnit();
   if (!u){
-    box.innerHTML = '<div class="gp-empty">Click a table to see its positions and add guest names (P1, P2&hellip;).<br>Names are saved automatically.</div>';
+    if (focusOpen) closeFocus(true);       // the table is gone (deleted / deselected): leave the focus view
+    box.classList.remove('open');
+    box.innerHTML = '';
+    updateToolState();
     return;
   }
   if (!Array.isArray(u.guests)) u.guests = [];
@@ -973,6 +1067,7 @@ function renderGuestPanel(){
       '</div>';
   }
   box.innerHTML =
+    '<button type="button" class="gp-close" id="gpClose" aria-label="Close">&times;</button>' +
     '<div class="gp-head"><label class="gp-title" for="gpLabel">Table</label>' +
     '<input class="gp-label" id="gpLabel" type="text" maxlength="10" autocomplete="off" ' +
     'aria-label="Table number" title="Change the table number" value="' + esc(u.label) + '"></div>' +
@@ -981,7 +1076,163 @@ function renderGuestPanel(){
     '<div class="gp-actions"><button type="button" class="btn danger" id="gpClear">Clear guests</button></div>';
   updateGuestCount(u);
   updateDupWarning(u);
+  box.classList.toggle('open', focusOpen);      // the list only shows in the focus view
+  updateToolState();
 }
+// Small picture of the selected table only: click a seat to jump to its name field.
+function tablePreview(u){
+  var n = u.seats, round = u.shape !== 'rect', i, dots = '', body = '', W, H;
+  function dot(k, x, y){
+    return '<button type="button" class="gp-dot' + (guestName(u, k) ? ' on' : '') + '" data-i="' + k + '" ' +
+      'style="left:' + Math.round(x) + 'px;top:' + Math.round(y) + 'px" title="P' + (k + 1) + '">' + (k + 1) + '</button>';
+  }
+  if (round){
+    var ring = Math.max(72, n * 22 / (2 * Math.PI)), R = ring - 28;
+    W = H = Math.round(2 * (ring + 16));
+    body = '<div class="gp-table" style="left:' + (W / 2 - R) + 'px;top:' + (H / 2 - R) + 'px;width:' + 2 * R + 'px;height:' + 2 * R + 'px;border-radius:50%">' + esc(u.label) + '</div>';
+    for (i = 0; i < n; i++){
+      var a = i / n * Math.PI * 2 - Math.PI / 2;
+      dots += dot(i, W / 2 + Math.cos(a) * ring - 12, H / 2 + Math.sin(a) * ring - 12);
+    }
+  } else {
+    var top = Math.ceil(n / 2), bot = n - top, tw = Math.min(330, Math.max(140, top * 26)), th = 46;
+    W = tw + 24; H = 150;
+    body = '<div class="gp-table" style="left:12px;top:' + (H / 2 - th / 2) + 'px;width:' + tw + 'px;height:' + th + 'px;border-radius:12px">' + esc(u.label) + '</div>';
+    for (i = 0; i < top; i++) dots += dot(i, 12 + (i + 0.5) * tw / top - 12, H / 2 - th / 2 - 32);
+    for (i = 0; i < bot; i++) dots += dot(top + i, 12 + (i + 0.5) * tw / bot - 12, H / 2 + th / 2 + 8);
+  }
+  return '<div class="gp-prev" style="width:' + W + 'px;height:' + H + 'px">' + body + dots + '</div>';
+}
+// Tools column: seat stepper, and the "Selected" card is only active while something is selected.
+function stepSeats(d){
+  var el = document.getElementById('seatCount');
+  var v = (parseInt(el.value, 10) || 8) + d;
+  el.value = Math.max(1, Math.min(30, v));
+}
+function updateToolState(){
+  var card = document.getElementById('selCard');
+  if (!card) return;
+  var has = !!state.selectedId;
+  card.classList.toggle('idle', !has);
+  card.querySelectorAll('button').forEach(function(b){ b.disabled = !has; });
+}
+
+// ── Focus view: zoom into the selected table; its guest list slides in from the right ──
+var focusOpen = false;
+function focusScale(W, H){
+  var wide = window.innerWidth > 900;
+  var availW = wide ? window.innerWidth - 410 - 90 : window.innerWidth - 40;
+  var availH = wide ? window.innerHeight - 190 : window.innerHeight * 0.30;
+  return Math.max(0.6, Math.min(availW / W, availH / H, 2.4));
+}
+function buildFocusPreview(u){
+  var html = tablePreview(u);
+  var m = html.match(/width:(\d+)px;height:(\d+)px/);
+  var W = +m[1], H = +m[2], sc = focusScale(W, H);
+  return '<div class="fs-prev" id="fsPrev" style="width:' + Math.round(W * sc) + 'px;height:' + Math.round(H * sc) + 'px">' +
+    '<div class="fs-scale" style="width:' + W + 'px;height:' + H + 'px;transform:scale(' + sc + ')">' + html + '</div></div>';
+}
+// Moves the zoomed picture so it sits exactly over the real table on the floor (and back).
+function focusFrom(u){
+  var pv = document.getElementById('fsPrev');
+  var tEl = canvas.querySelector('[data-id="' + u.id + '"] .table-shape');
+  var pt = pv && pv.querySelector('.gp-table');
+  if (!pv || !tEl || !pt) return null;
+  var tr = tEl.getBoundingClientRect(), pr = pv.getBoundingClientRect(), ptr = pt.getBoundingClientRect();
+  if (!ptr.width) return null;
+  var cx = ptr.left + ptr.width / 2, cy = ptr.top + ptr.height / 2;
+  return {
+    k: tr.width / ptr.width,
+    dx: (tr.left + tr.width / 2) - cx,
+    dy: (tr.top + tr.height / 2) - cy,
+    ox: cx - pr.left, oy: cy - pr.top
+  };
+}
+function openFocus(){
+  var u = selectedUnit();
+  if (!u || focusOpen) return;
+  focusOpen = true;
+  document.getElementById('fsCenter').innerHTML = buildFocusPreview(u);
+  var stage = document.getElementById('focusStage');
+  var pv = document.getElementById('fsPrev');
+  var f = focusFrom(u);
+  stage.classList.add('open');
+  stage.setAttribute('aria-hidden', 'false');
+  renderGuestPanel();                                   // the list slides in
+  if (pv && f){
+    pv.style.transformOrigin = f.ox + 'px ' + f.oy + 'px';
+    pv.style.transition = 'none';
+    pv.style.transform = 'translate(' + f.dx + 'px,' + f.dy + 'px) scale(' + f.k + ')';
+    pv.style.opacity = '0';
+    void pv.offsetWidth;
+    pv.style.transition = 'transform .6s cubic-bezier(.22,.8,.3,1), opacity .4s ease';
+    pv.style.transform = 'none';
+    pv.style.opacity = '1';
+  }
+}
+function closeFocus(immediate){
+  if (!focusOpen) return;
+  focusOpen = false;
+  closeDietPop();
+  var stage = document.getElementById('focusStage');
+  var u = selectedUnit();
+  var pv = document.getElementById('fsPrev');
+  var f = (!immediate && u) ? focusFrom(u) : null;
+  if (pv && f){
+    pv.style.transformOrigin = f.ox + 'px ' + f.oy + 'px';
+    pv.style.transition = 'transform .45s cubic-bezier(.4,0,.2,1), opacity .35s ease';
+    pv.style.transform = 'translate(' + f.dx + 'px,' + f.dy + 'px) scale(' + f.k + ')';
+    pv.style.opacity = '0';
+  }
+  stage.classList.remove('open');
+  stage.setAttribute('aria-hidden', 'true');
+  document.getElementById('guestPanel').classList.remove('open');
+}
+(function wireFocus(){
+  var stage = document.getElementById('focusStage');
+  document.getElementById('fsBack').addEventListener('click', function(){ closeFocus(); });
+  stage.addEventListener('click', function(e){
+    var d = e.target.closest ? e.target.closest('.gp-dot') : null;
+    if (!d) return;
+    var inp = document.getElementById('gp-' + d.getAttribute('data-i'));
+    if (inp){ inp.focus(); inp.scrollIntoView({ block: 'nearest' }); }
+  });
+  // keep the zoomed picture in step with what is typed in the list
+  document.getElementById('guestPanel').addEventListener('input', function(e){
+    if (!focusOpen) return;
+    var t = e.target;
+    setTimeout(function(){                               // after the list's own handler has saved the value
+      var u = selectedUnit(); if (!u || !focusOpen) return;
+      if (t.classList && t.classList.contains('gp-label')){
+        var v = t.value.trim();
+        if (v){
+          var lb = stage.querySelector('.gp-table'); if (lb) lb.textContent = v;
+        }
+      }
+      stage.querySelectorAll('.gp-dot').forEach(function(dEl){
+        dEl.classList.toggle('on', !!guestName(u, parseInt(dEl.getAttribute('data-i'), 10)));
+      });
+    }, 0);
+  });
+  window.addEventListener('resize', function(){
+    if (!focusOpen) return;
+    var u = selectedUnit(); if (!u) return;
+    document.getElementById('fsCenter').innerHTML = buildFocusPreview(u);
+  });
+})();
+(function wireDrawer(){
+  var box = document.getElementById('guestPanel');
+  box.addEventListener('click', function(e){
+    var t = e.target;
+    if (!t.closest) return;
+    if (t.closest('.gp-close')){ closeFocus(); return; }
+    var d = t.closest('.gp-dot');
+    if (d){
+      var inp = document.getElementById('gp-' + d.getAttribute('data-i'));
+      if (inp){ inp.focus(); inp.scrollIntoView({ block: 'nearest' }); }
+    }
+  });
+})();
 (function wireGuestPanel(){
   var box = document.getElementById('guestPanel');
   box.addEventListener('input', function(e){
@@ -1620,8 +1871,10 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'Escape'){
     if (plansDialogOpen()) { closePlansDialog(); return; }
     if (printDialogOpen()) { closePrintDialog(); return; }
+    if (focusOpen) { closeFocus(); return; }                      // then the focus view
+    if (state.selectedId) { selectUnit(null); return; }          // then the selection
   }
-  if (plansDialogOpen() || printDialogOpen() || dietPop) return;   // never delete a table while a dialog / list is open
+  if (plansDialogOpen() || printDialogOpen() || dietPop || focusOpen) return;   // never delete a table while a dialog / list is open
   // Delete / Backspace remove the selected table, but never while typing or after clicking a button.
   if ((e.key==='Delete'||e.key==='Backspace') && state.selectedId && !/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(document.activeElement.tagName)) deleteSelected();
 });
