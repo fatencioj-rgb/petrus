@@ -336,7 +336,7 @@ function staffMatch(cat,s,e){
   var a=tMin(s); if(a===null) return false;
   var st=a%1440, b=tMin(e), hasE=b!==null, raw=hasE?b%1440:0, en=hasE?(raw<=180?raw+1440:raw):0;
   if(cat===0) return st>=540 && st<=630;
-  if(cat===1) return (st>=660&&st<=900) || (st<660 && hasE && en>=780);
+  if(cat===1) return (st>=660&&st<=840) || (st<660 && hasE && en>=780);
   if(cat===2) return (st>=960&&st<=1080) || (st<960 && hasE && en>=1260);
   return hasE && raw<=180;
 }
@@ -783,7 +783,7 @@ function whoLists(m,k){
   return out;
 }
 function whoTable(m){
-  var labels=[['OPENING','09:00 - 10:30'],['LUNCH','11:00 - 15:00'],['DINNER','16:00 - 18:00'],['CLOSING','until 00:00']];
+  var labels=[['OPENING','09:00 - 10:30'],['LUNCH','11:00 - 14:00'],['DINNER','16:00 - 18:00'],['CLOSING','until 00:00']];
   var lists=[]; for(var k=0;k<7;k++) lists.push(whoLists(m,k));
   var h='<div class="below"><table class="rota frame who">'+colgroup(false)+'<tr><th class="nm" style="text-align:left;padding-left:8px">WHO\'S ON FOR</th>';
   for(k=0;k<7;k++){ var d=addDays(m.mon,k); h+='<th colspan="3">'+DAYS[k]+' '+d.getDate()+'</th>'; }
