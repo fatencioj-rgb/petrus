@@ -1,22 +1,22 @@
 {
-  "name": "Petrus — Front of House",
-  "short_name": "Petrus FOH",
-  "description": "Petrus Front of House — training, sommelier operations and team notifications.",
+  "name": "Restaurant Ops",
+  "short_name": "Restaurant Ops",
+  "description": "Restaurant Ops - training, wine department, operations and team notifications for Petrus.",
   "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#2d0a0a",
+  "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "icons/icon-192.png?v=ro1",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "icons/icon-512.png?v=ro1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

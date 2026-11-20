@@ -84,5 +84,31 @@
       bar.classList.add('has-brand');
     });
   }
+  // ---- App name, icon and tab icon (same on every page, so a bookmark or "Add to Home Screen"
+  // gets "Restaurant Ops" and the RO icon wherever it is saved from). ----
+  function setMeta(name, content) {
+    var m = document.querySelector('meta[name="' + name + '"]');
+    if (!m) { m = document.createElement('meta'); m.setAttribute('name', name); document.head.appendChild(m); }
+    m.setAttribute('content', content);
+  }
+  function ensureLink(rel, href, sizes) {
+    var sel = 'link[rel="' + rel + '"]' + (sizes ? '[sizes="' + sizes + '"]' : '');
+    var l = document.querySelector(sel);
+    if (!l) { l = document.createElement('link'); l.setAttribute('rel', rel); if (sizes) l.setAttribute('sizes', sizes); document.head.appendChild(l); }
+    l.setAttribute('href', href);
+    if (rel === 'icon') l.setAttribute('type', 'image/png');
+  }
+  function appIdentity() {
+    var appName = ((P.name || 'Restaurant') + ' ' + (P.accent || 'Ops')).trim();
+    setMeta('apple-mobile-web-app-title', appName);
+    setMeta('application-name', appName);
+    setMeta('apple-mobile-web-app-capable', 'yes');
+    setMeta('apple-mobile-web-app-status-bar-style', 'default');
+    setMeta('mobile-web-app-capable', 'yes');
+    ensureLink('manifest', url('manifest.json'));
+    ensureLink('apple-touch-icon', url('icons/icon-192.png?v=ro1'));
+    [16, 32, 48].forEach(function (s) { ensureLink('icon', url('favicon-' + s + '.png?v=ro1'), s + 'x' + s); });
+  }
+  appIdentity();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
