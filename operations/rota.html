@@ -955,7 +955,7 @@ function mondayToggle(){
 }
 
 /* ---------------------------------------------------------------- WhatsApp */
-// Message for one day (start time only in Opening, and in Lunch for people not already in Opening).
+// Message for one day (start time in Opening, in Lunch for people not in Opening, and in Dinner for people not in Opening/Lunch).
 function waText(t){
   var mon=ymd(mondayOf(t)), k=(t.getDay()+6)%7, m=buildModel(mon);
   if(t<periodStart()) return {error:'Today ('+fmtDM(t)+') is before the start of the rota.'};
@@ -964,7 +964,7 @@ function waText(t){
   for(var c=0;c<4;c++){
     txt+='\n*'+heads[c]+'*\n';
     if(L[c].length){ any=true; L[c].forEach(function(r){
-      var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]));
+      var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]))||(c===2 && !staffMatch(0,s,r.v[2*k+1]) && !staffMatch(1,s,r.v[2*k+1]));
       txt+='\u2022 '+r.name+(showT?' '+fmtT(tMin(s)):'')+(taskInService(r,k,c)?' \u2014 _'+taskLabel(r,k)+'_':'')+'\n';
     }); }
     else txt+=(c===0||c===3)?'\u26A0\uFE0F NOBODY\n':'-\n';
@@ -981,7 +981,7 @@ function waData(t){
   for(var c=0;c<4;c++){
     if(L[c].length) any=true;
     lists.push(L[c].map(function(r){
-      var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]));
+      var s=r.v[2*k], showT=(c===0)||(c===1 && !staffMatch(0,s,r.v[2*k+1]))||(c===2 && !staffMatch(0,s,r.v[2*k+1]) && !staffMatch(1,s,r.v[2*k+1]));
       var busy=taskInService(r,k,c), x=taskOf(r,k), sp=taskSpan(r,k);
       return { name:r.name, team:r.team, time: showT ? fmtT(tMin(s)) : '',
                task: busy ? String(x.t).toUpperCase() : '',
