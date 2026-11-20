@@ -196,6 +196,31 @@ tr.drag-over td{border-top:2px solid var(--gold)}
 .triple-cell .allergy-summary-table{font-size:5.5pt;width:100%;table-layout:auto}
 .triple-cell .allergy-summary-table td{padding:1px 3px}
 
+/* Printed sheets: editorial look. One-line header, thin horizontal lines only, allergies in red. */
+.ph{display:flex;align-items:flex-end;gap:14px;margin:0 0 6px;padding-bottom:5px;border-bottom:1px solid #23210f}
+.ph .p-logo{display:block;height:22px;width:auto;flex:0 0 auto}
+.pt{flex:1;display:flex;align-items:baseline;gap:8px;min-width:0;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.pt-a{font-family:var(--serif);font-size:20pt;font-weight:500;color:#23210f;line-height:1;white-space:nowrap}
+.pt-b{font-family:var(--serif);font-size:16pt;font-style:italic;color:#9d9650;line-height:1;white-space:nowrap}
+.pf{display:flex;align-items:flex-end;gap:14px}
+.fd{font-size:7pt;color:#5e5829;letter-spacing:.5px;margin-bottom:2px;white-space:nowrap}
+.fg{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.fg b{font-family:var(--serif);font-size:16pt;font-weight:500;color:#23210f;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.fg i{font-style:normal;font-size:5pt;letter-spacing:2px;text-transform:uppercase;color:#5e5829;margin-top:2px}
+.quad-cell .ph{gap:8px;margin-bottom:4px;padding-bottom:3px}
+.quad-cell .ph .p-logo{height:13px}
+.quad-cell .pt-a{font-size:11pt}.quad-cell .pt-b{font-size:9pt}
+.quad-cell .fd{font-size:5pt}.quad-cell .fg b{font-size:10pt}.quad-cell .fg i{font-size:3.8pt;letter-spacing:1.2px}.quad-cell .pf{gap:8px}
+.triple-cell .ph .p-logo{height:18px}
+.triple-cell .pt-a{font-size:16pt}.triple-cell .pt-b{font-size:13pt}.triple-cell .fg b{font-size:13pt}
+.print-table th,.triple-cell .print-table th{background:none;color:#5e5829;border-right:none;border-bottom:1px solid #d3cfa6;font-weight:600;letter-spacing:1.2px;font-size:5pt;padding:3px}
+.quad-cell .print-table th{font-size:4.2pt;letter-spacing:.8px}
+.print-table td,.triple-cell .print-table td{border-right:none;border-bottom:1px solid #e7e4cf;color:#23210f}
+.print-table tr:nth-child(even){background:none}
+.print-table td.allergy-cell,.triple-cell .print-table td.allergy-cell{background:none;color:#b03a2e;font-weight:700}
+.print-table td.occasion-cell,.triple-cell .print-table td.occasion-cell{background:none;color:#5e5829;font-style:italic}
+.menu-summary,.quad-cell .menu-summary,.triple-cell .menu-summary{border:none;border-top:1px solid #d3cfa6;border-radius:0;padding:4px 0;color:#5e5829}
+
 /* Station Sheet (highlighter grid per section) */
 .station-page{width:100%;background:white;padding:4mm;box-sizing:border-box;page-break-after:always}
 .station-page:last-child{page-break-after:auto}
@@ -1518,6 +1543,15 @@ function setPrintOrientation(rows, cols) {
 }
 
 // === PRINT KITCHEN ===
+// Sheet header (one line): Petrus logo | department + service | date, covers, tables.
+function printHead(label, service, dateStr, covers, tables){
+    function tc(s){ return String(s||'').toLowerCase().replace(/(^|[\s(])([a-z])/g, function(m, a, b){ return a + b.toUpperCase(); }).replace(/\((\w)\)/g, function(m, a){ return '(' + a.toUpperCase() + ')'; }); }
+    return '<div class="ph"><img class="p-logo" src="petrus-logo.png" alt="PETRUS">' +
+           '<div class="pt"><span class="pt-a">' + esc(tc(label)) + '</span><span class="pt-b">' + esc(tc(service)) + '</span></div>' +
+           '<div class="pf"><span class="fd">' + esc(String(dateStr || '')) + '</span>' +
+           '<span class="fg"><b>' + esc(String(covers == null ? '' : covers)) + '</b><i>Covers</i></span>' +
+           '<span class="fg"><b>' + esc(String(tables == null ? '' : tables)) + '</b><i>Tables</i></span></div></div>';
+}
 function printKitchen() {
     var info = getHeaderInfo();
     var rows = gatherRows();
@@ -1585,13 +1619,8 @@ function buildKitchenHTML(info, rows) {
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
     var menuHTML = mp.length ? '<div class="menu-summary">'+mp.join('')+'</div>' : '';
 
-    var allergyHTML = '';
-    if (allergyList.length) {
-        var ar = allergyList.map(function(a){return '<tr><td><strong>'+esc(a.name)+'</strong></td><td>Tbl '+esc(a.table)+'</td><td class="allergy-cell">'+formatAllergyPrint(a.allergies)+'</td></tr>';}).join('');
-        allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
-    }
 
-    return '<h2>PETRUS</h2><div class="p-service">KITCHEN \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:10%"><col style="width:6%"><col style="width:24%"><col style="width:6%"><col style="width:14%"><col style="width:40%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th>Allergy / Req</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return printHead('KITCHEN', info.service, info.dateStr, info.covers, info.tables)+'<table class="print-table"><colgroup><col style="width:10%"><col style="width:6%"><col style="width:24%"><col style="width:6%"><col style="width:14%"><col style="width:40%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th>Allergy / Req</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML;
 }
 
 function buildPastryHTML(info, rows) {
@@ -1612,13 +1641,8 @@ function buildPastryHTML(info, rows) {
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
     var menuHTML = mp.length ? '<div class="menu-summary">'+mp.join('')+'</div>' : '';
 
-    var allergyHTML = '';
-    if (allergyList.length) {
-        var ar = allergyList.map(function(a){return '<tr><td><strong>'+esc(a.name)+'</strong></td><td>Tbl '+esc(a.table)+'</td><td class="allergy-cell">'+formatAllergyPrint(a.allergies)+'</td></tr>';}).join('');
-        allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
-    }
 
-    return '<h2>PETRUS</h2><div class="p-service">PASTRY \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><colgroup><col style="width:8%"><col style="width:5%"><col style="width:20%"><col style="width:6%"><col style="width:13%"><col style="width:20%"><col style="width:28%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th>Occasion</th><th>Allergy / Req</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return printHead('PASTRY', info.service, info.dateStr, info.covers, info.tables)+'<table class="print-table"><colgroup><col style="width:8%"><col style="width:5%"><col style="width:20%"><col style="width:6%"><col style="width:13%"><col style="width:20%"><col style="width:28%"></colgroup><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th>Occasion</th><th>Allergy / Req</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML;
 }
 
 function buildReceptionLHTML(info, rows) {
@@ -1639,13 +1663,8 @@ function buildReceptionLHTML(info, rows) {
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
     var menuHTML = mp.length ? '<div class="menu-summary">'+mp.join('')+'</div>' : '';
 
-    var allergyHTML = '';
-    if (allergyList.length) {
-        var ar = allergyList.map(function(a){return '<tr><td><strong>'+esc(a.name)+'</strong></td><td>Tbl '+esc(a.table)+'</td><td class="allergy-cell">'+formatAllergyPrint(a.allergies)+'</td></tr>';}).join('');
-        allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
-    }
 
-    return '<h2>PETRUS</h2><div class="p-service">RECEPTION (L) \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return printHead('RECEPTION (L)', info.service, info.dateStr, info.covers, info.tables)+'<table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML;
 }
 
 function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
@@ -1668,13 +1687,8 @@ function buildSalonHTML(info, filtered, sectionLabel, allowedTables) {
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
     var menuHTML = mp.length ? '<div class="menu-summary">'+mp.join('')+'</div>' : '';
 
-    var allergyHTML = '';
-    if (allergyList.length) {
-        var ar = allergyList.map(function(a){return '<tr><td><strong>'+esc(a.name)+'</strong></td><td>Tbl '+esc(a.table)+'</td><td class="allergy-cell">'+formatAllergyPrint(a.allergies)+'</td></tr>';}).join('');
-        allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
-    }
 
-    return '<h2>PETRUS</h2><div class="p-service">'+sectionLabel+' \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+sectionCovers+'</span><span>Tbls: '+filtered.length+'</span></div><table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th>Allergy / Req</th><th style="width:4px;padding:0"></th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return printHead(sectionLabel, info.service, info.dateStr, sectionCovers, filtered.length)+'<table class="print-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th>Allergy / Req</th><th style="width:4px;padding:0"></th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML;
 }
 
 // === PRINT BOH (Kitchen x2 + Pastry) ===
@@ -1975,13 +1989,8 @@ function buildReceptionHTML(info, rows) {
     Object.keys(menuCount).forEach(function(n){if(menuCount[n]>0)mp.push('<span>'+n+': '+menuCount[n]+'</span>');});
     var menuHTML = mp.length ? '<div class="menu-summary">'+mp.join('')+'</div>' : '';
 
-    var allergyHTML = '';
-    if (allergyList.length) {
-        var ar = allergyList.map(function(a){return '<tr><td><strong>'+esc(a.name)+'</strong></td><td>Tbl '+esc(a.table)+'</td><td class="allergy-cell">'+formatAllergyPrint(a.allergies)+'</td></tr>';}).join('');
-        allergyHTML = '<div class="allergy-summary"><div class="allergy-summary-title">ALLERGIES</div><table class="allergy-summary-table">'+ar+'</table></div>';
-    }
 
-    return '<h2>PETRUS</h2><div class="p-service">RECEPTION \u2014 '+info.service+'</div><div class="print-header-info"><span>'+info.dateStr+'</span><span>Cvrs: '+info.covers+'</span><span>Tbls: '+info.tables+'</span></div><table class="print-table reception-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML+allergyHTML;
+    return printHead('RECEPTION', info.service, info.dateStr, info.covers, info.tables)+'<table class="print-table reception-table"><thead><tr><th>Time</th><th>Pax</th><th>Name</th><th>Tbl</th><th>Menu</th><th colspan="2">Occasion</th><th colspan="2">Allergy / Req</th><th colspan="3">Pre Payment</th><th>Notes</th></tr></thead><tbody>'+html+'</tbody></table>'+menuHTML;
 }
 
 // === SAVE / LOAD BOOKINGS (Firestore) ===
