@@ -394,6 +394,59 @@ body{background:#fff;color:var(--ink)}
 .gp-dot{position:absolute;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gold);background:#fff;color:var(--green-dark);font:600 10px var(--sans);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:transform .15s}
 .gp-dot:hover{transform:scale(1.18)}
 .gp-dot.on{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+/* --- Events: list of events (first screen) and the open event's details row --- */
+.ev-actions{display:flex;gap:10px;align-items:center}
+body.ev-list #planView,body.ev-list #btnAllEvents{display:none}
+body.ev-plan #eventList,body.ev-plan #btnNewEvent{display:none}
+.evl{max-width:1000px;margin:6px 0 40px}
+.evl-sec{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;margin:26px 0 2px}
+.evl-sec:first-child{margin-top:4px}
+.evl-row{display:grid;grid-template-columns:50px minmax(0,1fr) 170px 150px 64px 24px;align-items:center;column-gap:10px;padding:15px 6px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .25s}
+.evl-row:hover,.evl-row:focus-visible{background:linear-gradient(90deg,var(--soft),rgba(245,243,227,0));outline:none}
+.evl-no{font-family:var(--serif);font-size:15px;color:var(--gold);font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.evl-nm{font-family:var(--serif);font-size:28px;line-height:1.1;color:var(--ink);overflow-wrap:anywhere;font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.evl-nm .plan-flag{font-family:var(--sans);margin-left:8px;vertical-align:middle}
+.evl-dt{font-size:13px;color:var(--green-dark)}
+.evl-px{font-size:13px;color:var(--ink)}.evl-px span{color:var(--green-dark)}
+.evl-del{justify-self:end;background:none;border:none;padding:4px 2px;font:500 11px var(--sans);letter-spacing:.4px;color:#a8362b;cursor:pointer;opacity:0;transition:opacity .2s}
+.evl-row:hover .evl-del,.evl-del:focus-visible{opacity:.85}
+.evl-ar{color:var(--gold);font-size:18px;text-align:right;transition:transform .25s}
+.evl-row:hover .evl-ar{transform:translateX(4px)}
+.evl-row.past .evl-nm,.evl-row.past .evl-px{color:#8f8b5e}
+.evl-row.draft .evl-nm{font-style:italic}
+.evl-empty{padding:30px 6px;color:var(--green-dark);font-size:14px;line-height:1.6;border-bottom:1px solid var(--border)}
+@media (hover:none){.evl-del{opacity:.75}}
+
+.ev-row{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;margin:0 0 16px}
+.ev-f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ev-f label{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:var(--green-dark);font-weight:600}
+.ev-f-name{position:relative}
+.ev-row .plan-input{width:360px;font-size:1.9rem}
+.ev-links{position:absolute;right:0;top:0;display:flex;gap:12px}
+.ev-in{font-family:var(--sans);font-size:14px;color:var(--ink);border:none;border-bottom:1.5px solid var(--gold-light);border-radius:0;background:transparent;padding:6px 2px;outline:none}
+.ev-in:focus{border-bottom-color:var(--gold)}
+.ev-date{width:150px}.ev-pax{width:90px}
+.ev-sp{flex:1}
+.ev-count{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:140px}
+.ev-count .lbl{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:var(--green-dark);font-weight:600}
+.ev-count .big{font-family:var(--serif);font-size:30px;line-height:1;color:var(--ink);font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.ev-count .big em{font-style:normal;color:var(--gold)}
+.ev-bar{width:140px;height:4px;border-radius:4px;background:#ece9cf;overflow:hidden}
+.ev-bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+.ev-bar.off{visibility:hidden}
+.ev-save{display:flex;align-items:center;gap:12px}
+@media (max-width:600px){
+  .evl-row{grid-template-columns:30px minmax(0,1fr) auto;row-gap:4px;padding:14px 2px}
+  .evl-no{grid-row:1}.evl-nm{font-size:22px;grid-column:2}
+  .evl-dt,.evl-px{grid-column:2}
+  .evl-del{grid-column:3;grid-row:2}
+  .evl-ar{grid-column:3;grid-row:1}
+  .ev-row{gap:16px}
+  .ev-f-name{flex:1 1 100%}
+  .ev-row .plan-input{width:100%}
+  .ev-sp{display:none}
+  .ev-count{align-items:flex-start}
+}
 @media (max-width:900px){
   .plan-layout{flex-direction:column}
   .tools{flex:none;width:100%;position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -419,27 +472,44 @@ body{background:#fff;color:var(--ink)}
     <div class="ph-title">
       <h1>Events<em>.</em></h1>
     </div>
-    <!-- Event name + Save. A new plan has an empty, editable name; once saved it shows the
-         name and the button becomes Update (enabled when there are changes). -->
-    <div class="plan-bar" id="planBar">
+    <div class="ev-actions">
+      <button type="button" class="btn primary" id="btnNewEvent">+ New event</button>
+      <button type="button" class="btn" id="btnAllEvents">&larr; All events</button>
+    </div>
+  </div>
+
+  <!-- Event list (first screen): Upcoming / No date / Past. Click an event to open its seat plan. -->
+  <section class="evl" id="eventList" aria-label="Events"></section>
+
+  <div id="planView">
+  <!-- The open event: name, date, guests expected, how many guests are named, Save / Update.
+       A new event has an empty, editable name; once saved the button becomes Update. -->
+  <div class="ev-row" id="planBar">
+    <div class="ev-f ev-f-name">
+      <label for="planNameInput">Event</label>
       <input type="text" id="planNameInput" class="plan-input" maxlength="60" autocomplete="off"
-        placeholder="Event name&hellip;" aria-label="Plan name">
+        placeholder="Event name&hellip;" aria-label="Event name">
+      <span class="ev-links">
+        <button type="button" class="plan-link" id="btnRename" title="Change the name of this event" style="display:none;">Rename</button>
+        <button type="button" class="plan-link" id="btnCopy" title="Save a copy under a new name" style="display:none;">Save as&hellip;</button>
+      </span>
+    </div>
+    <div class="ev-f"><label for="evDate">Date</label><input type="date" id="evDate" class="ev-in ev-date"></div>
+    <div class="ev-f"><label for="evPax">Guests expected</label><input type="number" id="evPax" class="ev-in ev-pax" min="0" max="999" inputmode="numeric" placeholder="&ndash;"></div>
+    <span class="ev-sp"></span>
+    <div class="ev-count" aria-live="polite">
+      <span class="lbl">Guests named</span>
+      <span class="big" id="evCount">0</span>
+      <span class="ev-bar" id="evBar"><i id="evBarFill"></i></span>
+    </div>
+    <div class="ev-save">
       <button type="button" class="btn primary" id="btnSave">Save</button>
       <span class="plan-status" id="planStatus"></span>
-      <button type="button" class="plan-link" id="btnCopy" title="Save a copy under a new name" style="display:none;">Save as&hellip;</button>
-      <button type="button" class="plan-link" id="btnRename" title="Change the name of this plan" style="display:none;">Rename</button>
     </div>
   </div>
 
   <div class="plan-layout">
     <aside class="tools" aria-label="Tools">
-      <section class="tcard">
-        <h3 class="tlabel">Plan</h3>
-        <div class="tgrid">
-          <button class="btn" onclick="newPlan()">New</button>
-          <button class="btn" onclick="openPlansDialog()">Open&hellip;</button>
-        </div>
-      </section>
       <section class="tcard">
         <h3 class="tlabel">Add to floor</h3>
         <div class="tiles">
@@ -487,6 +557,7 @@ body{background:#fff;color:var(--ink)}
     <p class="fs-hint">Click a seat to jump to its name.</p>
   </div>
   <p class="hint">Drag a table from its centre to move it. Drag an individual chair to reposition it around the table. Use + / &minus; to change seats, &ldquo;Reset Seats&rdquo; to space them evenly. Change a table&rsquo;s number in the side panel (or double-click the number). Click a table to add guest names by position (P1, P2&hellip;); next to each name, &ldquo;Allergies&hellip;&rdquo; lets you tick allergies / diets or type your own. Everything saves automatically on this device and to the cloud.</p>
+  </div>
 
   <div class="footer"><em>&copy; 2026 — Petrus — Internal Use Only — Restaurant Ops &middot; Fiorella Atencio</em></div>
 </div>
@@ -576,7 +647,11 @@ var canvas = document.getElementById('canvas');
 // meta = link to a named saved plan: { id (Firestore doc id or null), name, baseline (signature when saved/opened) }
 var state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false, meta: blankMeta() };
 var uid = function(){ return 'u' + Date.now() + Math.floor(Math.random()*1000); };
-function blankMeta(){ return { id: null, name: '', baseline: '' }; }
+function blankMeta(){ return { id: null, name: '', baseline: '', date: '', pax: '' }; }
+// The event details (date, guests expected) count as changes too. Only present when set,
+// so events saved before these fields existed still compare equal.
+function evSig(m){ m = m || {}; return (m.date || m.pax) ? '#' + (m.date || '') + '|' + (m.pax || '') : ''; }
+function fullSig(){ return planSignature() + evSig(state.meta); }
 
 // A normalised fingerprint of a plan, used to tell whether it differs from the saved copy.
 // Rendering adds internal bookkeeping (empty angle lists, blank guest rows) that must not
@@ -635,6 +710,8 @@ function load(){
       state = s; state.selectedId = null;
       if (!state.fixed) state.fixed = [];
       if (!state.meta || typeof state.meta !== 'object') state.meta = blankMeta();
+      if (state.meta.date == null) state.meta.date = '';
+      if (state.meta.pax == null) state.meta.pax = '';
       return true;
     }
   } catch(e){}
@@ -674,7 +751,7 @@ function applyRemote(remote, meta){
     units: remote.units || [], fixed: remote.fixed || [],
     nextNum: remote.nextNum || 1, selectedId: null, isDefault: false,
     meta: (meta && typeof meta === 'object')
-      ? { id: meta.id || null, name: meta.name || '', baseline: meta.baseline || '' }
+      ? { id: meta.id || null, name: meta.name || '', baseline: meta.baseline || '', date: meta.date || '', pax: meta.pax || '' }
       : blankMeta()
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -726,6 +803,30 @@ window.addEventListener('pagehide', function(){ if (cloudTimer) cloudSaveNow(); 
 function updateTotals(){
   var covers = state.units.reduce(function(a,u){return a+u.seats;},0);
   document.getElementById('totals').textContent = state.units.length + ' tables · ' + covers + ' covers';
+  updateEventCount();
+}
+// Seats with a guest name, in a list of tables.
+function countNamed(units){
+  return (units || []).reduce(function(a, u){
+    var n = 0;
+    for (var i = 0; i < (u.seats || 0); i++) if (String((u.guests && u.guests[i]) || '').trim()) n++;
+    return a + n;
+  }, 0);
+}
+// "35 / 50" (named / expected) under GUESTS NAMED, with a thin progress bar.
+function updateEventCount(){
+  var el = document.getElementById('evCount');
+  if (!el) return;
+  var named = countNamed(state.units), pax = parseInt((state.meta && state.meta.pax) || '', 10);
+  var bar = document.getElementById('evBar'), fill = document.getElementById('evBarFill');
+  if (pax > 0){
+    el.innerHTML = named + ' <em>/ ' + pax + '</em>';
+    bar.classList.remove('off');
+    fill.style.width = Math.min(100, Math.round(named / pax * 100)) + '%';
+  } else {
+    el.textContent = named;
+    bar.classList.add('off');
+  }
 }
 
 function tableDiameter(seats, shape){
@@ -1429,7 +1530,7 @@ function savesCol(){ return db.collection(SAVES); }
 function nowStamp(){ return firebase.firestore.FieldValue.serverTimestamp(); }
 function myEmail(){ return (auth.currentUser && auth.currentUser.email) || ''; }
 
-function isModified(){ return !!(state.meta && state.meta.id) && planSignature() !== state.meta.baseline; }
+function isModified(){ return !!(state.meta && state.meta.id) && fullSig() !== state.meta.baseline; }
 // True when the working plan holds work that isn't safely stored as a named plan.
 function hasUnsavedWork(){
   // Linked to a saved plan: any difference from it counts, even if the plan was emptied.
@@ -1470,6 +1571,11 @@ function updatePlanUi(){
   if (copy) copy.style.display = saved ? '' : 'none';
   var rn = document.getElementById('btnRename');
   if (rn) rn.style.display = saved ? '' : 'none';
+  // Date and guests expected follow the open event (never overwritten while being typed in).
+  var dIn = document.getElementById('evDate'), pIn = document.getElementById('evPax');
+  if (dIn && document.activeElement !== dIn) dIn.value = m.date || '';
+  if (pIn && document.activeElement !== pIn) pIn.value = m.pax || '';
+  updateEventCount();
 }
 
 // Rename the open plan straight from the name field (Rename link or double-click).
@@ -1522,12 +1628,15 @@ function fetchSaved(){
       var v = d.data() || {};
       return {
         id: d.id, name: v.name || '(unnamed)', json: v.json,
+        date: v.date || '', pax: v.pax || '',
+        named: (function(){ try { return countNamed((JSON.parse(v.json) || {}).units); } catch(e){ return 0; } })(),
         updatedMs: (v.updatedAt && v.updatedAt.toMillis) ? v.updatedAt.toMillis() : 0,
         updatedBy: v.updatedBy || ''
       };
     });
     list.sort(function(a, b){ return b.updatedMs - a.updatedMs; });
     savedList = list;
+    eventsLoaded = true; eventsError = false;
     return list;
   });
 }
@@ -1560,7 +1669,8 @@ function saveNamedPlan(name){
   }
   fetchSaved().then(function(list){
     var same = list.filter(function(p){ return p.name.toLowerCase() === name.toLowerCase(); })[0];
-    var data = { name: name, json: JSON.stringify(planForCloud()), updatedAt: nowStamp(), updatedBy: myEmail() };
+    var m0 = state.meta || blankMeta();
+    var data = { name: name, json: JSON.stringify(planForCloud()), date: m0.date || '', pax: m0.pax || '', updatedAt: nowStamp(), updatedBy: myEmail() };
     var op;
     if (same){
       if (!confirm('A saved plan called "' + same.name + '" already exists.\n\nReplace it with the current plan?')) return null;
@@ -1571,8 +1681,10 @@ function saveNamedPlan(name){
       op = savesCol().add(data).then(function(ref){ return ref.id; });
     }
     return op.then(function(id){
-      state.meta = { id: id, name: data.name, baseline: planSignature() };
+      state.meta = { id: id, name: data.name, baseline: '', date: data.date, pax: data.pax };
+      state.meta.baseline = fullSig();
       save();
+      refreshSaved();
     });
   }).catch(function(err){ failMsg('Could not save the plan.', err); });
 }
@@ -1581,12 +1693,14 @@ function saveNamedPlan(name){
 function updatePlan(){
   if (!state.meta || !state.meta.id){ onPlanSave(); return; }
   if (!isModified()) return;
-  if (!confirm('Replace the saved plan "' + state.meta.name + '" with the current version?')) return;
+  if (!confirm('Save the changes to "' + state.meta.name + '"?')) return;
   savesCol().doc(state.meta.id).update({
-    json: JSON.stringify(planForCloud()), updatedAt: nowStamp(), updatedBy: myEmail()
+    json: JSON.stringify(planForCloud()), date: state.meta.date || '', pax: state.meta.pax || '',
+    updatedAt: nowStamp(), updatedBy: myEmail()
   }).then(function(){
-    state.meta.baseline = planSignature();
+    state.meta.baseline = fullSig();
     save();
+    refreshSaved();
   }).catch(function(err){
     if (err && err.code === 'not-found'){
       alert('That saved plan no longer exists (it was deleted). Type a name and press Save to save it again.');
@@ -1598,12 +1712,13 @@ function updatePlan(){
 // Start a fresh, empty plan. Saved plans are untouched.
 function newPlan(){
   if (hasUnsavedWork() && !confirm(
-    'The current plan has unsaved changes.\n\nStart a new, empty plan anyway?\n(Tip: cancel and press Save or Update first.)')) return;
+    'The current plan has unsaved changes.\n\nStart a new, empty plan anyway?\n(Tip: cancel and press Save or Update first.)')) return false;
   state = { units: [], fixed: [], nextNum: 1, selectedId: null, isDefault: false, meta: blankMeta() };
   var inp = document.getElementById('planNameInput');
   if (inp) inp.value = '';                       // a new plan starts with an empty name
   save(); render();
   if (inp) inp.focus();
+  return true;
 }
 
 // Event name + Save: Enter saves a new plan, the buttons do the rest.
@@ -1644,11 +1759,119 @@ function renderPlansList(){
   }).join('');
 }
 function refreshSaved(){
-  return fetchSaved().then(renderPlansList).catch(function(err){
+  return fetchSaved().then(function(){ renderPlansList(); renderEventList(); }).catch(function(err){
     console.error('Could not load saved plans:', err);
     document.getElementById('plansList').innerHTML = '<div class="gp-empty">Could not load saved plans.</div>';
+    eventsLoaded = true; eventsError = true; renderEventList();
   });
 }
+
+// ── Events list (first screen) and switching between the list and an open event ──
+var eventsLoaded = false, eventsError = false;
+function isoToday(){ var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function fmtEventDate(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return '';
+  var d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).replace(/,/g, '');
+}
+function renderEventList(){
+  var box = document.getElementById('eventList');
+  if (!box) return;
+  if (!eventsLoaded){ box.innerHTML = '<div class="evl-empty">Loading events&hellip;</div>'; return; }
+  if (eventsError){ box.innerHTML = '<div class="evl-empty">Could not load the events. Check the connection and reload the page.</div>'; return; }
+  var today = isoToday(), m = state.meta || blankMeta();
+  var list = savedList.map(function(p){
+    var open = m.id === p.id;
+    // The open event shows its live state (it may have changes not saved yet).
+    return { id: p.id, name: open ? (m.name || p.name) : p.name, date: open ? m.date : p.date, pax: open ? m.pax : p.pax,
+             named: open ? countNamed(state.units) : p.named, modified: open && isModified(), updatedMs: p.updatedMs };
+  });
+  var up = list.filter(function(e){ return e.date && e.date >= today; }).sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  var nod = list.filter(function(e){ return !e.date; });
+  var past = list.filter(function(e){ return e.date && e.date < today; }).sort(function(a, b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+  var no = 0, html = '';
+  function row(e, cls){
+    no++;
+    var pax = parseInt(e.pax || '', 10);
+    var count = '<b>' + e.named + '</b>' + (pax > 0 ? ' <span>/ ' + pax + ' guests</span>' : ' <span>guests</span>');
+    return '<div class="evl-row' + (cls ? ' ' + cls : '') + '" role="button" tabindex="0" data-id="' + esc(e.id) + '">' +
+      '<span class="evl-no">' + ('0' + no).slice(-2) + '</span>' +
+      '<span class="evl-nm">' + esc(e.name) + (e.modified ? '<span class="plan-flag mod">modified</span>' : '') + '</span>' +
+      '<span class="evl-dt">' + (e.date ? esc(fmtEventDate(e.date)) : '&ndash;') + '</span>' +
+      '<span class="evl-px">' + count + '</span>' +
+      '<button type="button" class="evl-del" data-del="' + esc(e.id) + '" aria-label="Delete ' + esc(e.name) + '">Delete</button>' +
+      '<span class="evl-ar" aria-hidden="true">&rarr;</span></div>';
+  }
+  // Work on the floor that was never saved as an event: offer to carry on with it.
+  if (!m.id && hasUnsavedWork()){
+    html += '<div class="evl-sec">Not saved yet</div>' +
+      '<div class="evl-row draft" role="button" tabindex="0" data-id="__draft">' +
+      '<span class="evl-no">&ndash;</span><span class="evl-nm">Unsaved plan</span>' +
+      '<span class="evl-dt">' + (m.date ? esc(fmtEventDate(m.date)) : '&ndash;') + '</span>' +
+      '<span class="evl-px"><b>' + countNamed(state.units) + '</b> <span>guests</span></span><span></span>' +
+      '<span class="evl-ar" aria-hidden="true">&rarr;</span></div>';
+  }
+  if (up.length) html += '<div class="evl-sec">Upcoming</div>' + up.map(function(e){ return row(e); }).join('');
+  if (nod.length) html += '<div class="evl-sec">No date</div>' + nod.map(function(e){ return row(e); }).join('');
+  if (past.length) html += '<div class="evl-sec">Past</div>' + past.map(function(e){ return row(e, 'past'); }).join('');
+  if (!list.length && !html) html = '<div class="evl-empty">No events yet. Press &ldquo;+ New event&rdquo; to start a seat plan.</div>';
+  box.innerHTML = html;
+}
+function showList(){
+  if (state.selectedId) selectUnit(null);
+  if (typeof focusOpen !== 'undefined' && focusOpen) closeFocus();
+  document.body.classList.remove('ev-plan');
+  document.body.classList.add('ev-list');
+  renderEventList();
+  window.scrollTo(0, 0);
+}
+function showPlan(){
+  var wasList = document.body.classList.contains('ev-list');
+  document.body.classList.remove('ev-list');
+  document.body.classList.add('ev-plan');
+  render();                                    // the canvas was hidden: lay it out now it has a size
+  updatePlanUi();
+  window.scrollTo(0, 0);
+  if (wasList){ try { history.pushState({ ev: 'plan' }, ''); } catch(e){} }   // the browser's Back returns to the list
+}
+function backToList(){
+  if (history.state && history.state.ev === 'plan') history.back();   // popstate shows the list
+  else showList();
+}
+window.addEventListener('popstate', function(){ if (document.body.classList.contains('ev-plan')) showList(); });
+function openEventFromList(id){
+  if (id === '__draft' || (state.meta && state.meta.id === id)){ showPlan(); return; }   // already the open one: keep its changes
+  if (openSaved(id)) showPlan();
+}
+(function wireEvents(){
+  var box = document.getElementById('eventList');
+  box.addEventListener('click', function(e){
+    var del = e.target.closest ? e.target.closest('[data-del]') : null;
+    if (del){ e.stopPropagation(); deleteSaved(del.getAttribute('data-del')); return; }
+    var r = e.target.closest ? e.target.closest('.evl-row') : null;
+    if (r) openEventFromList(r.getAttribute('data-id'));
+  });
+  box.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var r = e.target.closest ? e.target.closest('.evl-row') : null;
+    if (!r || e.target !== r) return;
+    e.preventDefault();
+    openEventFromList(r.getAttribute('data-id'));
+  });
+  document.getElementById('btnNewEvent').addEventListener('click', function(){ if (newPlan()) showPlan(); });
+  document.getElementById('btnAllEvents').addEventListener('click', backToList);
+  // Date and guests expected: stored with the open event (Update saves them to the event).
+  document.getElementById('evDate').addEventListener('change', function(){
+    state.meta.date = this.value || ''; save();
+  });
+  var pax = document.getElementById('evPax');
+  pax.addEventListener('input', function(){
+    var v = parseInt(this.value, 10);
+    state.meta.pax = (v > 0) ? String(Math.min(v, 999)) : '';
+    save();
+  });
+})();
 function openPlansDialog(){
   document.getElementById('plansList').innerHTML = '<div class="gp-empty">Loading&hellip;</div>';
   document.getElementById('plansDialog').style.display = 'flex';
@@ -1661,18 +1884,19 @@ function openSaved(id){
   var item = savedList.filter(function(p){ return p.id === id; })[0];
   if (!item) return;
   if (hasUnsavedWork() && !confirm(
-    'The current plan has unsaved changes.\n\nOpen "' + item.name + '" anyway? The current changes will be lost.')) return;
+    'The current plan has unsaved changes.\n\nOpen "' + item.name + '" anyway? The current changes will be lost.')) return false;
   var plan;
   try { plan = JSON.parse(item.json); } catch(e){ plan = null; }
-  if (!plan || !plan.units){ alert('This saved plan could not be read.'); return; }
+  if (!plan || !plan.units){ alert('This saved plan could not be read.'); return false; }
   state = {
     units: plan.units || [], fixed: plan.fixed || [], nextNum: plan.nextNum || 1,
-    selectedId: null, isDefault: false, meta: { id: item.id, name: item.name, baseline: '' }
+    selectedId: null, isDefault: false, meta: { id: item.id, name: item.name, baseline: '', date: item.date || '', pax: item.pax || '' }
   };
   render();                                   // render first: it adds bookkeeping the signature ignores
-  state.meta.baseline = planSignature();
+  state.meta.baseline = fullSig();
   save();
   closePlansDialog();
+  return true;
 }
 function renameSaved(id){
   var item = savedList.filter(function(p){ return p.id === id; })[0];
@@ -1906,7 +2130,7 @@ function buildPrintSheets(mode){
   function head(idx){
     var no = sheets.length > 1 ? '<span class="ps-sheetno">Sheet ' + (idx + 1) + ' of ' + sheets.length + '</span>' : '';
     return mk('div', 'ps-head',
-      '<div class="ps-title"><div class="ps-kicker">Events</div><div class="ps-event">' + esc(planName || 'Event') + '</div></div>' +
+      '<div class="ps-title"><div class="ps-kicker">Events' + (state.meta && state.meta.date ? ' &middot; ' + esc(fmtEventDate(state.meta.date)) : '') + '</div><div class="ps-event">' + esc(planName || 'Event') + '</div></div>' +
       '<div class="pf-meta">' + psBrand() + no + '</div>');
   }
   sheets.forEach(function(sh, idx){
@@ -1966,14 +2190,16 @@ document.addEventListener('keydown', function(e){
     if (state.selectedId) { selectUnit(null); return; }          // then the selection
   }
   if (plansDialogOpen() || printDialogOpen() || dietPop || focusOpen) return;   // never delete a table while a dialog / list is open
+  if (!document.body.classList.contains('ev-plan')) return;                      // nor from the events list
   // Delete / Backspace remove the selected table, but never while typing or after clicking a button.
   if ((e.key==='Delete'||e.key==='Backspace') && state.selectedId && !/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(document.activeElement.tagName)) deleteSelected();
 });
 
 function seedDefault(){
-  state.fixed.push({ id: uid(), label:'Wine cellar', shape:'circle', w:150, h:150, x: canvas.clientWidth/2-75, y: 280 });
-  state.fixed.push({ id: uid(), label:'Cloakroom', shape:'rect', w:140, h:44, x: canvas.clientWidth-170, y: 20 });
-  state.fixed.push({ id: uid(), label:'Area for drinks reception', shape:'rect', w:190, h:90, x: canvas.clientWidth/2+130, y: 320 });
+  var cw = canvas.clientWidth || 1100;          // the canvas is hidden while the events list is showing
+  state.fixed.push({ id: uid(), label:'Wine cellar', shape:'circle', w:150, h:150, x: cw/2-75, y: 280 });
+  state.fixed.push({ id: uid(), label:'Cloakroom', shape:'rect', w:140, h:44, x: cw-170, y: 20 });
+  state.fixed.push({ id: uid(), label:'Area for drinks reception', shape:'rect', w:190, h:90, x: cw/2+130, y: 320 });
   var seats = [12,8,10,12,11,10,10];
   var pos = [[60,40],[260,30],[430,30],[60,260],[60,470],[20,560],[220,560]];
   seats.forEach(function(s, i){
@@ -1989,8 +2215,15 @@ function seedDefault(){
 // Only seed the starter layout when nothing has ever been stored, so an intentionally
 // empty plan (e.g. after "New") stays empty on reload.
 if (!load()) seedDefault();
+document.body.classList.add('ev-list');
 render();
-auth.onAuthStateChanged(function(user){ if (user && seatIsOwner()) syncFromCloud(); });
+renderEventList();
+auth.onAuthStateChanged(function(user){
+  if (!(user && seatIsOwner())) return;
+  syncFromCloud();
+  fetchSaved().then(function(){ eventsLoaded = true; eventsError = false; renderEventList(); })
+    .catch(function(err){ console.error('Could not load events:', err); eventsLoaded = true; eventsError = true; renderEventList(); });
+});
 </script>
 </body>
 </html>
