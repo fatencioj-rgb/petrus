@@ -171,6 +171,49 @@ table.rota tr.tkrow td.tkhit:hover .tkb{outline:1px solid #BF9000}
 .panel .box.over{background:#FFEBEE}.panel .box.under{background:#FFF7D6}
 .panel .note{font-size:10.5px;font-style:italic;color:var(--grey);margin-top:12px}
 
+/* ---------- phone view ---------- */
+@media screen and (max-width:700px){
+  .title{font-size:22px}
+  .bar .btn{padding:8px 11px;font-size:12.5px}
+  .bar .gap{display:none}
+}
+.mob{max-width:100%;overflow:hidden}
+.mstrip{display:flex;gap:4px;margin:4px 0 10px}
+.md{flex:1;min-width:0;position:relative;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 0;font:inherit;color:var(--navy);display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.md span{font-size:10px;text-transform:uppercase;color:var(--blue);letter-spacing:.3px}
+.md b{font-size:17px;line-height:1.2}
+.md.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.md.on span{color:#BDD7EE}
+.md.cl{background:#f2f2f2;color:#aaa}
+.md i.nbd{position:absolute;top:4px;right:5px;margin:0}
+.mdh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.mdh b{font-size:18px}
+.mclosed{padding:30px;text-align:center;color:#999;background:#f2f2f2;border-radius:8px;font-style:italic}
+.minfo{display:grid;grid-template-columns:70px 1fr 1fr;gap:3px 6px;align-items:center;background:#F5F8FC;border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-bottom:10px;font-size:13px}
+.minfo .hd{text-align:center;font-weight:700;color:var(--blue)}
+.minfo .lb{font-weight:700;font-size:12px}
+.minfo span{text-align:center}
+.minfo input.t{width:100%;height:30px;font-size:16px;text-align:center;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--navy);padding:0}
+.pteam{display:flex;justify-content:space-between;align-items:center;background:#DDEBF7;color:var(--navy);padding:5px 8px;margin-top:8px;font-size:12.5px;border-radius:4px}
+.pteam span{color:var(--blue);font-weight:700}
+.pteam.tot{background:var(--navy);color:#fff}
+.pteam.tot span{color:#BDD7EE}
+.pr{display:flex;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid #E3ECF7;min-height:38px}
+.pr .pn{flex:1 1 auto;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr.ag .pn{background:var(--agency)}
+.pr .pt{display:flex;align-items:center;gap:2px;flex:0 0 auto}
+.pr .pt.w{flex:0 0 138px}
+.pr .pt input.t{width:62px;height:32px;font-size:16px;text-align:center;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--navy);padding:0}
+.pr .pt.w input.t{width:100%;text-align:left;padding:0 6px}
+.pr .pt .dash{width:14px;text-align:center;color:var(--blue)}
+.pr .pt .dash.tkhit{cursor:pointer}
+.pr .pt .tx{font-size:14px}
+.pr .phh{flex:0 0 46px;text-align:right;font-size:12px;color:#7a8aa5}
+.pr .phh.o{color:var(--overT);font-weight:700}.pr .phh.u{color:var(--underT);font-weight:700}
+.pr.k-hol{background:var(--holiday)}.pr.k-sick{background:var(--sick)}.pr.k-tbc{background:var(--tbc)}.pr.k-close{background:var(--closing)}
+.ptk{padding:0 8px 4px;margin-top:-2px;border-bottom:1px solid #E3ECF7}
+.mob .mcred{margin-top:14px;text-align:right}
+@media print{.mob{display:none}}
 /* ---------- dialogs / toast ---------- */
 .dlg-overlay{position:fixed;inset:0;background:rgba(15,25,45,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:9000;padding:20px}
 .dlg-overlay.open{display:flex}
@@ -679,19 +722,83 @@ function renderWeek(keepFocus){
      (S.isOwner?'<button class="btn green" data-a="wa">WhatsApp</button>':'')+
      '</div>';
   if(!S.canEdit) h+='<div class="status ro">View only — only Fiorella can edit.</div>';
+  if(isMob()){ h+=mobWeek(m); }
+  else {
   h+='<div class="week-wrap"><div class="scroll">';
   h+=rotaTable(m,{edit:S.canEdit,print:false});
   h+=paidTable(m);
   h+='<details class="whod"><summary>Week summary: who\'s on for</summary>'+whoTable(m)+'</details>';
   h+=legendHtml();
   h+='</div>'+hoursPanel(m)+'</div>';
+  }
   var app=document.getElementById('app'); app.innerHTML=h;
   bindBar(app);
+  app.querySelectorAll('[data-mday]').forEach(function(b){ b.onclick=function(){ S.mobDay=+b.getAttribute('data-mday'); renderWeek(false); }; });
+  app.querySelectorAll('[data-whoday]').forEach(function(b){ b.onclick=function(){ dayCard(addDays(parseYmd(S.mon),+b.getAttribute('data-whoday'))); }; });
   app.querySelectorAll('th[data-day]').forEach(function(th){ th.onclick=function(){ dayCard(addDays(parseYmd(S.mon),+th.getAttribute('data-day'))); }; });
   bindCells(app,m);
   if(focusId){ var el=app.querySelector('[data-cell="'+focusId+'"]'); if(el){ el.focus(); try{el.select();}catch(e){} } }
 }
 
+/* ---------------------------------------------------------------- phone view: one day at a time */
+var MQ=window.matchMedia('(max-width:700px)');
+function isMob(){ return MQ.matches; }
+(MQ.addEventListener ? MQ.addEventListener.bind(MQ,'change') : MQ.addListener.bind(MQ))(function(){ if(S.view==='week' && !S.staff) renderWeek(false); });
+function mobWeek(m){
+  var q, k;
+  if(S.mobMon!==S.mon){
+    S.mobMon=S.mon; var td=ymd(today()), kk=-1;
+    for(q=0;q<7;q++) if(ymd(addDays(m.mon,q))===td) kk=q;
+    if(kk<0 || dayClosed(kk,m.monOpen)){ kk=-1; for(q=0;q<7;q++) if(!dayClosed(q,m.monOpen)){ kk=q; break; } }
+    S.mobDay=Math.max(kk,0);
+  }
+  k=S.mobDay;
+  var E=S.canEdit, cl=dayClosed(k,m.monOpen), d=addDays(m.mon,k), h='<div class="mob">';
+  h+='<div class="mstrip">';
+  for(q=0;q<7;q++){
+    var c=dayClosed(q,m.monOpen), dot='';
+    if(!c){ var wl=whoLists(m,q); if((wl[0].length||wl[1].length||wl[2].length||wl[3].length) && (!wl[0].length||!wl[3].length)) dot='<i class="nbd"></i>'; }
+    h+='<button type="button" class="md'+(q===k?' on':'')+(c?' cl':'')+'" data-mday="'+q+'"><span>'+DAYS[q]+'</span><b>'+addDays(m.mon,q).getDate()+'</b>'+dot+'</button>';
+  }
+  h+='</div><div class="mdh"><b>'+fmtDay(d)+'</b>'+(cl?'':'<button type="button" class="btn blue" data-whoday="'+k+'">Who\'s on</button>')+'</div>';
+  if(cl){ h+='<div class="mclosed">Closed</div>'; }
+  else {
+    h+='<div class="minfo"><span></span><span class="hd">L</span><span class="hd">D</span>';
+    [['COVERS','covers'],['TABLES','tables'],['KT','kt']].forEach(function(x){
+      h+='<span class="lb">'+x[0]+'</span>';
+      for(var j=0;j<2;j++){
+        var v=infoNum((m.info[x[1]]||[])[2*k+j]);
+        h+='<span>'+(E?'<input class="t" data-info="'+x[1]+'" data-i="'+(2*k+j)+'" data-cell="i-'+x[1]+'-'+(2*k+j)+'" value="'+esc(v)+'" inputmode="numeric">':(esc(v)||'-'))+'</span>';
+      }
+    });
+    h+='</div>';
+    var rowIdx=0, totL=0, totD=0, totH=0;
+    m.sections.forEach(function(sec){
+      var L=0, D=0;
+      sec.rows.forEach(function(r){ if(countL(r.v[2*k])) L++; if(countD(r.v[2*k+1])) D++; });
+      totL+=L; totD+=D;
+      h+='<div class="pteam"><b>'+esc(sec.team)+'</b><span>L '+L+' &middot; D '+D+'</span></div>';
+      sec.rows.forEach(function(r){
+        var s=r.v[2*k], e=r.v[2*k+1], kc='';
+        if(isWord(s,'Holiday')) kc=' k-hol'; else if(isWord(s,'SICK')) kc=' k-sick'; else if(isWord(s,'TBC')||isWord(e,'TBC')) kc=' k-tbc'; else if(isClosingEnd(e)) kc=' k-close';
+        var wide=!isTime(s) && String(s||'').trim() && !String(e||'').trim(), tm;
+        if(wide) tm=E?inp(r,2*k,s,rowIdx,2*k):'<span class="tx">'+esc(s)+'</span>';
+        else if(E){
+          var tkHit=isTime(s);
+          tm=inp(r,2*k,s,rowIdx,2*k)+'<span class="dash'+(tkHit?' tkhit':'')+'"'+(tkHit?' data-tk="'+esc(r.key)+'|'+k+'" title="Add a task"':'')+'>'+(String(e||'').trim()?'-':'')+'</span>'+inp(r,2*k+1,e,rowIdx,2*k+1);
+        } else tm='<span class="tx">'+(esc(s)+(String(e||'').trim()?' - '+esc(e):''))+'</span>';
+        h+='<div class="pr'+kc+(r.agency?' ag':'')+'"><span class="pn">'+esc(r.name)+'</span><span class="pt'+(wide?' w':'')+'">'+tm+'</span><span class="phh'+(r.over?' o':(r.under?' u':''))+'" title="Hours this week">'+fmtH(r.hours,true)+'</span></div>';
+        var tl=dayTasks(r,k);
+        if(tl.length) h+='<div class="ptk"'+(E?' data-tk="'+esc(r.key)+'|'+k+'"':'')+'>'+tl.map(function(x){return '<span class="tkb">'+esc(x)+'</span>';}).join(' ')+'</div>';
+        rowIdx++;
+      });
+    });
+    h+='<div class="pteam tot"><b>TOTAL FOH</b><span>L '+totL+' &middot; D '+totD+'</span></div>';
+  }
+  h+='<details class="whod"><summary>Hours check &amp; legend</summary>'+hoursPanel(m)+legendHtml()+'</details>';
+  h+='<div class="credit mcred">'+CREDIT+'</div></div>';
+  return h;
+}
 function colgroup(withHours){
   var c='<colgroup><col class="c-n">'; for(var k=0;k<7;k++) c+='<col class="c-s"><col class="c-d"><col class="c-e">'; if(withHours) c+='<col class="c-h">'; return c+'</colgroup>';
 }
