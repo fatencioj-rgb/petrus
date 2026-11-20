@@ -1,6 +1,6 @@
 {
   "name": "Restaurant Ops",
-  "short_name": "Restaurant Ops",
+  "short_name": "R-Ops",
   "description": "Restaurant Ops - training, wine department, operations and team notifications for Petrus.",
   "start_url": "index.html",
   "scope": "./",

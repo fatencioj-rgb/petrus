@@ -4,6 +4,7 @@ window.PLATFORM = {
   name: 'Restaurant',
   accent: 'Ops',
   by: 'Fiorella Atencio',
+  appName: 'R-Ops',            // short name under the app icon on the phone
   restaurant: { name: 'Petrus', logo: 'petrus-logo.png' },
   departments: { foh: 'Front of House', mgmt: 'Management', boh: 'Kitchen' }
 };

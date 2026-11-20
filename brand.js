@@ -99,7 +99,7 @@
     if (rel === 'icon') l.setAttribute('type', 'image/png');
   }
   function appIdentity() {
-    var appName = ((P.name || 'Restaurant') + ' ' + (P.accent || 'Ops')).trim();
+    var appName = P.appName || ((P.name || 'Restaurant') + ' ' + (P.accent || 'Ops')).trim();
     setMeta('apple-mobile-web-app-title', appName);
     setMeta('application-name', appName);
     setMeta('apple-mobile-web-app-capable', 'yes');
