@@ -252,13 +252,13 @@ tr:last-child td { border-bottom:none; }
 .cut-other{font-size:10px;font-weight:500;color:var(--wine);border:1px solid var(--border);border-radius:30px;padding:2px 8px;background:#fff}
 /* detail sheet */
 .dish-modal-overlay{background:rgba(35,33,15,.5);backdrop-filter:blur(3px);align-items:center;padding:24px 16px}
-.dish-modal{max-width:700px;max-height:min(92vh,920px);display:flex;flex-direction:column;border:none;border-radius:24px;box-shadow:0 24px 70px rgba(35,33,15,.35);background:#fff;overflow:hidden}
+.dish-modal{max-width:700px;max-height:min(100%,920px);display:flex;flex-direction:column;border:none;border-radius:24px;box-shadow:0 24px 70px rgba(35,33,15,.35);background:#fff;overflow:hidden}
 #dish-modal-content{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .dish-modal .dish-media{height:clamp(190px,34vh,320px);aspect-ratio:auto;border-radius:0}
 .dish-modal .dish-media.empty{height:clamp(120px,22vh,200px)}
 .dish-modal .dish-body{padding:20px 24px 24px}
 .dish-modal .dish-name{color:var(--ink)}
-.dish-modal.two{max-width:1020px;height:auto;max-height:min(90vh,760px)}
+.dish-modal.two{max-width:1020px;height:auto;max-height:min(100%,760px)}
 .dish-modal.two #dish-modal-content{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .dm-grid{display:grid;grid-template-columns:minmax(300px,41%) 1fr;grid-template-rows:minmax(0,1fr);flex:1 1 auto;min-height:min(430px,60vh)}
 .dm-side{overflow-y:auto;background:#faf9f1;border-right:1px solid var(--border);padding-bottom:22px}
@@ -316,10 +316,11 @@ tr:last-child td { border-bottom:none; }
 .dm-btn:disabled{opacity:.35;cursor:default}
 .dm-count{font-size:11px;letter-spacing:2px;font-weight:500;color:var(--wine)}
 @media (max-width:700px){
-  .dish-modal-overlay{align-items:flex-end;padding:0}
-  .dish-modal{max-width:none;max-height:94vh;border-radius:24px 24px 0 0}
-  .dish-modal.two{max-width:none;height:auto;max-height:94vh}
-  .dm-grid{min-height:0}
+  .dish-modal-overlay{align-items:flex-end;padding:max(14px,env(safe-area-inset-top)) 0 0;overscroll-behavior:contain}
+  .dish-modal{max-width:none;max-height:100%;border-radius:24px 24px 0 0}
+  .dish-modal.two{max-width:none;height:auto;max-height:100%}
+  .dm-grid{min-height:0;flex:0 0 auto}
+  .dm-grid > *{flex-shrink:0}
   .dish-modal.two #dish-modal-content{overflow-y:auto}
   .dm-grid{display:flex;flex-direction:column;height:auto}
   .dm-side,.dm-main{display:contents}
