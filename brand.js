@@ -28,7 +28,7 @@
     + '.top-bar.has-brand>a{margin-left:auto}.top-bar.has-brand>span:empty{display:none}'
     + '.tb.has-brand::before,.top-bar.has-brand::before,.topbar.has-brand::before{display:none!important}'
     + '@media (max-width:640px){'
-    + '.brandmark{--bh:38px!important;flex-direction:column;gap:7px;align-items:center}'
+    + '.brandmark{--bh:38px!important;flex-direction:column;gap:20px;align-items:center}'
     + '.bm-dv{display:none}.bm-plat{align-items:center}'
     + '.bm-name{font-size:21px}.bm-by{font-size:8px}'
     + '}'
