@@ -94,6 +94,14 @@ table.rota .ds{border-left:1px solid var(--blue)}
 table.rota .hs{border-left:2px solid var(--navy)}
 table.rota tr.hdr th{background:var(--navy);color:#fff;font-weight:700;height:24px}
 table.rota tr.hdr th.monopen{background:var(--gold)}
+table.rota tr.hdr th.dayh{cursor:pointer}
+table.rota tr.hdr th.dayh:hover{background:var(--blue)}
+i.nbd{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FF6B6B;margin-left:4px;vertical-align:middle}
+details.whod{margin-top:12px}
+details.whod>summary{cursor:pointer;color:#A6A6A6;font-size:11px;list-style:none;user-select:none}
+details.whod>summary::-webkit-details-marker{display:none}
+details.whod>summary:hover{color:var(--blue)}
+details.whod[open]>summary{margin-bottom:-6px}
 table.rota tr.band td{background:var(--band);font-weight:700}
 table.rota tr.lbl td.nm{font-weight:700}
 table.rota tr.sp td{height:6px;border-bottom:1px solid var(--line)}
@@ -674,11 +682,12 @@ function renderWeek(keepFocus){
   h+='<div class="week-wrap"><div class="scroll">';
   h+=rotaTable(m,{edit:S.canEdit,print:false});
   h+=paidTable(m);
-  h+=whoTable(m);
+  h+='<details class="whod"><summary>Week summary: who\'s on for</summary>'+whoTable(m)+'</details>';
   h+=legendHtml();
   h+='</div>'+hoursPanel(m)+'</div>';
   var app=document.getElementById('app'); app.innerHTML=h;
   bindBar(app);
+  app.querySelectorAll('th[data-day]').forEach(function(th){ th.onclick=function(){ dayCard(addDays(parseYmd(S.mon),+th.getAttribute('data-day'))); }; });
   bindCells(app,m);
   if(focusId){ var el=app.querySelector('[data-cell="'+focusId+'"]'); if(el){ el.focus(); try{el.select();}catch(e){} } }
 }
@@ -693,7 +702,11 @@ function rotaTable(m,opts){
   h+='<table class="rota frame">'+colgroup(H);
   // DATE
   h+='<tr class="hdr r"><th class="nm">DATE</th>';
-  for(k=0;k<7;k++) h+='<th colspan="3" class="ds'+(k===0&&m.monOpen?' monopen':'')+'">'+fmtDay(addDays(m.mon,k))+'</th>';
+  for(k=0;k<7;k++){
+    var hit=!opts.print && !dayClosed(k,m.monOpen), dot='';
+    if(hit){ var wl=whoLists(m,k); if((wl[0].length||wl[1].length||wl[2].length||wl[3].length) && (!wl[0].length||!wl[3].length)) dot=' <i class="nbd" title="Nobody in '+(!wl[0].length?'Opening':'Closing')+'"></i>'; }
+    h+='<th colspan="3" class="ds'+(k===0&&m.monOpen?' monopen':'')+(hit?' dayh':'')+'"'+(hit?' data-day="'+k+'" title="Click to see who is on this day"':'')+'>'+fmtDay(addDays(m.mon,k))+dot+'</th>';
+  }
   if(H) h+='<th class="hs">HOURS</th>'; h+='</tr>';
   // SERVICE
   h+='<tr class="band r"><td class="nm">SERVICE</td>';
@@ -958,9 +971,9 @@ function mondayToggle(){
 // Message for one day (start time in Opening, in Lunch for people not in Opening, and in Dinner for people not in Opening/Lunch).
 function waText(t){
   var mon=ymd(mondayOf(t)), k=(t.getDay()+6)%7, m=buildModel(mon);
-  if(t<periodStart()) return {error:'Today ('+fmtDM(t)+') is before the start of the rota.'};
-  if(dayClosed(k,m.monOpen)) return {error:'Today ('+DAYS[k]+' '+fmtDM(t)+') the restaurant is closed — nothing to send.'};
-  var L=whoLists(m,k), heads=['Opening','Lunch','Dinner','Closing'], txt='*Today\'s Rota '+fmtDM(t)+'*\n', any=false;
+  if(t<periodStart()) return {error:fmtDM(t)+' is before the start of the rota.'};
+  if(dayClosed(k,m.monOpen)) return {error:DAYS[k]+' '+fmtDM(t)+': the restaurant is closed.'};
+  var L=whoLists(m,k), heads=['Opening','Lunch','Dinner','Closing'], txt='*'+(ymd(t)===ymd(today())?'Today\'s Rota ':'Rota ')+fmtDM(t)+'*\n', any=false;
   for(var c=0;c<4;c++){
     txt+='\n*'+heads[c]+'*\n';
     if(L[c].length){ any=true; L[c].forEach(function(r){
@@ -969,14 +982,14 @@ function waText(t){
     }); }
     else txt+=(c===0||c===3)?'\u26A0\uFE0F NOBODY\n':'-\n';
   }
-  if(!any) return {error:'There are no shifts for today ('+DAYS[k]+' '+fmtDM(t)+') yet.'};
+  if(!any) return {error:'There are no shifts for '+DAYS[k]+' '+fmtDM(t)+' yet.'};
   return {text:txt};
 }
 // Same lists as the text, as data for the image card.
 function waData(t){
   var mon=ymd(mondayOf(t)), k=(t.getDay()+6)%7, m=buildModel(mon);
-  if(t<periodStart()) return {error:'Today ('+fmtDM(t)+') is before the start of the rota.'};
-  if(dayClosed(k,m.monOpen)) return {error:'Today ('+DAYS[k]+' '+fmtDM(t)+') the restaurant is closed — nothing to send.'};
+  if(t<periodStart()) return {error:fmtDM(t)+' is before the start of the rota.'};
+  if(dayClosed(k,m.monOpen)) return {error:DAYS[k]+' '+fmtDM(t)+': the restaurant is closed.'};
   var L=whoLists(m,k), lists=[], any=false;
   for(var c=0;c<4;c++){
     if(L[c].length) any=true;
@@ -988,7 +1001,7 @@ function waData(t){
                taskTime: busy && !taskWhole(r,k) ? fmtT(sp[0])+'\u2013'+fmtT(sp[1]) : '' };
     }));
   }
-  if(!any) return {error:'There are no shifts for today ('+DAYS[k]+' '+fmtDM(t)+') yet.'};
+  if(!any) return {error:'There are no shifts for '+DAYS[k]+' '+fmtDM(t)+' yet.'};
   // covers / tables / KT for lunch (index 2k) and dinner (2k+1)
   function svc(j){
     var cv=infoNum((m.info.covers||[])[2*k+j]), tb=infoNum((m.info.tables||[])[2*k+j]), kt=infoNum((m.info.kt||[])[2*k+j]);
@@ -1037,7 +1050,7 @@ function drawCard(d){
   x.fillStyle='#fff'; x.font='bold 58px '+FONT; x.textBaseline='alphabetic'; x.fillText('PETRUS \u00B7 ROTA',P,84);
   var dt=d.date;
   x.fillStyle=BAND; x.font='34px '+FONT;
-  x.fillText('TODAY  \u00B7  '+DAYS[d.k]+' '+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear(),P,138);
+  x.fillText((d.isToday?'TODAY  \u00B7  ':'')+DAYS[d.k]+' '+dt.getDate()+' '+MONTHS[dt.getMonth()]+' '+dt.getFullYear(),P,138);
   // covers / tables / KT, top right
   x.textAlign='right';
   [['Lunch',d.lunch,78],['Dinner',d.dinner,128]].forEach(function(s){
@@ -1092,32 +1105,40 @@ function drawCard(d){
   return c;
 }
 
-function whatsappToday(){
-  var t=today(), mon=ymd(mondayOf(t));
+function whatsappToday(){ dayCard(today()); }
+// Day card dialog: Fiorella gets the WhatsApp buttons; everyone else just sees the card. Prev/Next day within the week.
+function dayCard(t){
+  var mon=ymd(mondayOf(t)), isToday=ymd(t)===ymd(today());
   loadWeek(mon).then(function(){
-    var d=waData(t);
+    var d=waData(t); if(d.error) d.isToday=isToday; else d.isToday=isToday;
     if(d.error) return dialog('WhatsApp',d.error);
     var canvas=drawCard(d), url=canvas.toDataURL('image/png'), fname='Petrus Rota '+pad(t.getDate())+'-'+pad(t.getMonth()+1)+'.png';
     canvas.toBlob(function(blob){
       var file=null; try{ file=new File([blob],fname,{type:'image/png'}); }catch(e){}
       var canShare=!!(file && navigator.canShare && navigator.canShare({files:[file]}));
-      var btns=[{label:'Close',cls:'light'},
+      var wm=buildModel(mon), kk=(t.getDay()+6)%7, pk=-1, nk=-1, q;
+      for(q=kk-1;q>=0;q--) if(!dayClosed(q,wm.monOpen)){ pk=q; break; }
+      for(q=kk+1;q<7;q++) if(!dayClosed(q,wm.monOpen)){ nk=q; break; }
+      var btns=[{label:'Close',cls:'light'}];
+      if(pk>=0 && addDays(parseYmd(mon),pk)>=periodStart()) btns.push({label:'\u2039 Prev day',cls:'light',fn:function(){ dayCard(addDays(parseYmd(mon),pk)); }});
+      if(nk>=0) btns.push({label:'Next day \u203A',cls:'light',fn:function(){ dayCard(addDays(parseYmd(mon),nk)); }});
+      if(S.isOwner) btns=btns.concat([
         {label:'Send as text',cls:'light',fn:function(){ var tx=waText(t).text; try{navigator.clipboard.writeText(tx);}catch(e){} window.open('https://wa.me/?text='+encodeURIComponent(tx),'_blank'); }},
         {label:'Download',cls:'light',fn:function(){ var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove(); }},
         {label:'Copy image',cls:'blue',fn:function(){
           if(!(navigator.clipboard && window.ClipboardItem)) return toast('This browser cannot copy images — use Download.',true);
           navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){ toast('Image copied — paste it in the WhatsApp chat (Ctrl+V)'); },
             function(){ toast('Could not copy the image — use Download.',true); });
-        }}];
+        }}]);
       // share ONLY the file: with a title/text, WhatsApp on iPhone treats it as text and does not open the image
-      if(canShare) btns.push({label:'Share',cls:'green',fn:function(){
+      if(canShare && S.isOwner) btns.push({label:'Share',cls:'green',fn:function(){
         navigator.share({files:[file]}).catch(function(err){
           if(err && err.name==='AbortError') return;                 // closed the share menu
           dialog('Share did not work','Tap "Download" to save the image, then in WhatsApp open the chat, tap + and choose the photo.',
                  [{label:'Close',cls:'light'},{label:'Download',fn:function(){ var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove(); }}]);
         });
       }});
-      dialog('Today\'s rota', canShare ? 'Press Share and choose WhatsApp, or copy the image and paste it in the chat.' : 'Copy the image and paste it in the WhatsApp chat (Ctrl+V), or download it.', btns,
+      dialog(isToday?'Today\'s rota':DAYS[kk]+' '+fmtDM(t), !S.isOwner ? '' : canShare ? 'Press Share and choose WhatsApp, or copy the image and paste it in the chat.' : 'Copy the image and paste it in the WhatsApp chat (Ctrl+V), or download it.', btns,
         '<img src="'+url+'" alt="Today\'s rota" style="display:block;width:100%;max-height:58vh;object-fit:contain;border:1px solid var(--line);border-radius:8px;margin-bottom:12px">');
       document.querySelector('#dlg .dlg').style.maxWidth='520px';
     },'image/png');
